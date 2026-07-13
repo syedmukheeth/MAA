@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MANAGER
+  CUSTOMER
+}
+
+enum RoomCategory {
+  LIVING_ROOM
+  BEDROOM
+  DINING
+  OFFICE
+  OUTDOOR
+}
+
+enum RequestStatus {
+  NEW
+  IN_REVIEW
+  QUOTED
+  CONVERTED
+  CLOSED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PACKED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(CUSTOMER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  products                Product[]                @relation("ProductCreatedBy")
+  combos                  Combo[]                   @relation("ComboCreatedBy")
+  customFurnitureRequests CustomFurnitureRequest[]  @relation("SubmittedBy")
+  cart                    Cart?
+  orders                  Order[]
+
+  @@index([role])
+}
+
+model Product {
+  id                String       @id @default(cuid())
+  name              String
+  slug              String       @unique
+  description       String
+  price             Decimal      @db.Decimal(10, 2)
+  category          RoomCategory
+  materials         String[]
+  dimensions        String?
+  images            String[]
+  stockQuantity     Int          @default(0)
+  lowStockThreshold Int          @default(5)
+  featured          Boolean      @default(false)
+  createdById       String
+  createdBy         User         @relation("ProductCreatedBy", fields: [createdById], references: [id])
+  comboItems        ComboItem[]
+  cartItems         CartItem[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([category])
+  @@index([featured])
+}
+
+model Combo {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  description String
+  bundlePrice Decimal     @db.Decimal(10, 2)
+  image       String?
+  isActive    Boolean     @default(true)
+  items       ComboItem[]
+  cartItems   CartItem[]
+  createdById String
+  createdBy   User        @relation("ComboCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([isActive])
+}
+
+model ComboItem {
+  id        String  @id @default(cuid())
+  comboId   String
+  combo     Combo   @relation(fields: [comboId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int     @default(1)
+
+  @@unique([comboId, productId])
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+  comboId   String?
+  combo     Combo?   @relation(fields: [comboId], references: [id])
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@unique([cartId, comboId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  status          OrderStatus @default(PENDING)
+  subtotal        Decimal     @db.Decimal(10, 2)
+  total           Decimal     @db.Decimal(10, 2)
+  paymentMethod   String      @default("COD")
+  shippingName    String
+  shippingPhone   String
+  shippingLine1   String
+  shippingLine2   String?
+  shippingCity    String
+  shippingState   String
+  shippingPincode String
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  comboId   String?
+  name      String
+  unitPrice Decimal @db.Decimal(10, 2)
+  quantity  Int
+  lineTotal Decimal @db.Decimal(10, 2)
+}
+
+model CustomFurnitureRequest {
+  id             String        @id @default(cuid())
+  name           String
+  phone          String
+  inspirationUrl String?
+  imageUrl       String?
+  dimensions     String?
+  wood           String?
+  finish         String?
+  budgetRange    String?
+  description    String?
+  status         RequestStatus @default(NEW)
+  submittedById  String?
+  submittedBy    User?         @relation("SubmittedBy", fields: [submittedById], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([status])
+}
