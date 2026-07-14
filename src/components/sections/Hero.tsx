@@ -6,7 +6,17 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export function Hero() {
+export function Hero({
+  headline,
+  subtext,
+  imageUrl,
+  deliveryMessage,
+}: {
+  headline: string;
+  subtext: string;
+  imageUrl: string;
+  deliveryMessage: string;
+}) {
   return (
     <section
       id="top"
@@ -19,7 +29,7 @@ export function Hero() {
         className="absolute inset-0"
       >
         <Image
-          src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=2400&auto=format&fit=crop"
+          src={imageUrl}
           alt="Luxury living room with handcrafted furniture"
           fill
           priority
@@ -35,7 +45,7 @@ export function Hero() {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="text-xs uppercase tracking-[0.35em] text-bronze"
         >
-          Handcrafted &middot; Est. Legacy of Craft
+          {deliveryMessage}
         </motion.p>
 
         <motion.h1
@@ -44,9 +54,12 @@ export function Hero() {
           transition={{ duration: 0.9, delay: 0.5 }}
           className="mt-6 font-heading text-5xl leading-[1.05] text-ivory sm:text-6xl lg:text-7xl"
         >
-          Crafted For Homes.
-          <br />
-          Built For Generations.
+          {headline.split("\n").map((line, i) => (
+            <span key={i}>
+              {line}
+              {i < headline.split("\n").length - 1 && <br />}
+            </span>
+          ))}
         </motion.h1>
 
         <motion.p
@@ -55,8 +68,7 @@ export function Hero() {
           transition={{ duration: 0.9, delay: 0.75 }}
           className="mt-7 max-w-xl text-base leading-relaxed text-ivory/80 sm:text-lg"
         >
-          Premium handcrafted furniture designed to bring timeless beauty and
-          lasting comfort into every space.
+          {subtext}
         </motion.p>
 
         <motion.div

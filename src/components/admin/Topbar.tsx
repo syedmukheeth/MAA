@@ -1,16 +1,47 @@
-import { LogOut } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { LogOut, Menu } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
+import { SidebarNav } from "@/components/admin/Sidebar";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import type { Role } from "@/lib/auth/jwt";
 
 export function Topbar({
   email,
   role,
 }: {
   email: string;
-  role: string;
+  role: Role;
 }) {
+  const [open, setOpen] = useState(false);
+
   return (
     <header className="flex h-16 flex-none items-center justify-between border-b border-border bg-background px-6">
-      <div />
+      <Sheet open={open} onOpenChange={setOpen}>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Open menu"
+          className="text-foreground lg:hidden"
+        >
+          <Menu size={22} />
+        </button>
+        <SheetContent side="left" className="w-64 p-0">
+          <SheetHeader className="border-b border-border">
+            <SheetTitle>MAA Admin</SheetTitle>
+          </SheetHeader>
+          <SidebarNav role={role} onNavigate={() => setOpen(false)} />
+        </SheetContent>
+      </Sheet>
+
+      <div className="hidden lg:block" />
+
       <div className="flex items-center gap-4">
         <div className="text-right">
           <p className="text-sm text-foreground">{email}</p>

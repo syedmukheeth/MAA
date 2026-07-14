@@ -9,6 +9,7 @@ import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 import { loginAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 function LoginForm() {
@@ -45,7 +46,7 @@ function LoginForm() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" {...register("password")} />
+          <PasswordInput id="password" {...register("password")} />
           {errors.password && (
             <p className="text-xs text-brand-red">
               {errors.password.message}

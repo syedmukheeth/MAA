@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { ROOM_CATEGORIES, CATEGORY_LABELS } from "@/lib/validations/product";
 import { createProduct, updateProduct } from "@/actions/products";
+import { getProductImageUploadSignature } from "@/actions/upload";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 
 type ProductDefaults = {
   id?: string;
@@ -25,7 +27,7 @@ type ProductDefaults = {
   category: (typeof ROOM_CATEGORIES)[number];
   materials: string;
   dimensions: string;
-  images: string;
+  images: string[];
   stockQuantity: string;
   lowStockThreshold: string;
   featured: boolean;
@@ -39,7 +41,7 @@ const EMPTY: ProductDefaults = {
   category: "LIVING_ROOM",
   materials: "",
   dimensions: "",
-  images: "",
+  images: [],
   stockQuantity: "0",
   lowStockThreshold: "5",
   featured: false,
@@ -213,13 +215,12 @@ export function ProductForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="images">Image URLs (one per line)</Label>
-        <Textarea
-          id="images"
-          rows={3}
-          placeholder="https://..."
+        <Label>Product images</Label>
+        <ImageUploader
+          multiple
           value={values.images}
-          onChange={(e) => setValues({ ...values, images: e.target.value })}
+          onChange={(images) => setValues({ ...values, images })}
+          getSignature={getProductImageUploadSignature}
         />
       </div>
 

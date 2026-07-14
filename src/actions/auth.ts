@@ -1,17 +1,23 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { signSession, type Role } from "@/lib/auth/jwt";
 import { SESSION_COOKIE } from "@/lib/auth/session";
+import { loginRatelimit, registerRatelimit } from "@/lib/redis";
 import {
   loginSchema,
   registerSchema,
   type LoginInput,
   type RegisterInput,
 } from "@/lib/validations/auth";
+
+async function clientIp() {
+  const headerList = await headers();
+  return headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+}
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
@@ -47,6 +53,11 @@ export async function registerAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
+  const { success } = await registerRatelimit.limit(`register:${await clientIp()}`);
+  if (!success) {
+    return { error: "Too many attempts. Please try again later." };
+  }
+
   const existing = await prisma.user.findUnique({
     where: { email: parsed.data.email },
   });
@@ -74,6 +85,11 @@ export async function loginAction(
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const { success } = await loginRatelimit.limit(`login:${parsed.data.email}`);
+  if (!success) {
+    return { error: "Too many attempts. Please try again in a minute." };
   }
 
   const user = await prisma.user.findUnique({

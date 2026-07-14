@@ -8,6 +8,7 @@ import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
 import { registerAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 export default function RegisterPage() {
@@ -49,11 +50,13 @@ export default function RegisterPage() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" {...register("password")} />
-          {errors.password && (
+          <PasswordInput id="password" {...register("password")} />
+          {errors.password ? (
             <p className="text-xs text-brand-red">
               {errors.password.message}
             </p>
+          ) : (
+            <p className="text-xs text-graphite/50">At least 8 characters.</p>
           )}
         </div>
 

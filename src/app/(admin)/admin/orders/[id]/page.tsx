@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/session";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
 import { OrderStatusControl } from "@/components/admin/OrderStatusControl";
+import { BackLink } from "@/components/admin/BackLink";
 
 export default async function AdminOrderDetailPage({
   params,
@@ -20,6 +21,7 @@ export default async function AdminOrderDetailPage({
 
   return (
     <div className="max-w-3xl">
+      <BackLink href="/admin/orders" label="Back to Orders" />
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-heading text-2xl text-foreground">
           {order.orderNumber}

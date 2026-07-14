@@ -33,8 +33,19 @@ const FAQS = [
   },
 ];
 
-export function ShowroomFaqContact() {
+export function ShowroomFaqContact({
+  address,
+  hours,
+  phone,
+  whatsapp,
+}: {
+  address: string;
+  hours: string;
+  phone: string;
+  whatsapp: string;
+}) {
   const [sent, setSent] = useState(false);
+  const whatsappDigits = whatsapp.replace(/[^0-9]/g, "");
 
   return (
     <section id="showroom" className="bg-ivory px-6 py-28 lg:px-10">
@@ -52,23 +63,33 @@ export function ShowroomFaqContact() {
             <div className="mt-8 space-y-5">
               <div className="flex items-start gap-3">
                 <MapPin className="mt-0.5 text-bronze" size={20} />
-                <p className="text-sm text-graphite/80">
-                  MAA Furnitures Showroom, Main Road, Kurnool, Andhra Pradesh
-                </p>
+                <p className="text-sm text-graphite/80">{address}</p>
               </div>
               <div className="flex items-start gap-3">
                 <Clock className="mt-0.5 text-bronze" size={20} />
-                <p className="text-sm text-graphite/80">
-                  Mon &ndash; Sat: 10:00 AM &ndash; 8:00 PM &middot; Sun: 11:00 AM &ndash; 6:00 PM
-                </p>
+                <p className="text-sm text-graphite/80">{hours}</p>
               </div>
             </div>
 
             <div className="mt-8 flex flex-wrap gap-4">
-              <Button className="rounded-full bg-charcoal text-ivory hover:bg-charcoal/90">
+              <Button
+                render={<a href={phone ? `tel:${phone}` : "#contact"} />}
+                className="rounded-full bg-charcoal text-ivory hover:bg-charcoal/90"
+              >
                 Book Appointment
               </Button>
               <Button
+                render={
+                  <a
+                    href={
+                      whatsappDigits
+                        ? `https://wa.me/${whatsappDigits}`
+                        : "#contact"
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                }
                 variant="outline"
                 className="rounded-full border-graphite/30"
               >
@@ -83,7 +104,7 @@ export function ShowroomFaqContact() {
               title="MAA Furnitures Showroom Location"
               className="absolute inset-0 h-full w-full border-0"
               loading="lazy"
-              src="https://www.google.com/maps?q=Kurnool,Andhra+Pradesh&output=embed"
+              src={`https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
             />
           </div>
         </div>

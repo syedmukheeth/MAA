@@ -3,13 +3,6 @@
 import { motion } from "framer-motion";
 import { ShieldCheck, Hammer, Home, Star } from "lucide-react";
 
-const STATS = [
-  { label: "Years of Experience", value: "18+" },
-  { label: "Projects Delivered", value: "4,200+" },
-  { label: "Happy Families", value: "3,600+" },
-  { label: "Google Rating", value: "4.9/5" },
-];
-
 const REASONS = [
   {
     icon: Hammer,
@@ -33,12 +26,29 @@ const REASONS = [
   },
 ];
 
-export function TrustBuilders() {
+export function TrustBuilders({
+  yearsExperience,
+  projectsDelivered,
+  happyFamilies,
+  googleRating,
+}: {
+  yearsExperience: number;
+  projectsDelivered: number;
+  happyFamilies: number;
+  googleRating: string;
+}) {
+  const stats = [
+    { label: "Years of Experience", value: `${yearsExperience}+` },
+    { label: "Projects Delivered", value: `${projectsDelivered.toLocaleString("en-IN")}+` },
+    { label: "Happy Families", value: `${happyFamilies.toLocaleString("en-IN")}+` },
+    { label: "Google Rating", value: googleRating },
+  ];
+
   return (
     <section className="bg-charcoal px-6 py-28 lg:px-10">
       <div className="mx-auto max-w-7xl">
         <div className="mb-20 grid grid-cols-2 gap-8 border-b border-ivory/10 pb-16 lg:grid-cols-4">
-          {STATS.map((s, i) => (
+          {stats.map((s, i) => (
             <motion.div
               key={s.label}
               initial={{ opacity: 0, y: 20 }}

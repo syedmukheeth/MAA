@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/session";
 import { RequestStatusControl } from "@/components/admin/RequestStatusControl";
+import { BackLink } from "@/components/admin/BackLink";
 
 export default async function AdminRequestDetailPage({
   params,
@@ -28,6 +29,7 @@ export default async function AdminRequestDetailPage({
 
   return (
     <div className="max-w-2xl">
+      <BackLink href="/admin/requests" label="Back to Custom Requests" />
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-heading text-2xl text-foreground">
           {request.name}&apos;s Request

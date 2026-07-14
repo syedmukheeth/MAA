@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { getSiteSettings } from "@/lib/site-settings";
 
-export default function AccountLayout({
+export default async function AccountLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getSiteSettings();
+
   return (
     <>
       <Navbar />
@@ -23,7 +26,12 @@ export default function AccountLayout({
           {children}
         </div>
       </main>
-      <Footer />
+      <Footer
+        instagramUrl={settings.instagramUrl}
+        facebookUrl={settings.facebookUrl}
+        whatsapp={settings.showroomWhatsapp}
+        deliveryMessage={settings.deliveryMessage}
+      />
     </>
   );
 }

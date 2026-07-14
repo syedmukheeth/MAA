@@ -35,14 +35,7 @@ export const productSchema = z.object({
         .filter(Boolean)
     ),
   dimensions: z.string().optional(),
-  images: z
-    .string()
-    .transform((v) =>
-      v
-        .split("\n")
-        .map((u) => u.trim())
-        .filter(Boolean)
-    ),
+  images: z.array(z.string()).min(1, "Upload at least one image"),
   stockQuantity: z.coerce.number().int().min(0),
   lowStockThreshold: z.coerce.number().int().min(0),
   featured: z.coerce.boolean().default(false),

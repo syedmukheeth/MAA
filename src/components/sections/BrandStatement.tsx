@@ -4,7 +4,13 @@ import { motion } from "framer-motion";
 
 const WORDS = ["Comfort.", "Lifestyle.", "Luxury.", "Craftsmanship.", "Trust."];
 
-export function BrandStatement() {
+export function BrandStatement({
+  label,
+  headline,
+}: {
+  label: string;
+  headline: string;
+}) {
   return (
     <section className="bg-ivory px-6 py-32 lg:px-10">
       <div className="mx-auto max-w-5xl text-center">
@@ -15,7 +21,7 @@ export function BrandStatement() {
           transition={{ duration: 0.7 }}
           className="text-xs uppercase tracking-[0.35em] text-bronze"
         >
-          Crafted For Better Living
+          {label}
         </motion.p>
 
         <motion.h2
@@ -25,8 +31,7 @@ export function BrandStatement() {
           transition={{ duration: 0.8, delay: 0.15 }}
           className="mt-8 font-heading text-3xl leading-snug text-charcoal sm:text-4xl lg:text-5xl"
         >
-          We don&apos;t build furniture. We shape the way you live, gather,
-          and grow, one room at a time.
+          {headline}
         </motion.h2>
 
         <div className="mt-14 flex flex-wrap items-center justify-center gap-x-10 gap-y-6">

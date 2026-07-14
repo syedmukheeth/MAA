@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createCombo, updateCombo } from "@/actions/combos";
+import { getComboImageUploadSignature } from "@/actions/upload";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 
 type ProductOption = { id: string; name: string };
 
@@ -153,11 +155,11 @@ export function ComboForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="image">Image URL</Label>
-          <Input
-            id="image"
-            value={values.image}
-            onChange={(e) => setValues({ ...values, image: e.target.value })}
+          <Label>Combo image</Label>
+          <ImageUploader
+            value={values.image ? [values.image] : []}
+            onChange={(urls) => setValues({ ...values, image: urls[0] ?? "" })}
+            getSignature={getComboImageUploadSignature}
           />
         </div>
       </div>

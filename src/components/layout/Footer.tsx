@@ -17,7 +17,19 @@ const COLUMNS = [
   },
 ];
 
-export function Footer() {
+export function Footer({
+  instagramUrl,
+  facebookUrl,
+  whatsapp,
+  deliveryMessage,
+}: {
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
+  whatsapp?: string;
+  deliveryMessage?: string;
+}) {
+  const whatsappDigits = whatsapp?.replace(/[^0-9]/g, "");
+
   return (
     <footer className="bg-charcoal text-ivory">
       <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
@@ -37,24 +49,31 @@ export function Footer() {
               Handcrafted furniture designed to bring timeless beauty and
               lasting comfort into every home, built to be lived in for
               generations.
+              {deliveryMessage ? ` ${deliveryMessage}.` : ""}
             </p>
             <div className="mt-6 flex gap-4">
               <a
-                href="#"
+                href={instagramUrl || "#"}
+                target={instagramUrl ? "_blank" : undefined}
+                rel="noopener noreferrer"
                 aria-label="Instagram"
                 className="rounded-full border border-ivory/20 p-2.5 transition-colors hover:border-bronze hover:text-bronze"
               >
                 <AtSign size={18} />
               </a>
               <a
-                href="#"
+                href={facebookUrl || "#"}
+                target={facebookUrl ? "_blank" : undefined}
+                rel="noopener noreferrer"
                 aria-label="Facebook"
                 className="rounded-full border border-ivory/20 p-2.5 transition-colors hover:border-bronze hover:text-bronze"
               >
                 <Globe size={18} />
               </a>
               <a
-                href="#"
+                href={whatsappDigits ? `https://wa.me/${whatsappDigits}` : "#"}
+                target={whatsappDigits ? "_blank" : undefined}
+                rel="noopener noreferrer"
                 aria-label="WhatsApp"
                 className="rounded-full border border-ivory/20 p-2.5 transition-colors hover:border-bronze hover:text-bronze"
               >

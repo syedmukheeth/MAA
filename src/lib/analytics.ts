@@ -120,6 +120,40 @@ export async function getCustomerGrowth(range?: { from?: Date; to?: Date }) {
   }));
 }
 
+export async function getAverageOrderValue(range?: { from?: Date; to?: Date }) {
+  const { from, to } = { ...defaultRange(), ...range };
+
+  const result = await prisma.order.aggregate({
+    where: {
+      createdAt: { gte: from, lte: to },
+      status: { in: [...REVENUE_STATUSES] },
+    },
+    _avg: { total: true },
+    _count: { _all: true },
+  });
+
+  return {
+    averageOrderValue: Number(result._avg.total ?? 0),
+    orderCount: result._count._all,
+  };
+}
+
+export async function getRepeatCustomerRate() {
+  const grouped = await prisma.order.groupBy({
+    by: ["userId"],
+    _count: { _all: true },
+  });
+
+  const totalCustomers = grouped.length;
+  const repeatCustomers = grouped.filter((g) => g._count._all > 1).length;
+
+  return {
+    totalCustomers,
+    repeatCustomers,
+    repeatRate: totalCustomers > 0 ? (repeatCustomers / totalCustomers) * 100 : 0,
+  };
+}
+
 export async function getLowStockProducts(limit = 20) {
   const [lowStock, outOfStock] = await Promise.all([
     prisma.product.findMany({

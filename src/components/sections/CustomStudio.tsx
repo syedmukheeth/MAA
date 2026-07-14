@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { UploadCloud, Check } from "lucide-react";
+import { UploadCloud, Check, Loader2 } from "lucide-react";
+import { getCustomRequestUploadSignature } from "@/actions/upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +26,9 @@ export function CustomStudio() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -34,6 +38,43 @@ export function CustomStudio() {
   const [finish, setFinish] = useState("");
   const [budgetRange, setBudgetRange] = useState("");
   const [description, setDescription] = useState("");
+
+  async function onFileSelected(file: File | undefined) {
+    if (!file) return;
+    setFileName(file.name);
+    setUploadError(null);
+    setUploadingImage(true);
+
+    try {
+      const sig = await getCustomRequestUploadSignature();
+      if ("error" in sig) {
+        setUploadError(sig.error);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", sig.apiKey);
+      formData.append("timestamp", String(sig.timestamp));
+      formData.append("signature", sig.signature);
+      formData.append("folder", sig.folder);
+
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,
+        { method: "POST", body: formData }
+      );
+      if (!res.ok) {
+        setUploadError("Image upload failed");
+        return;
+      }
+      const data = await res.json();
+      setImageUrl(data.secure_url);
+    } catch {
+      setUploadError("Image upload failed");
+    } finally {
+      setUploadingImage(false);
+    }
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -48,6 +89,7 @@ export function CustomStudio() {
           name,
           phone,
           inspirationUrl,
+          imageUrl,
           dimensions,
           wood,
           finish,
@@ -155,16 +197,26 @@ export function CustomStudio() {
                   htmlFor="file"
                   className="flex cursor-pointer items-center justify-center gap-3 rounded-lg border border-dashed border-graphite/30 px-4 py-6 text-sm text-graphite/70 transition-colors hover:border-bronze hover:text-bronze"
                 >
-                  <UploadCloud size={20} />
-                  {fileName ?? "Click to upload a photo"}
+                  {uploadingImage ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <UploadCloud size={20} />
+                  )}
+                  {uploadingImage
+                    ? "Uploading..."
+                    : (fileName ?? "Click to upload a photo")}
                   <input
                     id="file"
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+                    disabled={uploadingImage}
+                    onChange={(e) => onFileSelected(e.target.files?.[0])}
                   />
                 </label>
+                {uploadError && (
+                  <p className="text-sm text-brand-red">{uploadError}</p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">

@@ -1,0 +1,25 @@
+import { Redis } from "@upstash/redis";
+import { Ratelimit } from "@upstash/ratelimit";
+
+export const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+export const loginRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "60 s"),
+  prefix: "ratelimit:login",
+});
+
+export const registerRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "3600 s"),
+  prefix: "ratelimit:register",
+});
+
+export const uploadRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, "3600 s"),
+  prefix: "ratelimit:upload",
+});

@@ -6,6 +6,8 @@ import {
   getTopCombos,
   getCustomerGrowth,
   getLowStockProducts,
+  getAverageOrderValue,
+  getRepeatCustomerRate,
 } from "@/lib/analytics";
 
 function StatCard({ label, value }: { label: string; value: string }) {
@@ -22,7 +24,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 export default async function AnalyticsPage() {
   await requireRole(["OWNER", "ADMIN"]);
 
-  const [revenue, orderCounts, topProducts, topCombos, growth, stock] =
+  const [revenue, orderCounts, topProducts, topCombos, growth, stock, aov, repeat] =
     await Promise.all([
       getRevenueOverTime(),
       getOrderCounts(),
@@ -30,6 +32,8 @@ export default async function AnalyticsPage() {
       getTopCombos(),
       getCustomerGrowth(),
       getLowStockProducts(),
+      getAverageOrderValue(),
+      getRepeatCustomerRate(),
     ]);
 
   const totalRevenue = revenue.reduce((sum, r) => sum + r.revenue, 0);
@@ -48,6 +52,14 @@ export default async function AnalyticsPage() {
         <StatCard
           label="Out of Stock"
           value={String(stock.outOfStockCount)}
+        />
+        <StatCard
+          label="Avg Order Value"
+          value={`₹${aov.averageOrderValue.toFixed(0)}`}
+        />
+        <StatCard
+          label="Repeat Customer Rate"
+          value={`${repeat.repeatRate.toFixed(0)}%`}
         />
       </div>
 

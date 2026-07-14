@@ -7,6 +7,8 @@ import {
   shippingAddressSchema,
   type ShippingAddressInput,
 } from "@/lib/validations/checkout";
+import { sendEmail } from "@/lib/email";
+import { orderConfirmationHtml, orderStatusUpdateHtml } from "@/lib/email-templates";
 
 const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
 
@@ -129,6 +131,27 @@ export async function placeOrder(
     revalidatePath("/cart");
     revalidatePath("/products");
     revalidatePath("/admin/orders");
+
+    const placedOrder = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+    if (placedOrder) {
+      await sendEmail({
+        to: session.email,
+        subject: `Order ${placedOrder.orderNumber} confirmed`,
+        html: orderConfirmationHtml({
+          orderNumber: placedOrder.orderNumber,
+          total: placedOrder.total.toString(),
+          items: placedOrder.items.map((i) => ({
+            name: i.name,
+            quantity: i.quantity,
+            lineTotal: i.lineTotal.toString(),
+          })),
+        }),
+      });
+    }
+
     return { orderId };
   } catch (err) {
     return {
@@ -143,7 +166,10 @@ export async function updateOrderStatus(
 ): Promise<{ error?: string }> {
   await requireRole([...MANAGE_ROLES]);
 
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { user: true },
+  });
   if (!order) return { error: "Order not found" };
 
   const allowed = STATUS_FLOW[order.status] ?? [];
@@ -159,6 +185,16 @@ export async function updateOrderStatus(
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/account/orders");
+
+  await sendEmail({
+    to: order.user.email,
+    subject: `Order ${order.orderNumber} is now ${nextStatus}`,
+    html: orderStatusUpdateHtml(
+      { orderNumber: order.orderNumber, total: order.total.toString(), items: [] },
+      nextStatus
+    ),
+  });
+
   return {};
 }
 

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/session";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { BackLink } from "@/components/admin/BackLink";
 
 export default async function EditProductPage({
   params,
@@ -16,6 +17,7 @@ export default async function EditProductPage({
 
   return (
     <div>
+      <BackLink href="/admin/products" label="Back to Products" />
       <h1 className="mb-6 font-heading text-2xl text-foreground">
         Edit Product
       </h1>
@@ -29,7 +31,7 @@ export default async function EditProductPage({
           category: product.category,
           materials: product.materials.join(", "),
           dimensions: product.dimensions ?? "",
-          images: product.images.join("\n"),
+          images: product.images,
           stockQuantity: String(product.stockQuantity),
           lowStockThreshold: String(product.lowStockThreshold),
           featured: product.featured,
