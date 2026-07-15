@@ -19,7 +19,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "MAA Furnitures | Crafted For Homes, Built For Generations",
+  title: "MAA FURNITURE | Crafted For Homes, Built For Generations",
   description:
     "Premium handcrafted furniture designed to bring timeless beauty and lasting comfort into every space.",
 };

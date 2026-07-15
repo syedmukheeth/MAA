@@ -5,15 +5,31 @@ import { AtSign, Globe, MessageCircle } from "lucide-react";
 const COLUMNS = [
   {
     title: "Collections",
-    links: ["Living Room", "Bedroom", "Dining", "Office", "Outdoor"],
+    links: [
+      { label: "Living Room", href: "/products?category=LIVING_ROOM" },
+      { label: "Bedroom", href: "/products?category=BEDROOM" },
+      { label: "Dining", href: "/products?category=DINING" },
+      { label: "Office", href: "/products?category=OFFICE" },
+      { label: "Outdoor", href: "/products?category=OUTDOOR" },
+    ],
   },
   {
     title: "Studio",
-    links: ["Custom Furniture", "Design Consultation", "Materials", "Process"],
+    links: [
+      { label: "Custom Furniture", href: "/#custom-studio" },
+      { label: "Combo Offers", href: "/combos" },
+      { label: "Materials", href: "/#craftsmanship" },
+      { label: "Room Inspirations", href: "/#room-inspirations" },
+    ],
   },
   {
     title: "Company",
-    links: ["Our Story", "Showroom", "Reviews", "Contact"],
+    links: [
+      { label: "Our Story", href: "/#craftsmanship" },
+      { label: "Showroom", href: "/#showroom" },
+      { label: "Reviews", href: "/#testimonials" },
+      { label: "All Products", href: "/products" },
+    ],
   },
 ];
 
@@ -38,12 +54,12 @@ export function Footer({
             <div className="flex items-center gap-3">
               <Image
                 src="/brand/logo.jpeg"
-                alt="MAA Furnitures"
+                alt="MAA FURNITURE"
                 width={48}
                 height={48}
                 className="rounded-full"
               />
-              <span className="font-heading text-xl">MAA Furnitures</span>
+              <span className="font-heading text-xl">MAA FURNITURE</span>
             </div>
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-ivory/60">
               Handcrafted furniture designed to bring timeless beauty and
@@ -89,12 +105,12 @@ export function Footer({
               </h4>
               <ul className="mt-5 space-y-3">
                 {col.links.map((link) => (
-                  <li key={link}>
+                  <li key={link.label}>
                     <Link
-                      href="#"
+                      href={link.href}
                       className="text-sm text-ivory/70 transition-colors hover:text-ivory"
                     >
-                      {link}
+                      {link.label}
                     </Link>
                   </li>
                 ))}
@@ -104,7 +120,7 @@ export function Footer({
         </div>
 
         <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-ivory/10 pt-8 text-xs text-ivory/50 lg:flex-row">
-          <p>&copy; {new Date().getFullYear()} MAA Furnitures. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} MAA FURNITURE. All rights reserved.</p>
           <p>Crafted with care, by Sampeer Studio.</p>
         </div>
       </div>

@@ -21,7 +21,8 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
   const [isPending, startTransition] = useTransition();
 
   function changeQuantity(next: number) {
-    if (next < 0) return;
+    // Never delete via the minus button; the trash icon is the delete action
+    if (next < 1) return;
     setQuantity(next);
     setError(null);
     startTransition(async () => {
@@ -63,8 +64,8 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
       </div>
       <div className="flex items-center rounded-full border border-border">
         <button
-          disabled={isPending}
-          className="px-3 py-1.5 text-graphite/70"
+          disabled={isPending || quantity <= 1}
+          className="px-3 py-1.5 text-graphite/70 disabled:opacity-40"
           onClick={() => changeQuantity(quantity - 1)}
         >
           -

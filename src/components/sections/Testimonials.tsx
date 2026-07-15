@@ -9,7 +9,7 @@ const TESTIMONIALS = [
     name: "Priya & Arjun Rao",
     location: "Hyderabad",
     quote:
-      "MAA Furnitures redid our entire living room. It doesn't feel like furniture we bought. It feels like it was always meant to be there.",
+      "MAA FURNITURE redid our entire living room. It doesn't feel like furniture we bought. It feels like it was always meant to be there.",
     image:
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
   },
@@ -33,7 +33,7 @@ const TESTIMONIALS = [
 
 export function Testimonials() {
   return (
-    <section className="bg-ivory px-6 py-28 lg:px-10">
+    <section id="testimonials" className="bg-ivory px-6 py-28 lg:px-10">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 max-w-2xl">
           <p className="text-xs uppercase tracking-[0.35em] text-bronze">
