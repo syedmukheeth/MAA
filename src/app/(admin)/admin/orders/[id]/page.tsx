@@ -54,6 +54,11 @@ export default async function AdminOrderDetailPage({
             <div key={item.id} className="flex justify-between text-sm">
               <span className="text-foreground">
                 {item.quantity} x {item.name}
+                {item.variantName && (
+                  <span className="ml-1 text-muted-foreground">
+                    ({item.variantName})
+                  </span>
+                )}
               </span>
               <span className="text-muted-foreground">
                 &#8377;{item.lineTotal.toString()}

@@ -8,6 +8,7 @@ import { updateCartItemQuantity, removeFromCart } from "@/actions/cart";
 export type CartLineItemData = {
   id: string;
   name: string;
+  variantLabel?: string | null;
   image: string | null;
   unitPrice: string;
   quantity: number;
@@ -54,6 +55,9 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
             </span>
           )}
         </p>
+        {item.variantLabel && (
+          <p className="mt-0.5 text-xs text-graphite/50">{item.variantLabel}</p>
+        )}
         <p className="mt-1 text-sm text-graphite/60">&#8377;{item.unitPrice}</p>
         {error && <p className="mt-1 text-xs text-brand-red">{error}</p>}
       </div>

@@ -12,7 +12,12 @@ export default async function EditProductPage({
   await requireRole(["OWNER", "ADMIN", "MANAGER"]);
   const { id } = await params;
 
-  const product = await prisma.product.findUnique({ where: { id } });
+  const product = await prisma.product.findUnique({
+    where: { id },
+    include: {
+      variants: { orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }] },
+    },
+  });
   if (!product) notFound();
 
   return (
@@ -32,8 +37,17 @@ export default async function EditProductPage({
           materials: product.materials.join(", "),
           dimensions: product.dimensions ?? "",
           images: product.images,
-          stockQuantity: String(product.stockQuantity),
-          lowStockThreshold: String(product.lowStockThreshold),
+          variants: product.variants.map((v) => ({
+            id: v.id,
+            name: v.name,
+            woodType: v.woodType ?? "",
+            finish: v.finish ?? "",
+            size: v.size ?? "",
+            priceDelta: v.priceDelta.toString(),
+            sku: v.sku ?? "",
+            stock: String(v.stock),
+            lowStockThreshold: String(v.lowStockThreshold),
+          })),
           featured: product.featured,
         }}
       />

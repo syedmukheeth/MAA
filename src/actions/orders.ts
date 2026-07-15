@@ -7,6 +7,11 @@ import {
   shippingAddressSchema,
   type ShippingAddressInput,
 } from "@/lib/validations/checkout";
+import {
+  applyStockMovement,
+  getDefaultVariant,
+  restockOrderItems,
+} from "@/lib/inventory";
 import { sendEmail } from "@/lib/email";
 import { orderConfirmationHtml, orderStatusUpdateHtml } from "@/lib/email-templates";
 
@@ -40,6 +45,7 @@ export async function placeOrder(
       items: {
         include: {
           product: true,
+          variant: true,
           combo: { include: { items: { include: { product: true } } } },
         },
       },
@@ -52,52 +58,84 @@ export async function placeOrder(
 
   try {
     const orderId = await prisma.$transaction(async (tx) => {
+      // Aggregate required stock per variant
       const required = new Map<string, { name: string; needed: number }>();
+      const addRequired = (variantId: string, name: string, qty: number) => {
+        const prev = required.get(variantId);
+        required.set(variantId, {
+          name,
+          needed: (prev?.needed ?? 0) + qty,
+        });
+      };
+
+      // Resolve each cart line to variant(s)
+      const lines: {
+        productId: string | null;
+        comboId: string | null;
+        variantId: string | null;
+        variantName: string | null;
+        name: string;
+        unitPrice: number;
+        quantity: number;
+      }[] = [];
 
       for (const item of cart.items) {
         if (item.product) {
-          const prev = required.get(item.product.id);
-          required.set(item.product.id, {
+          const variant =
+            item.variant ?? (await getDefaultVariant(tx, item.product.id));
+          addRequired(variant.id, item.product.name, item.quantity);
+          lines.push({
+            productId: item.product.id,
+            comboId: null,
+            variantId: variant.id,
+            variantName: variant.isDefault ? null : variant.name,
             name: item.product.name,
-            needed: (prev?.needed ?? 0) + item.quantity,
+            unitPrice: Number(item.product.price) + Number(variant.priceDelta),
+            quantity: item.quantity,
           });
         } else if (item.combo) {
           for (const comboItem of item.combo.items) {
-            const prev = required.get(comboItem.productId);
-            required.set(comboItem.productId, {
-              name: comboItem.product.name,
-              needed: (prev?.needed ?? 0) + comboItem.quantity * item.quantity,
-            });
+            const variant = await getDefaultVariant(tx, comboItem.productId);
+            addRequired(
+              variant.id,
+              comboItem.product.name,
+              comboItem.quantity * item.quantity
+            );
           }
+          lines.push({
+            productId: null,
+            comboId: item.combo.id,
+            variantId: null,
+            variantName: null,
+            name: item.combo.name,
+            unitPrice: Number(item.combo.bundlePrice),
+            quantity: item.quantity,
+          });
         }
       }
 
-      for (const [productId, req] of required) {
-        const product = await tx.product.findUniqueOrThrow({
-          where: { id: productId },
+      // Validate stock per variant
+      for (const [variantId, req] of required) {
+        const variant = await tx.variant.findUniqueOrThrow({
+          where: { id: variantId },
         });
-        if (product.stockQuantity < req.needed) {
+        if (variant.stock < req.needed) {
           throw new Error(`${req.name} is out of stock`);
         }
       }
 
-      const orderItemsData = cart.items.map((item) => {
-        const unitPrice = item.product?.price ?? item.combo!.bundlePrice;
-        const lineTotal = Number(unitPrice) * item.quantity;
-        return {
-          productId: item.productId,
-          comboId: item.comboId,
-          name: item.product?.name ?? item.combo!.name,
-          unitPrice,
-          quantity: item.quantity,
-          lineTotal,
-        };
-      });
+      const orderItemsData = lines.map((line) => ({
+        productId: line.productId,
+        comboId: line.comboId,
+        variantId: line.variantId,
+        variantName: line.variantName,
+        name: line.name,
+        unitPrice: line.unitPrice,
+        quantity: line.quantity,
+        lineTotal: line.unitPrice * line.quantity,
+      }));
 
-      const subtotal = orderItemsData.reduce(
-        (sum, i) => sum + Number(i.lineTotal),
-        0
-      );
+      const subtotal = orderItemsData.reduce((sum, i) => sum + i.lineTotal, 0);
 
       const order = await tx.order.create({
         data: {
@@ -116,10 +154,13 @@ export async function placeOrder(
         },
       });
 
-      for (const [productId, req] of required) {
-        await tx.product.update({
-          where: { id: productId },
-          data: { stockQuantity: { decrement: req.needed } },
+      for (const [variantId, req] of required) {
+        await applyStockMovement(tx, {
+          variantId,
+          type: "SOLD",
+          qty: -req.needed,
+          orderId: order.id,
+          byUserId: session.sub,
         });
       }
 
@@ -131,6 +172,7 @@ export async function placeOrder(
     revalidatePath("/cart");
     revalidatePath("/products");
     revalidatePath("/admin/orders");
+    revalidatePath("/admin/inventory");
 
     const placedOrder = await prisma.order.findUnique({
       where: { id: orderId },
@@ -164,11 +206,11 @@ export async function updateOrderStatus(
   orderId: string,
   nextStatus: string
 ): Promise<{ error?: string }> {
-  await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...MANAGE_ROLES]);
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { user: true },
+    include: { user: true, items: true },
   });
   if (!order) return { error: "Order not found" };
 
@@ -177,14 +219,30 @@ export async function updateOrderStatus(
     return { error: `Cannot move order from ${order.status} to ${nextStatus}` };
   }
 
-  await prisma.order.update({
-    where: { id: orderId },
-    data: { status: nextStatus as never },
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Guard against a concurrent transition (double-click / two staff)
+      const updated = await tx.order.updateMany({
+        where: { id: orderId, status: order.status },
+        data: { status: nextStatus as never },
+      });
+      if (updated.count === 0) {
+        throw new Error("Order status changed by someone else. Refresh and retry.");
+      }
+      if (nextStatus === "CANCELLED") {
+        await restockOrderItems(tx, order, session.sub);
+      }
+    });
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Could not update order",
+    };
+  }
 
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/account/orders");
+  revalidatePath("/admin/inventory");
 
   await sendEmail({
     to: order.user.email,
@@ -213,36 +271,22 @@ export async function cancelOwnOrder(orderId: string): Promise<{ error?: string 
     return { error: "Only pending orders can be cancelled" };
   }
 
-  await prisma.$transaction(async (tx) => {
-    for (const item of order.items) {
-      if (item.productId) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stockQuantity: { increment: item.quantity } },
-        });
-      } else if (item.comboId) {
-        const combo = await tx.combo.findUnique({
-          where: { id: item.comboId },
-          include: { items: true },
-        });
-        if (combo) {
-          for (const comboItem of combo.items) {
-            await tx.product.update({
-              where: { id: comboItem.productId },
-              data: {
-                stockQuantity: { increment: comboItem.quantity * item.quantity },
-              },
-            });
-          }
-        }
+  try {
+    await prisma.$transaction(async (tx) => {
+      const updated = await tx.order.updateMany({
+        where: { id: orderId, status: "PENDING" },
+        data: { status: "CANCELLED" },
+      });
+      if (updated.count === 0) {
+        throw new Error("Order can no longer be cancelled");
       }
-    }
-
-    await tx.order.update({
-      where: { id: orderId },
-      data: { status: "CANCELLED" },
+      await restockOrderItems(tx, order, user.sub);
     });
-  });
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Could not cancel order",
+    };
+  }
 
   revalidatePath("/account/orders");
   revalidatePath(`/account/orders/${orderId}`);

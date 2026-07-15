@@ -36,6 +36,11 @@ export default async function AccountOrderDetailPage({
             <div key={item.id} className="flex justify-between text-sm">
               <span className="text-charcoal">
                 {item.quantity} x {item.name}
+                {item.variantName && (
+                  <span className="ml-1 text-graphite/50">
+                    ({item.variantName})
+                  </span>
+                )}
               </span>
               <span className="text-graphite/70">
                 &#8377;{item.lineTotal.toString()}

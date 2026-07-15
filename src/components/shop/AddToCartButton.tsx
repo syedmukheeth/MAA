@@ -8,10 +8,12 @@ import { addToCart } from "@/actions/cart";
 
 export function AddToCartButton({
   productId,
+  variantId,
   comboId,
   disabled,
 }: {
   productId?: string;
+  variantId?: string;
   comboId?: string;
   disabled?: boolean;
 }) {
@@ -25,7 +27,7 @@ export function AddToCartButton({
     setPending(true);
     setError(null);
     try {
-      const result = await addToCart({ productId, comboId, quantity });
+      const result = await addToCart({ productId, variantId, comboId, quantity });
       if (result?.error) {
         setError(result.error);
       } else {

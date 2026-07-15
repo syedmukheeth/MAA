@@ -10,17 +10,21 @@ export default async function CartPage() {
     where: { userId: session.sub },
     include: {
       items: {
-        include: { product: true, combo: true },
+        include: { product: true, variant: true, combo: true },
         orderBy: { createdAt: "asc" },
       },
     },
   });
 
   const items = cart?.items ?? [];
-  const subtotal = items.reduce((sum, item) => {
-    const unit = item.product?.price ?? item.combo?.bundlePrice;
-    return sum + Number(unit ?? 0) * item.quantity;
-  }, 0);
+  const unitPriceOf = (item: (typeof items)[number]) =>
+    item.product
+      ? Number(item.product.price) + Number(item.variant?.priceDelta ?? 0)
+      : Number(item.combo?.bundlePrice ?? 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + unitPriceOf(item) * item.quantity,
+    0
+  );
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16 lg:px-10">
@@ -44,11 +48,13 @@ export default async function CartPage() {
                 item={{
                   id: item.id,
                   name: item.product?.name ?? item.combo?.name ?? "Item",
+                  variantLabel:
+                    item.variant && !item.variant.isDefault
+                      ? item.variant.name
+                      : null,
                   image:
                     item.product?.images[0] ?? item.combo?.image ?? null,
-                  unitPrice: (
-                    item.product?.price ?? item.combo?.bundlePrice ?? 0
-                  ).toString(),
+                  unitPrice: unitPriceOf(item).toFixed(2),
                   quantity: item.quantity,
                   isCombo: Boolean(item.comboId),
                 }}

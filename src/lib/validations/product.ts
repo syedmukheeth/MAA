@@ -16,6 +16,20 @@ export const CATEGORY_LABELS: Record<(typeof ROOM_CATEGORIES)[number], string> =
   OUTDOOR: "Outdoor",
 };
 
+export const variantSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, "Variant name is required").max(80),
+  woodType: z.string().max(60).optional(),
+  finish: z.string().max(60).optional(),
+  size: z.string().max(60).optional(),
+  priceDelta: z.coerce.number().default(0),
+  sku: z.string().max(60).optional(),
+  stock: z.coerce.number().int().min(0).default(0),
+  lowStockThreshold: z.coerce.number().int().min(0).default(3),
+});
+
+export type VariantInput = z.input<typeof variantSchema>;
+
 export const productSchema = z.object({
   name: z.string().min(2).max(120),
   slug: z
@@ -36,8 +50,7 @@ export const productSchema = z.object({
     ),
   dimensions: z.string().optional(),
   images: z.array(z.string()).min(1, "Upload at least one image"),
-  stockQuantity: z.coerce.number().int().min(0),
-  lowStockThreshold: z.coerce.number().int().min(0),
+  variants: z.array(variantSchema).min(1, "Add at least one variant"),
   featured: z.coerce.boolean().default(false),
 });
 

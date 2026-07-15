@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { CATEGORY_LABELS } from "@/lib/validations/product";
 import { isInStock, isLowStock } from "@/lib/products";
 import { AddToCartButton } from "@/components/shop/AddToCartButton";
+import { VariantPicker } from "@/components/shop/VariantPicker";
 
 export const dynamic = "force-dynamic";
 
@@ -13,11 +14,30 @@ export default async function ProductDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await prisma.product.findUnique({ where: { slug } });
+  const product = await prisma.product.findUnique({
+    where: { slug },
+    include: {
+      variants: { orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }] },
+    },
+  });
   if (!product) notFound();
 
   const inStock = isInStock(product);
   const lowStock = isLowStock(product);
+  const hasVariantChoices =
+    product.variants.length > 1 ||
+    (product.variants.length === 1 && !product.variants[0].isDefault);
+  const variantOptions = product.variants.map((v) => ({
+    id: v.id,
+    name: v.name,
+    woodType: v.woodType,
+    finish: v.finish,
+    size: v.size,
+    priceDelta: Number(v.priceDelta),
+    stock: v.stock,
+    lowStockThreshold: v.lowStockThreshold,
+    isDefault: v.isDefault,
+  }));
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-16 lg:px-10">
@@ -54,21 +74,33 @@ export default async function ProductDetailPage({
           <h1 className="mt-4 font-heading text-3xl text-charcoal sm:text-4xl">
             {product.name}
           </h1>
-          <p className="mt-4 text-2xl text-charcoal">
-            &#8377;{product.price.toString()}
-          </p>
+          {hasVariantChoices ? (
+            <div className="mt-4">
+              <VariantPicker
+                productId={product.id}
+                basePrice={Number(product.price)}
+                variants={variantOptions}
+              />
+            </div>
+          ) : (
+            <>
+              <p className="mt-4 text-2xl text-charcoal">
+                &#8377;{product.price.toString()}
+              </p>
 
-          <p className="mt-2 text-sm">
-            {!inStock ? (
-              <span className="text-brand-red">Out of stock</span>
-            ) : lowStock ? (
-              <span className="text-amber-600">
-                Only {product.stockQuantity} left
-              </span>
-            ) : (
-              <span className="text-graphite/60">In stock</span>
-            )}
-          </p>
+              <p className="mt-2 text-sm">
+                {!inStock ? (
+                  <span className="text-brand-red">Out of stock</span>
+                ) : lowStock ? (
+                  <span className="text-amber-600">
+                    Only {product.stockQuantity} left
+                  </span>
+                ) : (
+                  <span className="text-graphite/60">In stock</span>
+                )}
+              </p>
+            </>
+          )}
 
           <p className="mt-6 leading-relaxed text-graphite/80">
             {product.description}
@@ -87,9 +119,11 @@ export default async function ProductDetailPage({
             </p>
           )}
 
-          <div className="mt-8">
-            <AddToCartButton productId={product.id} disabled={!inStock} />
-          </div>
+          {!hasVariantChoices && (
+            <div className="mt-8">
+              <AddToCartButton productId={product.id} disabled={!inStock} />
+            </div>
+          )}
         </div>
       </div>
     </div>

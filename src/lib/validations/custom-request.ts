@@ -21,3 +21,13 @@ export const REQUEST_STATUSES = [
   "CONVERTED",
   "CLOSED",
 ] as const;
+
+export type RequestStatusValue = (typeof REQUEST_STATUSES)[number];
+
+export const REQUEST_STATUS_FLOW: Record<RequestStatusValue, RequestStatusValue[]> = {
+  NEW: ["IN_REVIEW", "CLOSED"],
+  IN_REVIEW: ["QUOTED", "CLOSED"],
+  QUOTED: ["CONVERTED", "CLOSED"],
+  CONVERTED: [],
+  CLOSED: ["IN_REVIEW"],
+};
