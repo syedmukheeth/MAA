@@ -18,7 +18,7 @@ export const DEFAULT_SITE_SETTINGS = {
   statHappyFamilies: 3600,
   statGoogleRating: "4.9/5",
 
-  showroomAddress: "MAA Furnitures Showroom, Main Road, Kurnool, Andhra Pradesh",
+  showroomAddress: "MAA FURNITURE Showroom, Main Road, Kurnool, Andhra Pradesh",
   showroomHours: "Mon - Sat: 10:00 AM - 8:00 PM · Sun: 11:00 AM - 6:00 PM",
   showroomPhone: "",
   showroomWhatsapp: "",

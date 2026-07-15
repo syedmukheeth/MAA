@@ -3,18 +3,23 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { LayoutDashboard, Menu, ShoppingCart, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
-  { label: "Collections", href: "#collections" },
-  { label: "Craftsmanship", href: "#craftsmanship" },
-  { label: "Custom Studio", href: "#custom-studio" },
-  { label: "Room Inspirations", href: "#room-inspirations" },
-  { label: "Showroom", href: "#showroom" },
+  { label: "Shop", href: "/products" },
+  { label: "Combos", href: "/combos" },
+  { label: "Collections", href: "/#collections" },
+  { label: "Craftsmanship", href: "/#craftsmanship" },
+  { label: "Custom Studio", href: "/#custom-studio" },
+  { label: "Showroom", href: "/#showroom" },
 ];
 
-export function Navbar() {
+export type NavbarUser = {
+  role: "OWNER" | "ADMIN" | "MANAGER" | "CUSTOMER";
+} | null;
+
+export function Navbar({ user = null }: { user?: NavbarUser }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -26,6 +31,16 @@ export function Navbar() {
   }, []);
 
   const solid = scrolled || open;
+  const isStaff = user != null && user.role !== "CUSTOMER";
+
+  const accountLinks = user
+    ? [
+        ...(isStaff
+          ? [{ label: "Dashboard", href: "/admin", icon: LayoutDashboard }]
+          : [{ label: "My Account", href: "/account", icon: User }]),
+        { label: "Cart", href: "/cart", icon: ShoppingCart },
+      ]
+    : [{ label: "Log In", href: "/login", icon: User }];
 
   return (
     <header
@@ -36,10 +51,10 @@ export function Navbar() {
       }`}
     >
       <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-10">
-        <Link href="#top" className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <Image
             src="/brand/logo.jpeg"
-            alt="MAA Furnitures"
+            alt="MAA FURNITURE"
             width={44}
             height={44}
             className="rounded-full"
@@ -50,11 +65,11 @@ export function Navbar() {
               solid ? "text-charcoal" : "text-ivory"
             }`}
           >
-            MAA Furnitures
+            MAA FURNITURE
           </span>
         </Link>
 
-        <ul className="hidden items-center gap-8 lg:flex">
+        <ul className="hidden items-center gap-7 lg:flex">
           {NAV_LINKS.map((link) => (
             <li key={link.href}>
               <Link
@@ -69,9 +84,24 @@ export function Navbar() {
           ))}
         </ul>
 
-        <div className="hidden lg:block">
+        <div className="hidden items-center gap-3 lg:flex">
+          {accountLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              aria-label={link.label}
+              title={link.label}
+              className={`rounded-full border p-2.5 transition-colors hover:border-bronze hover:text-bronze ${
+                solid
+                  ? "border-border text-graphite"
+                  : "border-ivory/30 text-ivory"
+              }`}
+            >
+              <link.icon size={17} />
+            </Link>
+          ))}
           <Button
-            render={<Link href="#custom-studio" />}
+            render={<Link href="/#custom-studio" />}
             className="rounded-full bg-bronze px-6 text-ivory hover:bg-bronze/90"
           >
             Design Custom Furniture
@@ -97,6 +127,18 @@ export function Navbar() {
                   onClick={() => setOpen(false)}
                   className="text-base text-charcoal"
                 >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+            {accountLinks.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 text-base text-charcoal"
+                >
+                  <link.icon size={17} />
                   {link.label}
                 </Link>
               </li>

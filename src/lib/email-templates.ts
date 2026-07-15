@@ -3,11 +3,11 @@ function emailLayout(bodyHtml: string, previewText: string) {
     <div style="display:none;max-height:0;overflow:hidden;">${previewText}</div>
     <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#2a2420;">
       <p style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#a5732f;margin:0 0 24px;">
-        MAA Furnitures
+        MAA FURNITURE
       </p>
       ${bodyHtml}
       <p style="margin-top:32px;font-size:12px;color:#8a8078;">
-        MAA Furnitures &middot; Crafted for homes, built for generations.
+        MAA FURNITURE &middot; Crafted for homes, built for generations.
       </p>
     </div>
   `;

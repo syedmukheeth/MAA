@@ -33,7 +33,7 @@ function LoginForm() {
     <>
       <h1 className="font-heading text-2xl text-charcoal">Welcome back</h1>
       <p className="mt-2 text-sm text-graphite/70">
-        Log in to your MAA Furnitures account.
+        Log in to your MAA FURNITURE account.
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">

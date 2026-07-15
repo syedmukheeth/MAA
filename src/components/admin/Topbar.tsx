@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { LogOut, Menu } from "lucide-react";
+import Link from "next/link";
+import { LogOut, Menu, Store } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import { SidebarNav } from "@/components/admin/Sidebar";
 import {
@@ -40,9 +41,20 @@ export function Topbar({
         </SheetContent>
       </Sheet>
 
-      <div className="hidden lg:block" />
+      <div className="hidden lg:block">
+        <p className="font-heading text-sm text-muted-foreground">
+          MAA FURNITURE — Back Office
+        </p>
+      </div>
 
       <div className="flex items-center gap-4">
+        <Link
+          href="/"
+          className="flex items-center gap-2 rounded-full border border-bronze/50 px-4 py-1.5 text-sm text-bronze transition-colors hover:bg-bronze hover:text-ivory"
+        >
+          <Store size={15} />
+          <span className="hidden sm:inline">Visit Store</span>
+        </Link>
         <div className="text-right">
           <p className="text-sm text-foreground">{email}</p>
           <p className="text-xs capitalize text-muted-foreground">

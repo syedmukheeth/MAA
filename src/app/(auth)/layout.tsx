@@ -11,13 +11,13 @@ export default function AuthLayout({
       <Link href="/" className="mb-10 flex items-center gap-3">
         <Image
           src="/brand/logo.jpeg"
-          alt="MAA Furnitures"
+          alt="MAA FURNITURE"
           width={44}
           height={44}
           className="rounded-full"
         />
         <span className="font-heading text-lg text-charcoal">
-          MAA Furnitures
+          MAA FURNITURE
         </span>
       </Link>
       <div className="w-full max-w-md rounded-2xl bg-cream p-8 sm:p-10">

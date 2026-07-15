@@ -6,6 +6,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { deleteProduct } from "@/actions/products";
 import { isInStock, isLowStock } from "@/lib/products";
 import { CATEGORY_LABELS } from "@/lib/validations/product";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 
 export type ProductRow = {
   id: string;
@@ -21,6 +22,7 @@ export type ProductRow = {
 export function ProductTable({ products }: { products: ProductRow[] }) {
   const [rows, setRows] = useState(products);
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<ProductRow | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function onDelete(id: string) {
@@ -29,9 +31,11 @@ export function ProductTable({ products }: { products: ProductRow[] }) {
       const result = await deleteProduct(id);
       if (result?.error) {
         setError(result.error);
+        setConfirming(null);
         return;
       }
       setRows((prev) => prev.filter((p) => p.id !== id));
+      setConfirming(null);
     });
   }
 
@@ -88,7 +92,7 @@ export function ProductTable({ products }: { products: ProductRow[] }) {
                     <button
                       type="button"
                       disabled={isPending}
-                      onClick={() => onDelete(p.id)}
+                      onClick={() => setConfirming(p)}
                       className="rounded-md p-1.5 text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 size={16} />
@@ -110,6 +114,19 @@ export function ProductTable({ products }: { products: ProductRow[] }) {
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        open={confirming !== null}
+        title="Delete product?"
+        description={
+          confirming
+            ? `"${confirming.name}" will be permanently removed from the catalog. This cannot be undone.`
+            : ""
+        }
+        pending={isPending}
+        onConfirm={() => confirming && onDelete(confirming.id)}
+        onCancel={() => setConfirming(null)}
+      />
     </div>
   );
 }

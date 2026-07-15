@@ -2,7 +2,7 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM = process.env.EMAIL_FROM ?? "MAA Furnitures <onboarding@resend.dev>";
+const FROM = process.env.EMAIL_FROM ?? "MAA FURNITURE <onboarding@resend.dev>";
 
 export async function sendEmail({
   to,

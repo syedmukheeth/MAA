@@ -24,13 +24,30 @@ export default async function CheckoutPage() {
     return sum + unit * item.quantity;
   }, 0);
 
+  // Pre-fill from the customer's most recent order
+  const lastOrder = await prisma.order.findFirst({
+    where: { userId: session.sub },
+    orderBy: { createdAt: "desc" },
+  });
+  const defaults = lastOrder
+    ? {
+        shippingName: lastOrder.shippingName,
+        shippingPhone: lastOrder.shippingPhone,
+        shippingLine1: lastOrder.shippingLine1,
+        shippingLine2: lastOrder.shippingLine2 ?? undefined,
+        shippingCity: lastOrder.shippingCity,
+        shippingState: lastOrder.shippingState,
+        shippingPincode: lastOrder.shippingPincode,
+      }
+    : undefined;
+
   return (
     <div className="mx-auto max-w-3xl px-6 py-16 lg:px-10">
       <h1 className="font-heading text-3xl text-charcoal sm:text-4xl">
         Checkout
       </h1>
       <div className="mt-10 rounded-2xl bg-cream p-8">
-        <ShippingAddressForm subtotal={subtotal} />
+        <ShippingAddressForm subtotal={subtotal} defaults={defaults} />
       </div>
     </div>
   );

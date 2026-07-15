@@ -12,15 +12,19 @@ import { Testimonials } from "@/components/sections/Testimonials";
 import { TrustBuilders } from "@/components/sections/TrustBuilders";
 import { ShowroomFaqContact } from "@/components/sections/ShowroomFaqContact";
 import { getSiteSettings } from "@/lib/site-settings";
+import { getCurrentUser } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const settings = await getSiteSettings();
+  const [settings, user] = await Promise.all([
+    getSiteSettings(),
+    getCurrentUser(),
+  ]);
 
   return (
     <>
-      <Navbar />
+      <Navbar user={user ? { role: user.role } : null} />
       <main className="flex-1">
         <Hero
           headline={settings.heroHeadline}

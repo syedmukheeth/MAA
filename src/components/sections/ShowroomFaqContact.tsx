@@ -101,7 +101,7 @@ export function ShowroomFaqContact({
 
           <div className="relative min-h-64 overflow-hidden rounded-xl">
             <iframe
-              title="MAA Furnitures Showroom Location"
+              title="MAA FURNITURE Showroom Location"
               className="absolute inset-0 h-full w-full border-0"
               loading="lazy"
               src={`https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
