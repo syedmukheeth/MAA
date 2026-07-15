@@ -21,8 +21,10 @@ async function clientIp() {
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
-function homeRouteForRole(role: Role) {
-  return role === "CUSTOMER" ? "/account" : "/admin";
+// Every role lands on the store after signing in; staff reach the back
+// office via the navbar Dashboard link or /admin directly.
+function homeRouteForRole(_role: Role) {
+  return "/";
 }
 
 async function createSessionCookie(user: {

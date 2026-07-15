@@ -30,7 +30,7 @@ export default function RegisterPage() {
     <>
       <h1 className="font-heading text-2xl text-charcoal">Create an account</h1>
       <p className="mt-2 text-sm text-graphite/70">
-        Join MAA Furnitures to shop, track orders, and save your details.
+        Join MAA FURNITURE to shop, track orders, and save your details.
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
 import { deleteCombo, toggleComboActive } from "@/actions/combos";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 
 export type ComboRow = {
   id: string;
@@ -16,6 +17,7 @@ export type ComboRow = {
 export function ComboTable({ combos }: { combos: ComboRow[] }) {
   const [rows, setRows] = useState(combos);
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<ComboRow | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function onDelete(id: string) {
@@ -24,9 +26,11 @@ export function ComboTable({ combos }: { combos: ComboRow[] }) {
       const result = await deleteCombo(id);
       if (result?.error) {
         setError(result.error);
+        setConfirming(null);
         return;
       }
       setRows((prev) => prev.filter((c) => c.id !== id));
+      setConfirming(null);
     });
   }
 
@@ -87,7 +91,7 @@ export function ComboTable({ combos }: { combos: ComboRow[] }) {
                     <button
                       type="button"
                       disabled={isPending}
-                      onClick={() => onDelete(c.id)}
+                      onClick={() => setConfirming(c)}
                       className="rounded-md p-1.5 text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 size={16} />
@@ -106,6 +110,19 @@ export function ComboTable({ combos }: { combos: ComboRow[] }) {
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        open={confirming !== null}
+        title="Delete combo offer?"
+        description={
+          confirming
+            ? `"${confirming.name}" will be permanently removed. This cannot be undone.`
+            : ""
+        }
+        pending={isPending}
+        onConfirm={() => confirming && onDelete(confirming.id)}
+        onCancel={() => setConfirming(null)}
+      />
     </div>
   );
 }
