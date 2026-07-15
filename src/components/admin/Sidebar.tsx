@@ -6,6 +6,7 @@ import type { Role } from "@/lib/auth/jwt";
 import {
   LayoutDashboard,
   Package,
+  Boxes,
   Layers,
   ShoppingBag,
   Inbox,
@@ -30,6 +31,12 @@ export const NAV_ITEMS: {
     href: "/admin/products",
     label: "Products",
     icon: Package,
+    roles: ["OWNER", "ADMIN", "MANAGER"],
+  },
+  {
+    href: "/admin/inventory",
+    label: "Inventory",
+    icon: Boxes,
     roles: ["OWNER", "ADMIN", "MANAGER"],
   },
   {

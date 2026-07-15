@@ -8,7 +8,9 @@ export default async function CheckoutPage() {
 
   const cart = await prisma.cart.findUnique({
     where: { userId: session.sub },
-    include: { items: { include: { product: true, combo: true } } },
+    include: {
+      items: { include: { product: true, variant: true, combo: true } },
+    },
   });
 
   if (!cart || cart.items.length === 0) {
@@ -16,8 +18,10 @@ export default async function CheckoutPage() {
   }
 
   const subtotal = cart.items.reduce((sum, item) => {
-    const unit = item.product?.price ?? item.combo?.bundlePrice;
-    return sum + Number(unit ?? 0) * item.quantity;
+    const unit = item.product
+      ? Number(item.product.price) + Number(item.variant?.priceDelta ?? 0)
+      : Number(item.combo?.bundlePrice ?? 0);
+    return sum + unit * item.quantity;
   }, 0);
 
   return (

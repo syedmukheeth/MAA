@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getOrderCounts } from "@/lib/analytics";
+import { getOrderCounts, getLowStockVariants } from "@/lib/analytics";
 
 export default async function AdminOverviewPage() {
   const user = await getCurrentUser();
-  const orderCounts = await getOrderCounts();
+  const [orderCounts, lowStockData] = await Promise.all([
+    getOrderCounts(),
+    getLowStockVariants(6),
+  ]);
 
   return (
     <div>
@@ -36,6 +39,44 @@ export default async function AdminOverviewPage() {
           </div>
         ))}
       </div>
+
+      {(lowStockData.lowStock.length > 0 ||
+        lowStockData.outOfStockCount > 0) && (
+        <div className="mt-8 rounded-xl border border-amber-500/40 bg-amber-500/5 p-5">
+          <div className="flex items-center justify-between">
+            <p className="text-xs uppercase tracking-wider text-amber-500">
+              Stock alerts
+            </p>
+            <Link
+              href="/admin/inventory"
+              className="text-xs text-amber-500 hover:underline"
+            >
+              Open inventory →
+            </Link>
+          </div>
+          {lowStockData.outOfStockCount > 0 && (
+            <p className="mt-2 text-sm text-destructive">
+              {lowStockData.outOfStockCount} variant
+              {lowStockData.outOfStockCount === 1 ? "" : "s"} out of stock
+            </p>
+          )}
+          {lowStockData.lowStock.length > 0 && (
+            <ul className="mt-2 space-y-1 text-sm text-foreground">
+              {lowStockData.lowStock.map((v) => (
+                <li key={v.id} className="flex justify-between">
+                  <span>
+                    {v.product.name}
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      {v.name}
+                    </span>
+                  </span>
+                  <span className="text-amber-500">{v.stock} left</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {(user?.role === "OWNER" || user?.role === "ADMIN") && (
         <Link

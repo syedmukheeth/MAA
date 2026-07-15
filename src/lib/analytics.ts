@@ -154,6 +154,22 @@ export async function getRepeatCustomerRate() {
   };
 }
 
+export async function getLowStockVariants(limit = 10) {
+  const [candidates, outOfStockCount] = await Promise.all([
+    prisma.variant.findMany({
+      where: { stock: { gt: 0 } },
+      orderBy: { stock: "asc" },
+      take: limit * 3,
+      include: { product: { select: { name: true } } },
+    }),
+    prisma.variant.count({ where: { stock: { lte: 0 } } }),
+  ]);
+  const lowStock = candidates
+    .filter((v) => v.stock <= v.lowStockThreshold)
+    .slice(0, limit);
+  return { lowStock, outOfStockCount };
+}
+
 export async function getLowStockProducts(limit = 20) {
   const [lowStock, outOfStock] = await Promise.all([
     prisma.product.findMany({
