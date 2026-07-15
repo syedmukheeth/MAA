@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +19,18 @@ import { createProduct, updateProduct } from "@/actions/products";
 import { getProductImageUploadSignature } from "@/actions/upload";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 
+export type VariantRow = {
+  id?: string;
+  name: string;
+  woodType: string;
+  finish: string;
+  size: string;
+  priceDelta: string;
+  sku: string;
+  stock: string;
+  lowStockThreshold: string;
+};
+
 type ProductDefaults = {
   id?: string;
   name: string;
@@ -28,9 +41,19 @@ type ProductDefaults = {
   materials: string;
   dimensions: string;
   images: string[];
-  stockQuantity: string;
-  lowStockThreshold: string;
+  variants: VariantRow[];
   featured: boolean;
+};
+
+const EMPTY_VARIANT: VariantRow = {
+  name: "Default",
+  woodType: "",
+  finish: "",
+  size: "",
+  priceDelta: "0",
+  sku: "",
+  stock: "0",
+  lowStockThreshold: "3",
 };
 
 const EMPTY: ProductDefaults = {
@@ -42,8 +65,7 @@ const EMPTY: ProductDefaults = {
   materials: "",
   dimensions: "",
   images: [],
-  stockQuantity: "0",
-  lowStockThreshold: "5",
+  variants: [{ ...EMPTY_VARIANT }],
   featured: false,
 };
 
@@ -56,10 +78,32 @@ export function ProductForm({
   const [values, setValues] = useState(defaults);
   const [category, setCategory] = useState(defaults.category);
   const [featured, setFeatured] = useState(defaults.featured);
+  const [variants, setVariants] = useState<VariantRow[]>(
+    defaults.variants.length > 0 ? defaults.variants : [{ ...EMPTY_VARIANT }]
+  );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const isEdit = Boolean(defaults.id);
+
+  function setVariant(index: number, patch: Partial<VariantRow>) {
+    setVariants((rows) =>
+      rows.map((row, i) => (i === index ? { ...row, ...patch } : row))
+    );
+  }
+
+  function addVariant() {
+    setVariants((rows) => [
+      ...rows,
+      { ...EMPTY_VARIANT, name: `Variant ${rows.length + 1}` },
+    ]);
+  }
+
+  function removeVariant(index: number) {
+    setVariants((rows) =>
+      rows.length > 1 ? rows.filter((_, i) => i !== index) : rows
+    );
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -75,8 +119,18 @@ export function ProductForm({
       materials: values.materials,
       dimensions: values.dimensions,
       images: values.images,
-      stockQuantity: values.stockQuantity,
-      lowStockThreshold: values.lowStockThreshold,
+      variants: variants.map((v) => ({
+        id: v.id,
+        name: v.name,
+        woodType: v.woodType || undefined,
+        finish: v.finish || undefined,
+        size: v.size || undefined,
+        priceDelta: v.priceDelta === "" ? 0 : Number(v.priceDelta),
+        sku: v.sku || undefined,
+        stock: v.stock === "" ? 0 : Number(v.stock),
+        lowStockThreshold:
+          v.lowStockThreshold === "" ? 3 : Number(v.lowStockThreshold),
+      })),
       featured,
     };
 
@@ -93,7 +147,7 @@ export function ProductForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-2xl space-y-6">
+    <form onSubmit={onSubmit} className="max-w-3xl space-y-6">
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="name">Name</Label>
@@ -131,7 +185,7 @@ export function ProductForm({
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="price">Price (INR)</Label>
+          <Label htmlFor="price">Base price (INR)</Label>
           <Input
             id="price"
             type="number"
@@ -173,32 +227,125 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="stockQuantity">Stock quantity</Label>
-          <Input
-            id="stockQuantity"
-            type="number"
-            min="0"
-            required
-            value={values.stockQuantity}
-            onChange={(e) =>
-              setValues({ ...values, stockQuantity: e.target.value })
-            }
-          />
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <Label>Variants</Label>
+            <p className="text-xs text-muted-foreground">
+              First row is the default variant. Price delta is added to the
+              base price.
+              {isEdit &&
+                " Stock for existing variants is managed from the Inventory page."}
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={addVariant}
+          >
+            <Plus size={14} className="mr-1" /> Add variant
+          </Button>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="lowStockThreshold">Low stock threshold</Label>
-          <Input
-            id="lowStockThreshold"
-            type="number"
-            min="0"
-            required
-            value={values.lowStockThreshold}
-            onChange={(e) =>
-              setValues({ ...values, lowStockThreshold: e.target.value })
-            }
-          />
+
+        <div className="space-y-3">
+          {variants.map((v, index) => (
+            <div
+              key={v.id ?? `new-${index}`}
+              className="rounded-lg border border-border p-4"
+            >
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="space-y-1">
+                  <Label className="text-xs">Name</Label>
+                  <Input
+                    required
+                    value={v.name}
+                    onChange={(e) => setVariant(index, { name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Wood</Label>
+                  <Input
+                    placeholder="Teak"
+                    value={v.woodType}
+                    onChange={(e) =>
+                      setVariant(index, { woodType: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Finish</Label>
+                  <Input
+                    placeholder="Natural"
+                    value={v.finish}
+                    onChange={(e) =>
+                      setVariant(index, { finish: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Size</Label>
+                  <Input
+                    placeholder="3-seater"
+                    value={v.size}
+                    onChange={(e) => setVariant(index, { size: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Price delta (INR)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={v.priceDelta}
+                    onChange={(e) =>
+                      setVariant(index, { priceDelta: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">SKU</Label>
+                  <Input
+                    value={v.sku}
+                    onChange={(e) => setVariant(index, { sku: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">
+                    {v.id ? "Stock (via Inventory)" : "Initial stock"}
+                  </Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    disabled={Boolean(v.id)}
+                    value={v.stock}
+                    onChange={(e) =>
+                      setVariant(index, { stock: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Low-stock alert at</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={v.lowStockThreshold}
+                    onChange={(e) =>
+                      setVariant(index, { lowStockThreshold: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+              {variants.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeVariant(index)}
+                  className="mt-3 inline-flex items-center gap-1 text-xs text-destructive hover:underline"
+                >
+                  <Trash2 size={12} /> Remove variant
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 

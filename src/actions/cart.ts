@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/session";
+import { getDefaultVariant } from "@/lib/inventory";
 
 async function getOrCreateCart(userId: string) {
   const existing = await prisma.cart.findUnique({ where: { userId } });
@@ -12,6 +13,7 @@ async function getOrCreateCart(userId: string) {
 
 export async function addToCart(input: {
   productId?: string;
+  variantId?: string;
   comboId?: string;
   quantity: number;
 }): Promise<{ error?: string }> {
@@ -30,12 +32,19 @@ export async function addToCart(input: {
     });
     if (!product) return { error: "Product not found" };
 
+    const variant = input.variantId
+      ? await prisma.variant.findUnique({ where: { id: input.variantId } })
+      : await getDefaultVariant(prisma, product.id);
+    if (!variant || variant.productId !== product.id) {
+      return { error: "Variant not found" };
+    }
+
     const existingItem = await prisma.cartItem.findUnique({
-      where: { cartId_productId: { cartId: cart.id, productId: product.id } },
+      where: { cartId_variantId: { cartId: cart.id, variantId: variant.id } },
     });
     const nextQty = (existingItem?.quantity ?? 0) + quantity;
-    if (nextQty > product.stockQuantity) {
-      return { error: `Only ${product.stockQuantity} left in stock` };
+    if (nextQty > variant.stock) {
+      return { error: `Only ${variant.stock} left in stock` };
     }
 
     if (existingItem) {
@@ -45,7 +54,12 @@ export async function addToCart(input: {
       });
     } else {
       await prisma.cartItem.create({
-        data: { cartId: cart.id, productId: product.id, quantity },
+        data: {
+          cartId: cart.id,
+          productId: product.id,
+          variantId: variant.id,
+          quantity,
+        },
       });
     }
   } else if (input.comboId) {
@@ -89,7 +103,12 @@ export async function updateCartItemQuantity(
   const session = await requireAuth();
   const item = await prisma.cartItem.findUnique({
     where: { id: cartItemId },
-    include: { cart: true, product: true, combo: { include: { items: { include: { product: true } } } } },
+    include: {
+      cart: true,
+      product: true,
+      variant: true,
+      combo: { include: { items: { include: { product: true } } } },
+    },
   });
   if (!item || item.cart.userId !== session.sub) {
     return { error: "Cart item not found" };
@@ -101,7 +120,10 @@ export async function updateCartItemQuantity(
     return {};
   }
 
-  if (item.product && quantity > item.product.stockQuantity) {
+  if (item.variant && quantity > item.variant.stock) {
+    return { error: `Only ${item.variant.stock} left in stock` };
+  }
+  if (!item.variant && item.product && quantity > item.product.stockQuantity) {
     return { error: `Only ${item.product.stockQuantity} left in stock` };
   }
   if (item.combo) {
