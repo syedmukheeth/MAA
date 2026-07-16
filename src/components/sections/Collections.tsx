@@ -25,7 +25,7 @@ const COLLECTIONS = [
     tagline: "Every meal, a moment.",
     category: "DINING",
     image:
-      "https://images.unsplash.com/photo-1615874959474-d609969a20ed?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1577140917170-285929fb55b7?q=80&w=1600&auto=format&fit=crop",
   },
   {
     name: "Office",
@@ -39,7 +39,7 @@ const COLLECTIONS = [
     tagline: "Bring the living room out.",
     category: "OUTDOOR",
     image:
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=1600&auto=format&fit=crop",
   },
 ];
 
