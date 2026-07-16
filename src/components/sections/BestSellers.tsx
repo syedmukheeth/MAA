@@ -31,7 +31,7 @@ const PRODUCTS = [
     room: "Office",
     price: "₹38,900",
     image:
-      "https://images.unsplash.com/photo-1594620302200-9a762244a156?q=80&w=1200&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1592804589252-3f7cb1ec5cd1?q=80&w=1200&auto=format&fit=crop",
   },
 ];
 

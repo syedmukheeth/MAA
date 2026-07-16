@@ -9,30 +9,35 @@ const COLLECTIONS = [
   {
     name: "Living Room",
     tagline: "Gather. Unwind. Belong.",
+    category: "LIVING_ROOM",
     image:
       "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=1600&auto=format&fit=crop",
   },
   {
     name: "Bedroom",
     tagline: "Rest that feels earned.",
+    category: "BEDROOM",
     image:
       "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?q=80&w=1600&auto=format&fit=crop",
   },
   {
     name: "Dining",
     tagline: "Every meal, a moment.",
+    category: "DINING",
     image:
       "https://images.unsplash.com/photo-1615874959474-d609969a20ed?q=80&w=1600&auto=format&fit=crop",
   },
   {
     name: "Office",
     tagline: "Focus, in comfort.",
+    category: "OFFICE",
     image:
       "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?q=80&w=1600&auto=format&fit=crop",
   },
   {
     name: "Outdoor",
     tagline: "Bring the living room out.",
+    category: "OUTDOOR",
     image:
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop",
   },
@@ -69,7 +74,7 @@ export function Collections() {
                 i === 0 ? "md:col-span-2 md:row-span-1 aspect-[16/9]" : "aspect-[4/5]"
               }`}
             >
-              <Link href="#" className="block h-full w-full">
+              <Link href={`/products?category=${c.category}`} className="block h-full w-full">
                 <Image
                   src={c.image}
                   alt={c.name}
