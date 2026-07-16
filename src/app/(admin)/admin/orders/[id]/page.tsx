@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth/session";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
 import { OrderStatusControl } from "@/components/admin/OrderStatusControl";
 import { BackLink } from "@/components/admin/BackLink";
+import { formatINR } from "@/lib/money";
 
 export default async function AdminOrderDetailPage({
   params,
@@ -61,14 +62,14 @@ export default async function AdminOrderDetailPage({
                 )}
               </span>
               <span className="text-muted-foreground">
-                &#8377;{item.lineTotal.toString()}
+                {formatINR(item.lineTotal.toString())}
               </span>
             </div>
           ))}
         </div>
         <div className="mt-4 flex justify-between border-t border-border pt-4 font-heading text-foreground">
           <span>Total</span>
-          <span>&#8377;{order.total.toString()}</span>
+          <span>{formatINR(order.total.toString())}</span>
         </div>
       </div>
 

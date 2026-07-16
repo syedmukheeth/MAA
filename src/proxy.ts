@@ -2,17 +2,26 @@ import { NextResponse, type NextRequest } from "next/server";
 import { verifySession } from "@/lib/auth/jwt";
 import { SESSION_COOKIE } from "@/lib/auth/session";
 
+/**
+ * Only private areas are matched. The storefront — `/`, `/products/*`,
+ * `/combos/*` — is deliberately absent: it must be crawlable and shareable.
+ * Gating it means Google indexes nothing and WhatsApp/Instagram link previews
+ * die, which for this business is the primary channel.
+ */
 export const config = {
   matcher: [
-    "/",
-    "/products/:path*",
-    "/combos/:path*",
-    "/admin/:path*",
-    "/account/:path*",
-    "/cart/:path*",
-    "/checkout/:path*",
-    "/login",
-    "/register",
+    /*
+     * Match all request paths except for:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - brand (brand assets)
+     * - uploads (uploaded files)
+     * - 403 (access denied page)
+     * - forgot-password, reset-password (password reset flow)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|brand|uploads|403|forgot-password|reset-password).*)",
   ],
 };
 
@@ -31,10 +40,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // App flow starts at login: every area requires a session
+  // Everything still matched here is private.
   if (!session) {
     const loginUrl = new URL("/login", request.url);
-    if (pathname !== "/") loginUrl.searchParams.set("next", pathname);
+    if (pathname !== "/logout") {
+      loginUrl.searchParams.set("next", pathname);
+    }
     const response = NextResponse.redirect(loginUrl);
     if (token) response.cookies.delete(SESSION_COOKIE);
     return response;
@@ -50,6 +61,5 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/admin", request.url));
   }
 
-  // Store, cart, and checkout are open to every signed-in role
   return NextResponse.next();
 }

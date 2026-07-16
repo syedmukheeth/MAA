@@ -68,7 +68,7 @@ export function customRequestNotificationHtml(request: CustomRequestLike) {
       <p style="color:#5c5349;"><strong>${request.name}</strong> &middot; ${request.phone}</p>
       ${request.budgetRange ? `<p style="color:#5c5349;">Budget: ${request.budgetRange}</p>` : ""}
       ${request.description ? `<p style="color:#5c5349;">${request.description}</p>` : ""}
-      <p style="margin-top:16px;"><a href="https://maafurnitures.com/admin/requests" style="color:#a5732f;">View in admin dashboard</a></p>
+      <p style="margin-top:16px;"><a href="https://maafurniture.com/admin/requests" style="color:#a5732f;">View in admin dashboard</a></p>
     `,
     `New request from ${request.name}`
   );

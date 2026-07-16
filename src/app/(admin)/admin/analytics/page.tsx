@@ -9,6 +9,7 @@ import {
   getAverageOrderValue,
   getRepeatCustomerRate,
 } from "@/lib/analytics";
+import { formatINR } from "@/lib/money";
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
@@ -46,7 +47,7 @@ export default async function AnalyticsPage() {
       </h1>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Revenue" value={`₹${totalRevenue.toFixed(0)}`} />
+        <StatCard label="Revenue" value={formatINR(totalRevenue)} />
         <StatCard label="Orders" value={String(orderCounts.total)} />
         <StatCard label="New Customers" value={String(totalSignups)} />
         <StatCard
@@ -55,7 +56,7 @@ export default async function AnalyticsPage() {
         />
         <StatCard
           label="Avg Order Value"
-          value={`₹${aov.averageOrderValue.toFixed(0)}`}
+          value={formatINR(aov.averageOrderValue)}
         />
         <StatCard
           label="Repeat Customer Rate"
@@ -89,7 +90,7 @@ export default async function AnalyticsPage() {
             {revenue.map((r) => (
               <div key={r.date} className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{r.date}</span>
-                <span className="text-foreground">₹{r.revenue.toFixed(0)}</span>
+                <span className="text-foreground">{formatINR(r.revenue)}</span>
               </div>
             ))}
             {revenue.length === 0 && (
@@ -106,7 +107,7 @@ export default async function AnalyticsPage() {
                 <span className="text-muted-foreground">
                   {p.name} &times;{p.quantitySold}
                 </span>
-                <span className="text-foreground">₹{p.revenue.toFixed(0)}</span>
+                <span className="text-foreground">{formatINR(p.revenue)}</span>
               </div>
             ))}
             {topProducts.length === 0 && (
@@ -123,7 +124,7 @@ export default async function AnalyticsPage() {
                 <span className="text-muted-foreground">
                   {c.name} &times;{c.quantitySold}
                 </span>
-                <span className="text-foreground">₹{c.revenue.toFixed(0)}</span>
+                <span className="text-foreground">{formatINR(c.revenue)}</span>
               </div>
             ))}
             {topCombos.length === 0 && (
