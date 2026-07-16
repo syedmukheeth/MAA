@@ -10,6 +10,10 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
+    // DATABASE_URL must point to Supabase transaction-mode pooler (port 6543)
+    // to prevent EMAXCONNSESSION errors in serverless/Next.js deployments.
+    // For running `prisma migrate`, temporarily switch DATABASE_URL to the
+    // direct connection URL (port 5432) or set DIRECT_URL and pass it here.
     url: process.env["DATABASE_URL"],
   },
 });
