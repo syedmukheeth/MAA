@@ -14,6 +14,11 @@ import {
 } from "@/lib/inventory";
 import { sendEmail } from "@/lib/email";
 import { orderConfirmationHtml, orderStatusUpdateHtml } from "@/lib/email-templates";
+import { getSiteSettings } from "@/lib/site-settings";
+import { money, toPaise, type Money } from "@/lib/money";
+import { computeCartTotals } from "@/lib/cart";
+import { recordAudit } from "@/lib/audit";
+import { randomBytes } from "node:crypto";
 
 const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
 
@@ -26,8 +31,20 @@ const STATUS_FLOW: Record<string, string[]> = {
   CANCELLED: [],
 };
 
+/**
+ * Order numbers must be unique, and `orderNumber` carries a UNIQUE constraint.
+ *
+ * The previous `MAA-${Date.now()}` collided whenever two orders landed in the
+ * same millisecond — and the loser wasn't a retry, it was a customer whose
+ * entire checkout transaction rolled back with a constraint violation. Rare,
+ * but it fails at exactly the worst moment: peak traffic.
+ *
+ * Timestamp keeps them roughly sortable; the random suffix removes the race.
+ */
 function generateOrderNumber() {
-  return `MAA-${Date.now().toString(36).toUpperCase()}`;
+  const stamp = Date.now().toString(36).toUpperCase();
+  const rand = randomBytes(3).toString("hex").toUpperCase();
+  return `MAA-${stamp}-${rand}`;
 }
 
 export async function placeOrder(
@@ -56,6 +73,10 @@ export async function placeOrder(
     return { error: "Your cart is empty" };
   }
 
+  // Read outside the transaction: settings are slow-changing config, and the
+  // rate is frozen onto the order below so a later change can't rewrite it.
+  const settings = await getSiteSettings();
+
   try {
     const orderId = await prisma.$transaction(async (tx) => {
       // Aggregate required stock per variant
@@ -75,7 +96,7 @@ export async function placeOrder(
         variantId: string | null;
         variantName: string | null;
         name: string;
-        unitPrice: number;
+        unitPrice: Money;
         quantity: number;
       }[] = [];
 
@@ -90,7 +111,8 @@ export async function placeOrder(
             variantId: variant.id,
             variantName: variant.isDefault ? null : variant.name,
             name: item.product.name,
-            unitPrice: Number(item.product.price) + Number(variant.priceDelta),
+            // Decimal throughout — never Number(). See src/lib/money.ts.
+            unitPrice: toPaise(money(item.product.price).plus(money(variant.priceDelta))),
             quantity: item.quantity,
           });
         } else if (item.combo) {
@@ -108,7 +130,7 @@ export async function placeOrder(
             variantId: null,
             variantName: null,
             name: item.combo.name,
-            unitPrice: Number(item.combo.bundlePrice),
+            unitPrice: toPaise(money(item.combo.bundlePrice)),
             quantity: item.quantity,
           });
         }
@@ -132,17 +154,25 @@ export async function placeOrder(
         name: line.name,
         unitPrice: line.unitPrice,
         quantity: line.quantity,
-        lineTotal: line.unitPrice * line.quantity,
+        lineTotal: toPaise(line.unitPrice.times(line.quantity)),
       }));
 
-      const subtotal = orderItemsData.reduce((sum, i) => sum + i.lineTotal, 0);
+      // Same calculator the cart and checkout used — so what the customer was
+      // shown is what gets charged.
+      const totals = computeCartTotals(
+        orderItemsData.map((i) => i.lineTotal),
+        settings
+      );
 
       const order = await tx.order.create({
         data: {
           orderNumber: generateOrderNumber(),
           userId: session.sub,
-          subtotal,
-          total: subtotal,
+          subtotal: totals.subtotal,
+          deliveryFee: totals.deliveryFee,
+          taxRate: totals.taxRate,
+          taxAmount: totals.taxAmount,
+          total: totals.total,
           shippingName: parsed.data.shippingName,
           shippingPhone: parsed.data.shippingPhone,
           shippingLine1: parsed.data.shippingLine1,
@@ -232,6 +262,23 @@ export async function updateOrderStatus(
       if (nextStatus === "CANCELLED") {
         await restockOrderItems(tx, order, session.sub);
       }
+      // Inside the transaction: the log lands or rolls back with the change.
+      await recordAudit(
+        {
+          actorId: session.sub,
+          action: nextStatus === "CANCELLED" ? "order.cancel" : "order.status_change",
+          entity: "Order",
+          entityId: orderId,
+          summary: `${order.orderNumber}: ${order.status} → ${nextStatus}`,
+          metadata: {
+            from: order.status,
+            to: nextStatus,
+            orderNumber: order.orderNumber,
+            total: order.total.toString(),
+          },
+        },
+        tx
+      );
     });
   } catch (err) {
     return {

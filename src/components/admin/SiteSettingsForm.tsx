@@ -15,6 +15,9 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
     showroomWhatsapp: defaults.showroomWhatsapp ?? "",
     instagramUrl: defaults.instagramUrl ?? "",
     facebookUrl: defaults.facebookUrl ?? "",
+    gstRate: defaults.gstRate ?? "18",
+    deliveryFee: defaults.deliveryFee ?? "0",
+    freeDeliveryThreshold: defaults.freeDeliveryThreshold ?? "",
   });
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -191,6 +194,49 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
             value={values.deliveryMessage}
             onChange={(e) => set("deliveryMessage", e.target.value)}
           />
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="font-heading text-lg text-foreground">Tax & Delivery Settings</h2>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="gstRate">GST Rate (%)</Label>
+            <Input
+              id="gstRate"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              required
+              value={values.gstRate}
+              onChange={(e) => set("gstRate", e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="deliveryFee">Delivery Fee (INR)</Label>
+            <Input
+              id="deliveryFee"
+              type="number"
+              min="0"
+              step="0.01"
+              required
+              value={values.deliveryFee}
+              onChange={(e) => set("deliveryFee", e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="freeDeliveryThreshold">Free Delivery Threshold (INR, optional)</Label>
+            <Input
+              id="freeDeliveryThreshold"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="No free threshold"
+              value={values.freeDeliveryThreshold}
+              onChange={(e) => set("freeDeliveryThreshold", e.target.value)}
+            />
+          </div>
         </div>
       </section>
 

@@ -14,7 +14,9 @@ import {
   Users,
   Settings,
   ShieldCheck,
+  ScrollText,
   Store,
+  MessageSquare,
 } from "lucide-react";
 
 export const NAV_ITEMS: {
@@ -60,6 +62,12 @@ export const NAV_ITEMS: {
     roles: ["OWNER", "ADMIN", "MANAGER"],
   },
   {
+    href: "/admin/testimonials",
+    label: "Testimonials",
+    icon: MessageSquare,
+    roles: ["OWNER", "ADMIN"],
+  },
+  {
     href: "/admin/analytics",
     label: "Analytics",
     icon: BarChart3,
@@ -82,6 +90,13 @@ export const NAV_ITEMS: {
     label: "Roles & Permissions",
     icon: ShieldCheck,
     roles: ["OWNER", "ADMIN", "MANAGER"],
+  },
+  {
+    href: "/admin/audit",
+    label: "Audit Log",
+    icon: ScrollText,
+    // Owner-only: a log the people it watches can curate isn't a control.
+    roles: ["OWNER"],
   },
 ];
 
@@ -112,8 +127,8 @@ export function SidebarNav({
             aria-current={active ? "page" : undefined}
             className={`flex items-center gap-3 rounded-lg border-l-2 px-3 py-2 text-sm transition-colors ${
               active
-                ? "border-[#B08D57] bg-[#2E2820] font-semibold text-[#E6C280]"
-                : "border-transparent text-white/70 hover:bg-white/5 hover:text-white"
+                ? "border-bronze bg-bronze/10 font-semibold text-gold"
+                : "border-transparent text-muted-foreground hover:bg-white/5 hover:text-foreground"
             }`}
           >
             <item.icon size={18} />

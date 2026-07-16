@@ -9,12 +9,17 @@ const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
 
 export async function getProductImageUploadSignature() {
   await requireRole([...MANAGE_ROLES]);
-  return generateUploadSignature("maa-furnitures/products");
+  return generateUploadSignature("maa-furniture/products");
 }
 
 export async function getComboImageUploadSignature() {
   await requireRole([...MANAGE_ROLES]);
-  return generateUploadSignature("maa-furnitures/combos");
+  return generateUploadSignature("maa-furniture/combos");
+}
+
+export async function getTestimonialImageUploadSignature() {
+  await requireRole(["OWNER", "ADMIN"]);
+  return generateUploadSignature("maa-furniture/testimonials");
 }
 
 export async function getCustomRequestUploadSignature(): Promise<
@@ -30,5 +35,5 @@ export async function getCustomRequestUploadSignature(): Promise<
     return { error: "Too many uploads, please try again later." };
   }
 
-  return generateUploadSignature("maa-furnitures/custom-requests");
+  return generateUploadSignature("maa-furniture/custom-requests");
 }

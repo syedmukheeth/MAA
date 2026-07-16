@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/session";
 import { comboSchema, type ComboInput } from "@/lib/validations/combo";
+import { recordAudit } from "@/lib/audit";
 
 const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
 
@@ -84,8 +85,22 @@ export async function updateCombo(
 }
 
 export async function deleteCombo(id: string): Promise<{ error?: string }> {
-  await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...MANAGE_ROLES]);
+  const doomed = await prisma.combo.findUnique({
+    where: { id },
+    select: { name: true, slug: true, bundlePrice: true },
+  });
   await prisma.combo.delete({ where: { id } });
+  await recordAudit({
+    actorId: session.sub,
+    action: "combo.delete",
+    entity: "Combo",
+    entityId: id,
+    summary: `Deleted combo "${doomed?.name ?? id}"`,
+    metadata: doomed
+      ? { name: doomed.name, slug: doomed.slug, bundlePrice: doomed.bundlePrice.toString() }
+      : undefined,
+  });
   revalidatePath("/admin/combos");
   revalidatePath("/combos");
   return {};
@@ -95,8 +110,16 @@ export async function toggleComboActive(
   id: string,
   isActive: boolean
 ): Promise<{ error?: string }> {
-  await requireRole([...MANAGE_ROLES]);
-  await prisma.combo.update({ where: { id }, data: { isActive } });
+  const session = await requireRole([...MANAGE_ROLES]);
+  const combo = await prisma.combo.update({ where: { id }, data: { isActive } });
+  await recordAudit({
+    actorId: session.sub,
+    action: "combo.toggle_active",
+    entity: "Combo",
+    entityId: id,
+    summary: `${combo.name} ${isActive ? "activated" : "deactivated"}`,
+    metadata: { isActive },
+  });
   revalidatePath("/admin/combos");
   revalidatePath("/combos");
   return {};

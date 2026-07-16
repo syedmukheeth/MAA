@@ -3,6 +3,13 @@ import { prisma } from "@/lib/db";
 export const SETTINGS_ID = "singleton";
 
 export const DEFAULT_SITE_SETTINGS = {
+  // Money is carried as strings, not Decimal: this object crosses the
+  // server/client boundary into section components, and Decimal isn't
+  // serialisable. Callers doing arithmetic wrap with money() from @/lib/money.
+  gstRate: "18",
+  deliveryFee: "0",
+  freeDeliveryThreshold: null as string | null,
+
   heroHeadline: "Crafted For Homes.\nBuilt For Generations.",
   heroSubtext:
     "Premium handcrafted furniture designed to bring timeless beauty and lasting comfort into every space.",
@@ -38,6 +45,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     });
     if (!row) return DEFAULT_SITE_SETTINGS;
     return {
+      gstRate: row.gstRate.toString(),
+      deliveryFee: row.deliveryFee.toString(),
+      freeDeliveryThreshold: row.freeDeliveryThreshold?.toString() ?? null,
       heroHeadline: row.heroHeadline,
       heroSubtext: row.heroSubtext,
       heroImageUrl: row.heroImageUrl,
