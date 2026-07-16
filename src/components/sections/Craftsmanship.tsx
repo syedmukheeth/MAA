@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -49,67 +51,146 @@ const STEPS = [
 export function Craftsmanship() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) return;
+
     const section = sectionRef.current;
     if (!section) return;
 
     const triggers = STEPS.map((_, i) =>
       ScrollTrigger.create({
         trigger: section,
-        start: `${i / STEPS.length * 100}% top`,
-        end: `${(i + 1) / STEPS.length * 100}% top`,
+        start: `${(i / STEPS.length) * 100}% top`,
+        end: `${((i + 1) / STEPS.length) * 100}% top`,
         onToggle: (self) => self.isActive && setActive(i),
       })
     );
 
     return () => triggers.forEach((t) => t.kill());
-  }, []);
+  }, [isMobile]);
+
+  const nextSlide = () => setActive((prev) => (prev + 1) % STEPS.length);
+  const prevSlide = () => setActive((prev) => (prev - 1 + STEPS.length) % STEPS.length);
 
   return (
     <section
       id="craftsmanship"
       ref={sectionRef}
       className="relative bg-charcoal"
-      style={{ height: `${STEPS.length * 100}vh` }}
+      style={isMobile ? { height: "75vh", minHeight: "500px" } : { height: `${STEPS.length * 100}vh` }}
     >
-      <div className="sticky top-0 h-screen overflow-hidden">
-        {STEPS.map((step, i) => (
-          <div
-            key={step.title}
-            className="absolute inset-0 transition-opacity duration-700"
-            style={{ opacity: active === i ? 1 : 0 }}
-          >
-            <Image
-              src={step.image}
-              alt={step.title}
-              fill
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/40 to-charcoal/60" />
+      <div className={isMobile ? "relative h-full w-full overflow-hidden flex flex-col justify-end" : "sticky top-0 h-screen overflow-hidden"}>
+        {/* Background Images */}
+        {isMobile ? (
+          <div className="absolute inset-0 overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={active}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="absolute inset-0"
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.5}
+                onDragEnd={(e, info) => {
+                  if (info.offset.x < -50) {
+                    nextSlide();
+                  } else if (info.offset.x > 50) {
+                    prevSlide();
+                  }
+                }}
+              >
+                <Image
+                  src={STEPS[active].image}
+                  alt={STEPS[active].title}
+                  fill
+                  className="object-cover select-none pointer-events-none"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/95 via-charcoal/50 to-charcoal/60" />
+              </motion.div>
+            </AnimatePresence>
           </div>
-        ))}
+        ) : (
+          STEPS.map((step, i) => (
+            <div
+              key={step.title}
+              className="absolute inset-0 transition-opacity duration-700"
+              style={{ opacity: active === i ? 1 : 0 }}
+            >
+              <Image
+                src={step.image}
+                alt={step.title}
+                fill
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/40 to-charcoal/60" />
+            </div>
+          ))
+        )}
 
-        <div className="relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-end px-6 pb-24 lg:px-10">
+        {/* Content Area */}
+        <div className="relative z-10 mx-auto flex h-full w-full max-w-7xl flex-col justify-end px-6 pb-16 lg:px-10">
           <p className="text-xs uppercase tracking-[0.35em] text-bronze">
             The Art of Craftsmanship
           </p>
-          <div className="mt-6 flex items-baseline gap-4">
-            <span className="font-heading text-2xl text-bronze">
-              0{active + 1}
-            </span>
-            <h3 className="font-heading text-4xl text-ivory sm:text-5xl">
-              {STEPS[active].title}
-            </h3>
+          <div className="mt-6 flex items-center justify-between">
+            <div className="flex items-baseline gap-4">
+              <span className="font-heading text-2xl text-bronze">
+                0{active + 1}
+              </span>
+              <h3 className="font-heading text-4xl text-ivory sm:text-5xl">
+                {STEPS[active].title}
+              </h3>
+            </div>
+            
+            {/* Mobile Navigation Chevrons */}
+            {isMobile && (
+              <div className="flex gap-3">
+                <button
+                  onClick={prevSlide}
+                  aria-label="Previous step"
+                  className="rounded-full border border-ivory/20 p-2 text-ivory hover:border-bronze hover:text-bronze bg-charcoal/40 backdrop-blur-xs transition-colors cursor-pointer"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  aria-label="Next step"
+                  className="rounded-full border border-ivory/20 p-2 text-ivory hover:border-bronze hover:text-bronze bg-charcoal/40 backdrop-blur-xs transition-colors cursor-pointer"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
           </div>
-          <p className="mt-4 max-w-lg text-ivory/75">{STEPS[active].desc}</p>
+          
+          <p className="mt-4 max-w-lg text-ivory/75 min-h-[60px]">{STEPS[active].desc}</p>
 
+          {/* Clickable progress bars */}
           <div className="mt-10 flex gap-2">
             {STEPS.map((_, i) => (
-              <span
+              <button
                 key={i}
-                className={`h-1 flex-1 rounded-full transition-colors duration-500 ${
-                  i <= active ? "bg-bronze" : "bg-ivory/20"
+                onClick={() => setActive(i)}
+                aria-label={`Go to step ${i + 1}`}
+                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                  i === active 
+                    ? "bg-bronze flex-[2]" 
+                    : i < active 
+                      ? "bg-bronze/60 flex-1" 
+                      : "bg-ivory/20 flex-1"
                 }`}
               />
             ))}

@@ -60,14 +60,25 @@ export default function RegisterPage() {
           )}
         </div>
 
-        {serverError && <p className="text-sm text-brand-red">{serverError}</p>}
+        {serverError && (
+          <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-500 font-medium">
+            {serverError}
+          </div>
+        )}
 
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-full bg-bronze text-ivory hover:bg-bronze/90"
+          className="w-full rounded-full bg-bronze text-ivory hover:bg-bronze/90 flex items-center justify-center gap-2"
         >
-          {isSubmitting ? "Creating account..." : "Create Account"}
+          {isSubmitting ? (
+            <>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-ivory border-t-transparent" />
+              <span>Creating account...</span>
+            </>
+          ) : (
+            "Create Account"
+          )}
         </Button>
       </form>
 

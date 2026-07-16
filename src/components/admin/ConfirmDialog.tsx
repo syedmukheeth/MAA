@@ -29,7 +29,7 @@ export function ConfirmDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
-      <DialogContent>
+      <DialogContent className="dark">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
