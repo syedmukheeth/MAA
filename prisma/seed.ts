@@ -318,7 +318,7 @@ const PRODUCTS: SeedProduct[] = [
     category: "OUTDOOR",
     materials: ["Acacia"],
     dimensions: '36" x 12" x 40"',
-    images: [unsplash("photo-1585320806297-9794b3e4eeae")],
+    images: [unsplash("photo-1485955900006-10f4d324d411")],
     variants: [{ name: "Default", stock: 18 }],
   },
 ];
