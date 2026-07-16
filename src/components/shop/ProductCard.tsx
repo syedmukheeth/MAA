@@ -20,14 +20,24 @@ export function ProductCard({ product }: { product: ProductCardData }) {
 
   return (
     <Link href={`/products/${product.slug}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-cream">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-cream border border-linen/60 transition-colors duration-300 group-hover:border-bronze/30">
         {image ? (
-          <Image
-            src={image}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-105"
-          />
+          <>
+            <Image
+              src={image}
+              alt={product.name}
+              fill
+              className="object-cover transition-transform duration-700 ease-out group-hover:scale-104"
+            />
+            {product.images[1] && (
+              <Image
+                src={product.images[1]}
+                alt={product.name}
+                fill
+                className="object-cover absolute inset-0 opacity-0 transition-opacity duration-700 ease-in-out group-hover:opacity-100"
+              />
+            )}
+          </>
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-graphite/40">
             No image
@@ -39,13 +49,13 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           </span>
         )}
       </div>
-      <p className="mt-4 text-xs uppercase tracking-wider text-bronze">
+      <p className="mt-4 text-[10px] uppercase tracking-[0.2em] font-semibold text-bronze">
         {CATEGORY_LABELS[product.category]}
       </p>
-      <h3 className="mt-1 font-heading text-lg text-charcoal">
+      <h3 className="mt-1 font-heading text-base text-charcoal group-hover:text-bronze transition-colors duration-300">
         {product.name}
       </h3>
-      <p className="mt-1 text-sm text-graphite/70">&#8377;{product.price}</p>
+      <p className="mt-1 text-sm font-medium text-graphite/80">&#8377;{product.price}</p>
     </Link>
   );
 }

@@ -112,8 +112,8 @@ export function SidebarNav({
             aria-current={active ? "page" : undefined}
             className={`flex items-center gap-3 rounded-lg border-l-2 px-3 py-2 text-sm transition-colors ${
               active
-                ? "border-bronze bg-bronze/15 font-medium text-bronze"
-                : "border-transparent text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                ? "border-[#B08D57] bg-[#2E2820] font-semibold text-[#E6C280]"
+                : "border-transparent text-white/70 hover:bg-white/5 hover:text-white"
             }`}
           >
             <item.icon size={18} />

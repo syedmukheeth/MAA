@@ -250,7 +250,7 @@ const PRODUCTS: SeedProduct[] = [
     category: "OFFICE",
     materials: ["Mango Wood", "Iron"],
     dimensions: '32" x 14" x 74"',
-    images: [unsplash("photo-1594620302200-9a762244a156")],
+    images: [unsplash("photo-1592804589252-3f7cb1ec5cd1")],
     variants: [
       { name: "5-tier", size: "5-tier", stock: 6 },
       { name: "3-tier", size: "3-tier", priceDelta: -6500, stock: 9 },

@@ -2,6 +2,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { getSiteSettings } from "@/lib/site-settings";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getCartItemCount } from "@/lib/cart";
 
 export default async function ShopLayout({
   children,
@@ -13,9 +14,11 @@ export default async function ShopLayout({
     getCurrentUser(),
   ]);
 
+  const cartItemCount = user ? await getCartItemCount(user.sub) : 0;
+
   return (
     <>
-      <Navbar user={user ? { role: user.role } : null} />
+      <Navbar user={user ? { role: user.role } : null} cartItemCount={cartItemCount} />
       <main className="flex-1 pt-20">{children}</main>
       <Footer
         instagramUrl={settings.instagramUrl}

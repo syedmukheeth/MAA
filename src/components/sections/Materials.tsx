@@ -32,7 +32,7 @@ const MATERIALS = [
 
 export function Materials() {
   return (
-    <section className="bg-ivory px-6 py-28 lg:px-10">
+    <section id="materials" className="bg-ivory px-6 py-28 lg:px-10">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 max-w-2xl">
           <p className="text-xs uppercase tracking-[0.35em] text-bronze">

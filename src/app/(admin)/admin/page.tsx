@@ -107,29 +107,29 @@ export default async function AdminOverviewPage() {
         Today&apos;s snapshot of the store.
       </p>
 
-      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-3">
+      <div className="mt-8 grid grid-cols-2 gap-5 lg:grid-cols-3">
         {cards.map((card) => (
           <Link
             key={card.label}
             href={card.href}
-            className={`rounded-xl border p-5 transition-colors hover:border-bronze/60 ${
+            className={`rounded-xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
               card.alert
-                ? "border-amber-500/40 bg-amber-500/5"
-                : "border-border"
+                ? "border-amber-500/40 bg-amber-500/5 hover:border-amber-500 hover:bg-amber-500/10"
+                : "border-white/5 bg-[#1E1B18] hover:border-[#B08D57]/40 hover:bg-[#25211e]"
             }`}
           >
             <div className="flex items-center justify-between">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              <p className="text-[10px] uppercase tracking-widest font-semibold text-white/50">
                 {card.label}
               </p>
               <card.icon
                 size={16}
-                className={card.alert ? "text-amber-500" : "text-muted-foreground"}
+                className={card.alert ? "text-amber-500" : "text-[#B08D57]"}
               />
             </div>
             <p
-              className={`mt-2 font-heading text-2xl ${
-                card.alert ? "text-amber-500" : "text-foreground"
+              className={`mt-4 font-heading text-3xl font-bold tracking-tight ${
+                card.alert ? "text-amber-500" : "text-white"
               }`}
             >
               {card.value}

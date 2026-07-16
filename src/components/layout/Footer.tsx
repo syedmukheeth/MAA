@@ -18,7 +18,7 @@ const COLUMNS = [
     links: [
       { label: "Custom Furniture", href: "/#custom-studio" },
       { label: "Combo Offers", href: "/combos" },
-      { label: "Materials", href: "/#craftsmanship" },
+      { label: "Materials", href: "/#materials" },
       { label: "Room Inspirations", href: "/#room-inspirations" },
     ],
   },

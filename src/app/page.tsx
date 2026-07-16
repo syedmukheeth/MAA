@@ -13,6 +13,7 @@ import { TrustBuilders } from "@/components/sections/TrustBuilders";
 import { ShowroomFaqContact } from "@/components/sections/ShowroomFaqContact";
 import { getSiteSettings } from "@/lib/site-settings";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getCartItemCount } from "@/lib/cart";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +23,11 @@ export default async function Home() {
     getCurrentUser(),
   ]);
 
+  const cartItemCount = user ? await getCartItemCount(user.sub) : 0;
+
   return (
     <>
-      <Navbar user={user ? { role: user.role } : null} />
+      <Navbar user={user ? { role: user.role } : null} cartItemCount={cartItemCount} />
       <main className="flex-1">
         <Hero
           headline={settings.heroHeadline}
