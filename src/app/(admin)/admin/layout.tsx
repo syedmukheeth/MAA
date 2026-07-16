@@ -15,9 +15,9 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="dark flex min-h-screen bg-background text-foreground">
+    <div className="dark flex h-screen w-full max-w-full overflow-hidden bg-background text-foreground">
       <Sidebar role={user.role} />
-      <div className="flex min-h-screen flex-1 flex-col">
+      <div className="flex h-screen flex-1 flex-col min-w-0 overflow-hidden">
         <Topbar email={user.email} role={user.role} />
         <main className="flex-1 overflow-y-auto p-6 lg:p-8">{children}</main>
       </div>

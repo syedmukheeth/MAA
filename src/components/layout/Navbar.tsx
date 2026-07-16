@@ -3,8 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Menu, ShoppingCart, User, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { LayoutDashboard, Menu, ShoppingCart, User, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { logoutAction } from "@/actions/auth";
 
 const NAV_LINKS = [
   { label: "Shop", href: "/products" },
@@ -20,6 +22,7 @@ export type NavbarUser = {
 } | null;
 
 export function Navbar({ user = null }: { user?: NavbarUser }) {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -30,7 +33,8 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const solid = scrolled || open;
+  const isHome = pathname === "/";
+  const solid = !isHome || scrolled || open;
   const isStaff = user != null && user.role !== "CUSTOMER";
 
   const accountLinks = user
@@ -41,6 +45,16 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
         { label: "Cart", href: "/cart", icon: ShoppingCart },
       ]
     : [{ label: "Log In", href: "/login", icon: User }];
+
+  const isLinkActive = (href: string) => {
+    if (href.startsWith("/#")) {
+      return pathname === "/";
+    }
+    if (href === "/products") {
+      return pathname.startsWith("/products") || pathname.startsWith("/product/");
+    }
+    return pathname.startsWith(href);
+  };
 
   return (
     <header
@@ -70,18 +84,25 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
         </Link>
 
         <ul className="hidden items-center gap-7 lg:flex">
-          {NAV_LINKS.map((link) => (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                className={`text-sm tracking-wide transition-colors hover:text-bronze ${
-                  solid ? "text-graphite" : "text-ivory/90"
-                }`}
-              >
-                {link.label}
-              </Link>
-            </li>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const active = isLinkActive(link.href);
+            return (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className={`text-sm tracking-wide transition-colors hover:text-bronze ${
+                    active
+                      ? "text-bronze font-semibold"
+                      : solid
+                        ? "text-graphite"
+                        : "text-ivory/90"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="hidden items-center gap-3 lg:flex">
@@ -100,6 +121,21 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
               <link.icon size={17} />
             </Link>
           ))}
+          {user && (
+            <form action={logoutAction}>
+              <button
+                type="submit"
+                title="Log Out"
+                className={`rounded-full border p-2.5 transition-colors hover:border-destructive hover:text-destructive cursor-pointer ${
+                  solid
+                    ? "border-border text-graphite"
+                    : "border-ivory/30 text-ivory"
+                }`}
+              >
+                <LogOut size={17} />
+              </button>
+            </form>
+          )}
           <Button
             render={<Link href="/#custom-studio" />}
             className="rounded-full bg-bronze px-6 text-ivory hover:bg-bronze/90"
@@ -120,17 +156,22 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
       {open && (
         <div className="border-t border-border bg-ivory px-6 py-6 lg:hidden">
           <ul className="flex flex-col gap-5">
-            {NAV_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="text-base text-charcoal"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+            {NAV_LINKS.map((link) => {
+              const active = isLinkActive(link.href);
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    className={`text-base transition-colors hover:text-bronze ${
+                      active ? "text-bronze font-semibold" : "text-charcoal"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              );
+            })}
             {accountLinks.map((link) => (
               <li key={link.href}>
                 <Link
@@ -143,6 +184,19 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
                 </Link>
               </li>
             ))}
+            {user && (
+              <li>
+                <form action={logoutAction}>
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 text-base text-brand-red hover:underline cursor-pointer bg-transparent border-0 p-0"
+                  >
+                    <LogOut size={17} />
+                    Log Out
+                  </button>
+                </form>
+              </li>
+            )}
           </ul>
         </div>
       )}

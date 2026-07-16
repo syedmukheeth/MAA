@@ -189,7 +189,7 @@ function ReceiveDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent className="dark">
         <DialogHeader>
           <DialogTitle>Receive stock</DialogTitle>
           <DialogDescription>
@@ -263,7 +263,7 @@ function AdjustDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent className="dark">
         <DialogHeader>
           <DialogTitle>Adjust stock</DialogTitle>
           <DialogDescription>
