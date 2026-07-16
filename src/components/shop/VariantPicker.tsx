@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AddToCartButton } from "@/components/shop/AddToCartButton";
+import { motion, AnimatePresence } from "framer-motion";
 
 export type VariantOption = {
   id: string;
@@ -27,6 +28,18 @@ function formatInr(value: number) {
   return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(
     value
   );
+}
+
+function getWoodColorHex(wood: string | null): string | null {
+  if (!wood) return null;
+  const w = wood.toLowerCase().trim();
+  if (w.includes("teak")) return "#8B5E3C";
+  if (w.includes("walnut")) return "#5C4033";
+  if (w.includes("oak")) return "#C2A278";
+  if (w.includes("mahogany")) return "#4A2511";
+  if (w.includes("rosewood") || w.includes("sheesham")) return "#3D1E12";
+  if (w.includes("ash")) return "#E3D4C1";
+  return null;
 }
 
 export function VariantPicker({
@@ -64,15 +77,28 @@ export function VariantPicker({
 
   return (
     <div>
-      <p className="text-2xl text-charcoal">&#8377;{formatInr(price)}</p>
+      <div className="overflow-hidden h-10 flex flex-col justify-center">
+        <AnimatePresence mode="popLayout">
+          <motion.p
+            key={price}
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 15 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="text-2xl font-semibold text-charcoal"
+          >
+            &#8377;{formatInr(price)}
+          </motion.p>
+        </AnimatePresence>
+      </div>
 
-      <p className="mt-2 text-sm">
+      <p className="mt-1.5 text-xs font-semibold tracking-wide">
         {!inStock ? (
-          <span className="text-brand-red">Out of stock</span>
+          <span className="text-brand-red bg-brand-red/10 px-2.5 py-1 rounded-full">Out of stock</span>
         ) : lowStock ? (
-          <span className="text-amber-600">Only {selected.stock} left</span>
+          <span className="text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">Only {selected.stock} left</span>
         ) : (
-          <span className="text-graphite/60">In stock</span>
+          <span className="text-sage bg-sage/10 px-2.5 py-1 rounded-full">In stock</span>
         )}
       </p>
 
@@ -87,11 +113,11 @@ export function VariantPicker({
               display={(v) => v.name}
             />
           ) : (
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-[0.25em] text-graphite/50">
+            <div className="space-y-2.5">
+              <p className="text-[10px] uppercase tracking-[0.2em] font-semibold text-graphite/50">
                 {activeAttrs.map((a) => a.label).join(" / ")}
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2.5">
                 {variants.map((v) => {
                   const label =
                     activeAttrs
@@ -99,24 +125,31 @@ export function VariantPicker({
                       .filter(Boolean)
                       .join(" · ") || v.name;
                   const isSelected = v.id === selectedId;
+                  const woodColor = getWoodColorHex(v.woodType);
                   return (
                     <button
                       key={v.id}
                       type="button"
                       onClick={() => setSelectedId(v.id)}
-                      className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                      className={`inline-flex items-center gap-2 rounded-full border px-4.5 py-2 text-xs uppercase tracking-wider font-semibold transition-all duration-300 cursor-pointer ${
                         isSelected
-                          ? "border-bronze bg-bronze text-ivory"
+                          ? "border-[#B08D57] bg-[#B08D57] text-ivory scale-[1.02] shadow-sm"
                           : v.stock > 0
-                            ? "border-border text-graphite/80 hover:border-bronze/60"
-                            : "border-border text-graphite/40 line-through"
+                            ? "border-linen text-graphite/80 bg-white/40 hover:border-bronze/60 hover:bg-white"
+                            : "border-linen/40 text-graphite/30 line-through bg-transparent"
                       }`}
                     >
-                      {label}
+                      {woodColor && (
+                        <span
+                          className="inline-block size-3.5 shrink-0 rounded-full border border-black/10 shadow-xs"
+                          style={{ backgroundColor: woodColor }}
+                        />
+                      )}
+                      <span>{label}</span>
                       {v.priceDelta !== 0 && (
-                        <span className="ml-1 opacity-70">
-                          {v.priceDelta > 0 ? "+" : "−"}&#8377;
-                          {formatInr(Math.abs(v.priceDelta))}
+                        <span className={`ml-1 text-[10px] opacity-75 ${isSelected ? "text-ivory" : "text-bronze"}`}>
+                          ({v.priceDelta > 0 ? "+" : "−"}&#8377;
+                          {formatInr(Math.abs(v.priceDelta))})
                         </span>
                       )}
                     </button>

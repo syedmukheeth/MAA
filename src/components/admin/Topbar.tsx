@@ -62,13 +62,13 @@ export function Topbar({
       <div className="flex items-center gap-4">
         <Link
           href="/"
-          className="flex items-center gap-2 rounded-full border border-bronze/50 px-4 py-1.5 text-sm text-bronze transition-colors hover:bg-bronze hover:text-ivory"
+          className="flex items-center gap-2 rounded-full border border-bronze/50 px-3 py-1.5 text-sm text-bronze transition-colors hover:bg-bronze hover:text-ivory"
         >
           <Store size={15} />
-          <span>Visit Store</span>
+          <span className="hidden sm:inline">Visit Store</span>
         </Link>
-        <div className="text-right">
-          <p className="text-sm text-foreground">{email}</p>
+        <div className="hidden md:block text-right">
+          <p className="text-sm text-foreground max-w-[150px] truncate">{email}</p>
           <p className="text-xs capitalize text-muted-foreground">
             {role.toLowerCase()}
           </p>
@@ -77,7 +77,7 @@ export function Topbar({
           <button
             type="submit"
             aria-label="Log out"
-            className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:text-foreground"
+            className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:text-foreground cursor-pointer flex items-center justify-center"
           >
             <LogOut size={16} />
           </button>
