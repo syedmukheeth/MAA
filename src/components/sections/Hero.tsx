@@ -35,7 +35,9 @@ export function Hero({
           priority
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/30 to-charcoal/50" />
+        {/* Layered overlay: baseline 35% darkness + smooth top and bottom gradients to secure navbar and button contrast */}
+        <div className="absolute inset-0 bg-black/35" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/75" />
       </motion.div>
 
       <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-6 text-center">
@@ -43,7 +45,7 @@ export function Hero({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="text-xs font-semibold uppercase tracking-[0.4em] text-gold drop-shadow-lg"
+          className="text-xs font-semibold uppercase tracking-[0.4em] text-gold drop-shadow-md"
         >
           {deliveryMessage}
         </motion.p>
@@ -52,7 +54,7 @@ export function Hero({
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.5 }}
-          className="mt-6 font-heading text-5xl leading-[1.05] text-ivory sm:text-6xl lg:text-7xl"
+          className="mt-6 font-heading text-5xl leading-[1.15] text-ivory sm:text-6xl lg:text-7xl drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
         >
           {headline.split("\n").map((line, i) => (
             <span key={i}>
@@ -66,7 +68,7 @@ export function Hero({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.75 }}
-          className="mt-7 max-w-xl text-base leading-relaxed text-ivory/80 sm:text-lg"
+          className="mt-7 max-w-xl text-base leading-relaxed text-ivory/95 sm:text-lg drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)] font-medium"
         >
           {subtext}
         </motion.p>
@@ -80,7 +82,7 @@ export function Hero({
           <Button
             render={<Link href="#collections" />}
             size="lg"
-            className="rounded-full bg-ivory px-8 text-charcoal hover:bg-ivory/90"
+            className="rounded-full bg-bronze px-8 text-ivory hover:bg-bronze/90 shadow-md transition-all hover:shadow-lg cursor-pointer"
           >
             Explore Collection
           </Button>
@@ -88,7 +90,7 @@ export function Hero({
             render={<Link href="#custom-studio" />}
             size="lg"
             variant="outline"
-            className="rounded-full border-ivory/40 bg-transparent px-8 text-ivory hover:bg-ivory/10"
+            className="rounded-full border-ivory/80 bg-transparent px-8 text-ivory hover:bg-ivory hover:text-charcoal shadow-md transition-all cursor-pointer"
           >
             Design Custom Furniture
           </Button>

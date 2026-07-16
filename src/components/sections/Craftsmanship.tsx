@@ -16,7 +16,7 @@ const STEPS = [
     title: "Raw Wood",
     desc: "Sourced sustainably, seasoned for years before it ever touches a blade.",
     image:
-      "https://images.unsplash.com/photo-1601058268499-e52658b8bb88?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1588854337236-6889d631faa8?q=80&w=1600&auto=format&fit=crop",
   },
   {
     title: "Precision Cutting",
@@ -28,25 +28,25 @@ const STEPS = [
     title: "Assembly",
     desc: "Joinery over hardware wherever possible, built to outlast trends.",
     image:
-      "https://images.unsplash.com/photo-1509365465985-25d11c17e812?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1610557892470-76d747e4927f?q=80&w=1600&auto=format&fit=crop",
   },
   {
     title: "Hand Finishing",
     desc: "Sanded, oiled, and sealed by hand across multiple passes.",
     image:
-      "https://images.unsplash.com/photo-1595428774223-ef52624120d2?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=1600&auto=format&fit=crop",
   },
   {
     title: "Quality Inspection",
     desc: "Every joint, every finish, checked against a master craftsman's eye.",
     image:
-      "https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?q=80&w=1600&auto=format&fit=crop",
   },
   {
     title: "Delivery",
     desc: "White-glove delivery and placement, straight into your home.",
     image:
-      "https://images.unsplash.com/photo-1600585152220-90363fe7e115?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1600&auto=format&fit=crop",
   },
 ];
 

@@ -31,6 +31,7 @@ export function Navbar({
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -39,13 +40,44 @@ export function Navbar({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    if (pathname !== "/") return;
+
+    const handleScroll = () => {
+      const sections = ["collections", "craftsmanship", "custom-studio", "showroom"];
+      let currentSection = "";
+      sections.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top < 300 && rect.bottom > 100) {
+            currentSection = id;
+          }
+        }
+      });
+      setActiveSection(currentSection);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    
+    // Call asynchronously to prevent cascading render warning
+    const timer = setTimeout(handleScroll, 0);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(timer);
+    };
+  }, [pathname]);
+
   const isHome = pathname === "/";
   const solid = !isHome || scrolled || open;
   const isStaff = user != null && user.role !== "CUSTOMER";
 
   const isLinkActive = (href: string) => {
     if (href.startsWith("/#")) {
-      return pathname === "/";
+      if (pathname !== "/") return false;
+      const id = href.substring(2);
+      return activeSection === id;
     }
     if (href === "/products") {
       return pathname.startsWith("/products") || pathname.startsWith("/product/");
