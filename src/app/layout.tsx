@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
+import { MotionProvider } from "@/components/MotionProvider";
+import { getSiteUrl, SITE_NAME } from "@/lib/site-url";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,9 +21,28 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "MAA FURNITURE | Crafted For Homes, Built For Generations",
+  // Without metadataBase, relative OG image paths resolve to localhost in
+  // production and every link preview breaks.
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default: "MAA FURNITURE | Crafted For Homes, Built For Generations",
+    // Product/combo pages supply their own name; this frames it.
+    template: "%s | MAA FURNITURE",
+  },
   description:
-    "Premium handcrafted furniture designed to bring timeless beauty and lasting comfort into every space.",
+    "Premium handcrafted furniture designed to bring timeless beauty and lasting comfort into every space. Handcrafted in Kurnool, delivered across India.",
+  applicationName: SITE_NAME,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    siteName: SITE_NAME,
+    title: "MAA FURNITURE | Crafted For Homes, Built For Generations",
+    description:
+      "Premium handcrafted furniture, built to outlast trends. Handcrafted in Kurnool, delivered across India.",
+  },
+  twitter: { card: "summary_large_image" },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
@@ -35,7 +56,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        {children}
+        <MotionProvider>{children}</MotionProvider>
       </body>
     </html>
   );

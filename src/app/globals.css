@@ -17,6 +17,7 @@
   --color-charcoal: var(--charcoal);
   --color-graphite: var(--graphite);
   --color-bronze: var(--bronze);
+  --color-gold: var(--gold);
   --color-brand-red: var(--brand-red);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -57,15 +58,36 @@
 }
 
 :root {
+  /* ── Brand layer ──────────────────────────────────────────────────────────
+     Named for what the colour IS. Components reference the semantic layer
+     below, never these directly. Verified with:
+       node ~/.claude/skills/brand-system/scripts/contrast.mjs src/app/globals.css
+     ------------------------------------------------------------------------ */
   --ivory: oklch(0.98 0.006 85);
   --cream: oklch(0.95 0.014 85);
-  --oak: oklch(0.72 0.045 70);
-  --walnut: oklch(0.4 0.045 55);
   --charcoal: oklch(0.24 0.008 55);
   --graphite: oklch(0.32 0.006 55);
-  --bronze: oklch(0.6 0.09 55);
+
+  /* Accent SURFACE (buttons, and accent text on light backgrounds).
+     0.52, not 0.6: at 0.6 this scored 3.83:1 against ivory both ways, which
+     failed AA on the Add-to-Cart button and is the "bronze too faint on mobile"
+     report in updates01.md. Now 5.36:1 in both directions. */
+  --bronze: oklch(0.52 0.09 55);
+
+  /* Accent TEXT for dark surfaces. Bronze on the dark admin canvas is only
+     3.48:1; this is 11.63:1. It previously existed as a hardcoded #E6C280 in 13
+     places precisely because no such token was defined. */
+  --gold: oklch(0.83 0.095 81);
+
   --brand-red: oklch(0.55 0.19 15);
 
+  /* Timber swatches — these depict real wood on the variant picker. They are
+     product data, not UI theme, and are the one place a literal colour is the
+     subject rather than the styling. */
+  --oak: oklch(0.72 0.045 70);
+  --walnut: oklch(0.4 0.045 55);
+
+  /* ── Semantic layer ───────────────────────────────────────────────────── */
   --background: var(--ivory);
   --foreground: var(--charcoal);
   --card: oklch(1 0 0);
@@ -80,7 +102,7 @@
   --muted-foreground: var(--graphite);
   --accent: var(--bronze);
   --accent-foreground: var(--ivory);
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: var(--brand-red);
   --border: oklch(0.88 0.012 75);
   --input: oklch(0.88 0.012 75);
   --ring: var(--bronze);
@@ -100,12 +122,28 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* ── Dark scope = the back office ───────────────────────────────────────────
+   NOT a public theme toggle. `.dark` is applied by (admin)/admin/layout.tsx and
+   by several admin dialogs/sheets — it is what makes the back office dark. It
+   is deliberately dark-locked; the storefront is always light.
+
+   Brand tokens are redeclared below. They previously weren't, so the dark admin
+   inherited light-mode brand colours on a dark canvas — which is exactly why
+   Sidebar.tsx had to hardcode #B08D57 / #2E2820 / #E6C280 to get a usable
+   active state. Fix the scope and the hardcodes become unnecessary.
+
+   `--bronze` is intentionally NOT overridden: it's an accent *surface* always
+   paired with ivory text, so it carries its own 5.36:1 on any canvas.
+   -------------------------------------------------------------------------- */
 .dark {
-  --background: oklch(0.145 0 0);
+  /* Warm-neutral, not pure grey: a heritage timber brand's back office should
+     share the brand's warmth. The greys here were shadcn defaults, which is why
+     admin/page.tsx hardcoded bg-[#1E1B18] to get a warm card. */
+  --background: oklch(0.145 0.004 75);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.205 0.008 75);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.205 0.008 75);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
@@ -113,12 +151,16 @@
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+
+  /* Warm highlight surface + gold text: the branded active state, replacing
+     bg-[#2E2820] text-[#E6C280]. 9.69:1 AAA. */
+  --accent: oklch(0.24 0.015 75);
+  --accent-foreground: var(--gold);
+
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: var(--gold);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -126,12 +168,14 @@
   --chart-5: oklch(0.269 0 0);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  /* Was oklch(0.488 0.243 264.376) — a violet from the shadcn default that has
+     nothing to do with this brand. */
+  --sidebar-primary: var(--bronze);
+  --sidebar-primary-foreground: var(--ivory);
+  --sidebar-accent: oklch(0.24 0.015 75);
+  --sidebar-accent-foreground: var(--gold);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: var(--gold);
 }
 
 @layer base {
@@ -154,4 +198,24 @@
 
 .animate-loading-slide {
   animation: loading-slide 1.5s infinite ease-in-out;
+}
+
+/* ── Reduced motion (WCAG 2.3.3) ────────────────────────────────────────────
+   Framer animations are handled by <MotionConfig reducedMotion="user"> in
+   MotionProvider. This block is the safety net for everything Framer can't see:
+   CSS keyframes, transitions, and smooth scrolling.
+
+   Not `animation: none` — an infinite loading shimmer must stop, but an element
+   that simply appears with no transition at all reads as a glitch. Near-instant
+   keeps the feedback and removes the movement.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
-gsap.registerPlugin(ScrollTrigger);
+/**
+ * Scroll position here is *state*, not animation — GSAP ScrollTrigger was doing
+ * nothing but reporting "which step is on screen" via onToggle. IntersectionObserver
+ * is that job exactly, and it removes GSAP + ScrollTrigger (~34kB) plus a second
+ * animation dialect competing with Framer inside one component.
+ */
 
 const STEPS = [
   {
@@ -48,9 +50,18 @@ const STEPS = [
   },
 ];
 
+/** Respect the OS preference for JS-driven scrolling; CSS can't reach scrollTo(). */
+function scrollBehavior(): ScrollBehavior {
+  if (typeof window === "undefined") return "auto";
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? "auto"
+    : "smooth";
+}
+
 export function Craftsmanship() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sentinelsRef = useRef<(HTMLDivElement | null)[]>([]);
   const [active, setActive] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -61,22 +72,26 @@ export function Craftsmanship() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Desktop: one sentinel per step, spanning that step's slice of the tall
+  // section. The -50% root margin collapses the viewport to its centre line, so
+  // exactly one sentinel intersects at a time.
   useEffect(() => {
     if (isMobile) return;
+    const nodes = sentinelsRef.current.filter(Boolean) as HTMLDivElement[];
+    if (!nodes.length) return;
 
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const triggers = STEPS.map((_, i) =>
-      ScrollTrigger.create({
-        trigger: section,
-        start: `${(i / STEPS.length) * 100}% top`,
-        end: `${((i + 1) / STEPS.length) * 100}% top`,
-        onToggle: (self) => self.isActive && setActive(i),
-      })
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const i = Number((entry.target as HTMLElement).dataset.step);
+          if (!Number.isNaN(i)) setActive(i);
+        }
+      },
+      { rootMargin: "-50% 0px -50% 0px", threshold: 0 }
     );
-
-    return () => triggers.forEach((t) => t.kill());
+    nodes.forEach((n) => observer.observe(n));
+    return () => observer.disconnect();
   }, [isMobile]);
 
   const handleMobileScroll = () => {
@@ -94,17 +109,30 @@ export function Craftsmanship() {
     }
   };
 
-  const scrollToStep = (index: number) => {
-    setActive(index);
-    const container = scrollContainerRef.current;
-    if (isMobile && container) {
-      const width = container.getBoundingClientRect().width;
-      container.scrollTo({
-        left: index * (width - 16),
-        behavior: "smooth",
-      });
-    }
-  };
+  const scrollToStep = useCallback(
+    (index: number) => {
+      const container = scrollContainerRef.current;
+      if (isMobile) {
+        setActive(index);
+        if (!container) return;
+        const width = container.getBoundingClientRect().width;
+        container.scrollTo({
+          left: index * (width - 16),
+          behavior: scrollBehavior(),
+        });
+        return;
+      }
+
+      // Desktop: the progress bar previously only called setActive(), which the
+      // scroll sensor immediately overwrote — the clicks did nothing. Active
+      // state is derived from scroll position here, so move the scroll instead.
+      const section = sectionRef.current;
+      if (!section) return;
+      const top = section.offsetTop + (section.offsetHeight / STEPS.length) * index;
+      window.scrollTo({ top, behavior: scrollBehavior() });
+    },
+    [isMobile]
+  );
 
   const nextSlide = () => {
     const nextIdx = (active + 1) % STEPS.length;
@@ -127,7 +155,7 @@ export function Craftsmanship() {
         // Mobile Layout: Horizontal Scroll Snap Container
         <div className="flex flex-col justify-between py-20 px-6 h-full min-h-[650px]">
           <div className="mb-8">
-            <p className="text-xs uppercase tracking-[0.35em] text-[#E6C280]">
+            <p className="text-xs uppercase tracking-[0.35em] text-gold">
               The Art of Craftsmanship
             </p>
             <h2 className="mt-4 font-heading text-3xl text-ivory">
@@ -157,7 +185,7 @@ export function Craftsmanship() {
                 
                 <div className="relative z-10 p-6">
                   <div className="flex items-baseline gap-3">
-                    <span className="font-heading text-lg text-[#E6C280]">
+                    <span className="font-heading text-lg text-gold">
                       0{i + 1}
                     </span>
                     <h3 className="font-heading text-2xl text-ivory">
@@ -179,10 +207,11 @@ export function Craftsmanship() {
                 <button
                   key={i}
                   onClick={() => scrollToStep(i)}
-                  aria-label={`Go to step ${i + 1}`}
-                  className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                  aria-label={`Step ${i + 1}: ${STEPS[i].title}`}
+                  aria-current={i === active ? "step" : undefined}
+                  className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold ${
                     i === active
-                      ? "bg-[#E6C280] w-6"
+                      ? "bg-gold w-6"
                       : "bg-ivory/20 w-2"
                   }`}
                 />
@@ -193,14 +222,14 @@ export function Craftsmanship() {
               <button
                 onClick={prevSlide}
                 aria-label="Previous step"
-                className="rounded-full border border-ivory/20 p-2.5 text-ivory bg-charcoal/60 backdrop-blur-xs hover:border-[#E6C280] hover:text-[#E6C280] transition-colors cursor-pointer"
+                className="rounded-full border border-ivory/20 p-2.5 text-ivory bg-charcoal/60 backdrop-blur-xs hover:border-gold hover:text-gold transition-colors cursor-pointer"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
                 onClick={nextSlide}
                 aria-label="Next step"
-                className="rounded-full border border-ivory/20 p-2.5 text-ivory bg-charcoal/60 backdrop-blur-xs hover:border-[#E6C280] hover:text-[#E6C280] transition-colors cursor-pointer"
+                className="rounded-full border border-ivory/20 p-2.5 text-ivory bg-charcoal/60 backdrop-blur-xs hover:border-gold hover:text-gold transition-colors cursor-pointer"
               >
                 <ChevronRight size={16} />
               </button>
@@ -208,8 +237,25 @@ export function Craftsmanship() {
           </div>
         </div>
       ) : (
-        // Desktop Layout: Scroll-linked pinned views
-        <div className="sticky top-0 h-screen overflow-hidden">
+        <>
+          {/* Scroll sentinels — invisible, one per step. These are what the
+              IntersectionObserver watches; they carry no content. */}
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-full">
+            {STEPS.map((_, i) => (
+              <div
+                key={i}
+                data-step={i}
+                ref={(el) => {
+                  sentinelsRef.current[i] = el;
+                }}
+                className="absolute left-0 w-px"
+                style={{ top: `${i * 100}vh`, height: "100vh" }}
+              />
+            ))}
+          </div>
+
+          {/* Desktop Layout: Scroll-linked pinned views */}
+          <div className="sticky top-0 h-screen overflow-hidden">
           {STEPS.map((step, i) => (
             <div
               key={step.title}
@@ -228,41 +274,46 @@ export function Craftsmanship() {
 
           {/* Content Area */}
           <div className="relative z-10 mx-auto flex h-full w-full max-w-7xl flex-col justify-end px-6 pb-16 lg:px-10">
-            <p className="text-xs uppercase tracking-[0.35em] text-[#E6C280]">
+            <p className="text-xs uppercase tracking-[0.35em] text-gold">
               The Art of Craftsmanship
             </p>
-            <div className="mt-6 flex items-center justify-between">
-              <div className="flex items-baseline gap-4">
-                <span className="font-heading text-2xl text-[#E6C280]">
-                  0{active + 1}
-                </span>
-                <h3 className="font-heading text-4xl text-ivory sm:text-5xl">
-                  {STEPS[active].title}
-                </h3>
+            {/* The step changes as you scroll; without aria-live a screen reader
+                is never told, and the section silently becomes decorative. */}
+            <div aria-live="polite" aria-atomic="true">
+              <div className="mt-6 flex items-center justify-between">
+                <div className="flex items-baseline gap-4">
+                  <span className="font-heading text-2xl text-gold">0{active + 1}</span>
+                  <h3 className="font-heading text-4xl text-ivory sm:text-5xl">
+                    {STEPS[active].title}
+                  </h3>
+                </div>
               </div>
+              <p className="mt-4 max-w-lg text-ivory/75 min-h-[60px]">
+                {STEPS[active].desc}
+              </p>
             </div>
-            
-            <p className="mt-4 max-w-lg text-ivory/75 min-h-[60px]">{STEPS[active].desc}</p>
 
             {/* Clickable progress bars */}
             <div className="mt-10 flex gap-2">
-              {STEPS.map((_, i) => (
+              {STEPS.map((step, i) => (
                 <button
                   key={i}
                   onClick={() => scrollToStep(i)}
-                  aria-label={`Go to step ${i + 1}`}
-                  className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                    i === active 
-                      ? "bg-[#E6C280] flex-[2]" 
-                      : i < active 
-                        ? "bg-[#E6C280]/60 flex-1" 
+                  aria-label={`Step ${i + 1}: ${step.title}`}
+                  aria-current={i === active ? "step" : undefined}
+                  className={`h-2 rounded-full transition-all duration-300 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold ${
+                    i === active
+                      ? "bg-gold flex-[2]"
+                      : i < active
+                        ? "bg-gold/60 flex-1"
                         : "bg-ivory/20 flex-1"
                   }`}
                 />
               ))}
             </div>
           </div>
-        </div>
+          </div>
+        </>
       )}
     </section>
   );

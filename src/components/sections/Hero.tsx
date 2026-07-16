@@ -43,7 +43,7 @@ export function Hero({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="text-xs font-semibold uppercase tracking-[0.4em] text-[#E6C280] drop-shadow-lg"
+          className="text-xs font-semibold uppercase tracking-[0.4em] text-gold drop-shadow-lg"
         >
           {deliveryMessage}
         </motion.p>

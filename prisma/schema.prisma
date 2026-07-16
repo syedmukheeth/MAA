@@ -17,6 +17,16 @@ enum Role {
 model SiteSettings {
   id String @id @default("singleton")
 
+  /// Displayed prices are GST-inclusive (Indian B2C retail norm). This rate is
+  /// used to break the tax component OUT of the total for invoicing, not to add
+  /// it on top. Stored per-order at purchase time so historical orders keep the
+  /// rate they were actually charged.
+  gstRate Decimal @default(18) @db.Decimal(5, 2)
+
+  /// Flat delivery fee added to the order. Waived above the threshold.
+  deliveryFee           Decimal  @default(0) @db.Decimal(10, 2)
+  freeDeliveryThreshold Decimal? @db.Decimal(10, 2)
+
   heroHeadline    String
   heroSubtext     String
   heroImageUrl    String
@@ -88,6 +98,8 @@ model User {
   products                Product[]                @relation("ProductCreatedBy")
   combos                  Combo[]                   @relation("ComboCreatedBy")
   customFurnitureRequests CustomFurnitureRequest[]  @relation("SubmittedBy")
+  testimonials            Testimonial[]             @relation("TestimonialCreatedBy")
+  auditLogs               AuditLog[]                @relation("AuditActor")
   cart                    Cart?
   orders                  Order[]
 
@@ -219,8 +231,19 @@ model Order {
   userId          String
   user            User        @relation(fields: [userId], references: [id])
   status          OrderStatus @default(PENDING)
-  subtotal        Decimal     @db.Decimal(10, 2)
-  total           Decimal     @db.Decimal(10, 2)
+
+  /// Sum of line totals. GST-INCLUSIVE — this is what the customer saw.
+  subtotal Decimal @db.Decimal(10, 2)
+  /// Delivery charge applied at purchase time.
+  deliveryFee Decimal @default(0) @db.Decimal(10, 2)
+  /// The GST rate in force when this order was placed. Frozen deliberately:
+  /// if the rate changes, past invoices must not silently change with it.
+  taxRate Decimal @default(0) @db.Decimal(5, 2)
+  /// The GST component contained WITHIN (subtotal + deliveryFee). Not added on.
+  taxAmount Decimal @default(0) @db.Decimal(10, 2)
+  /// subtotal + deliveryFee. What the customer pays.
+  total Decimal @db.Decimal(10, 2)
+
   paymentMethod   String      @default("COD")
   shippingName    String
   shippingPhone   String
@@ -250,6 +273,53 @@ model OrderItem {
   unitPrice   Decimal  @db.Decimal(10, 2)
   quantity    Int
   lineTotal   Decimal  @db.Decimal(10, 2)
+}
+
+/// Real customer testimonials, entered by staff.
+///
+/// This model exists so the storefront never has to fabricate one. The section
+/// renders nothing when there are no published rows — an empty trust block is
+/// honest; an invented one is a consumer-protection problem (CCPA / BIS
+/// IS 19000:2022) and destroys the exact trust it pretends to build.
+model Testimonial {
+  id          String   @id @default(cuid())
+  name        String
+  location    String?
+  quote       String
+  rating      Int      @default(5)
+  imageUrl    String?
+  isPublished Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdById String?
+  createdBy   User?    @relation("TestimonialCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished, sortOrder])
+}
+
+/// Who changed what. Required by ULTRAPLAN §2 and previously absent entirely —
+/// nothing recorded who altered a price, deleted a product, cancelled an order,
+/// or granted a role. With three staff tiers touching money and stock, this is
+/// the primary internal control.
+model AuditLog {
+  id       String  @id @default(cuid())
+  actorId  String
+  actor    User    @relation("AuditActor", fields: [actorId], references: [id])
+  /// Dotted action, e.g. "product.delete", "user.role_change".
+  action   String
+  entity   String
+  entityId String?
+  /// Human-readable one-liner for the admin table.
+  summary  String?
+  /// Before/after detail. Never store secrets here.
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@index([entity, entityId])
 }
 
 model CustomFurnitureRequest {

@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
 import { CancelOrderButton } from "@/components/shop/CancelOrderButton";
 import { BackLink } from "@/components/admin/BackLink";
+import { formatINR } from "@/lib/money";
 
 export default async function AccountOrderDetailPage({
   params,
@@ -43,14 +44,14 @@ export default async function AccountOrderDetailPage({
                 )}
               </span>
               <span className="text-graphite/70">
-                &#8377;{item.lineTotal.toString()}
+                {formatINR(item.lineTotal.toString())}
               </span>
             </div>
           ))}
         </div>
         <div className="mt-4 flex justify-between border-t border-border pt-4 font-heading text-charcoal">
           <span>Total</span>
-          <span>&#8377;{order.total.toString()}</span>
+          <span>{formatINR(order.total.toString())}</span>
         </div>
       </div>
 

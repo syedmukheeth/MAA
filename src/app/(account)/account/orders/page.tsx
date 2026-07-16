@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/session";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
+import { formatINR } from "@/lib/money";
 
 export default async function AccountOrdersPage() {
   const session = await requireAuth();
@@ -34,7 +35,7 @@ export default async function AccountOrdersPage() {
                 </p>
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-charcoal">&#8377;{o.total.toString()}</span>
+                <span className="tabular-nums text-charcoal">{formatINR(o.total.toString())}</span>
                 <OrderStatusBadge status={o.status} />
               </div>
             </Link>

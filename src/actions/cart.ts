@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth, getActiveUser } from "@/lib/auth/session";
 import { getDefaultVariant } from "@/lib/inventory";
 
 async function getOrCreateCart(userId: string) {
@@ -16,8 +16,14 @@ export async function addToCart(input: {
   variantId?: string;
   comboId?: string;
   quantity: number;
-}): Promise<{ error?: string }> {
-  const session = await requireAuth();
+}): Promise<{ error?: string; requiresAuth?: boolean }> {
+  // The catalogue is public, so an anonymous visitor reaching this is a normal
+  // path — not an error. Signal it so the client can route to login and come
+  // back, instead of inferring "signed out" from any thrown error.
+  const session = await getActiveUser();
+  if (!session) {
+    return { requiresAuth: true, error: "Please sign in to add items to your cart" };
+  }
   const quantity = Math.max(1, Math.floor(input.quantity));
 
   if (!input.productId && !input.comboId) {

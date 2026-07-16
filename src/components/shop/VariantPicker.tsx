@@ -30,15 +30,31 @@ function formatInr(value: number) {
   );
 }
 
+/**
+ * Timber swatches shown next to each variant.
+ *
+ * These hex values are deliberately literal and deliberately NOT theme tokens:
+ * the colour here *is the product data* — an approximation of what the wood
+ * actually looks like. It must not shift with the theme, because teak is teak.
+ * (token-lint allows this file for that reason; see brand-system.)
+ *
+ * Keyed by substring so "Solid Teak" and "Teak / Natural" both match.
+ */
+const WOOD_SWATCHES: ReadonlyArray<readonly [match: string[], hex: string]> = [
+  [["teak"], "#8B5E3C"],
+  [["walnut"], "#5C4033"],
+  [["oak"], "#C2A278"],
+  [["mahogany"], "#4A2511"],
+  [["rosewood", "sheesham"], "#3D1E12"],
+  [["ash"], "#E3D4C1"],
+];
+
 function getWoodColorHex(wood: string | null): string | null {
   if (!wood) return null;
   const w = wood.toLowerCase().trim();
-  if (w.includes("teak")) return "#8B5E3C";
-  if (w.includes("walnut")) return "#5C4033";
-  if (w.includes("oak")) return "#C2A278";
-  if (w.includes("mahogany")) return "#4A2511";
-  if (w.includes("rosewood") || w.includes("sheesham")) return "#3D1E12";
-  if (w.includes("ash")) return "#E3D4C1";
+  for (const [names, hex] of WOOD_SWATCHES) {
+    if (names.some((n) => w.includes(n))) return hex;
+  }
   return null;
 }
 

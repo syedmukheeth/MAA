@@ -1,9 +1,51 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { prisma } from "@/lib/db";
 import { AddToCartButton } from "@/components/shop/AddToCartButton";
+import { formatINR } from "@/lib/money";
+import { getSiteUrl, SITE_NAME } from "@/lib/site-url";
+import { JsonLd } from "@/components/seo/JsonLd";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const combo = await prisma.combo.findUnique({
+    where: { slug },
+    select: { name: true, description: true, image: true, isActive: true },
+  });
+  if (!combo || !combo.isActive) return { title: "Combo not found" };
+
+  const url = `${getSiteUrl()}/combos/${slug}`;
+  const title = `${combo.name} | Furniture Combo`;
+  const description = combo.description.slice(0, 155);
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: SITE_NAME,
+      type: "website",
+      locale: "en_IN",
+      images: combo.image ? [{ url: combo.image, alt: combo.name }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: combo.image ? [combo.image] : [],
+    },
+  };
+}
 
 export default async function ComboDetailPage({
   params,
@@ -21,8 +63,29 @@ export default async function ComboDetailPage({
     (i) => i.product.stockQuantity < i.quantity
   );
 
+  const comboSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: combo.name,
+    description: combo.description,
+    image: combo.image ? [combo.image] : [],
+    brand: { "@type": "Brand", name: SITE_NAME },
+    offers: {
+      "@type": "Offer",
+      url: `${getSiteUrl()}/combos/${combo.slug}`,
+      priceCurrency: "INR",
+      price: combo.bundlePrice.toString(),
+      availability: outOfStock
+        ? "https://schema.org/OutOfStock"
+        : "https://schema.org/InStock",
+      itemCondition: "https://schema.org/NewCondition",
+      seller: { "@type": "Organization", name: SITE_NAME },
+    },
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-16 lg:px-10">
+      <JsonLd data={comboSchema} />
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
         <div className="relative aspect-square overflow-hidden rounded-2xl bg-cream">
           {combo.image ? (
@@ -38,7 +101,7 @@ export default async function ComboDetailPage({
             {combo.name}
           </h1>
           <p className="mt-4 text-2xl text-charcoal">
-            &#8377;{combo.bundlePrice.toString()}
+            {formatINR(combo.bundlePrice.toString())}
           </p>
 
           <p className="mt-6 leading-relaxed text-graphite/80">

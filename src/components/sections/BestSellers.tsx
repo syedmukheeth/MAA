@@ -4,38 +4,29 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 
-const PRODUCTS = [
-  {
-    name: "Oakridge Lounge Chair",
-    room: "Living Room",
-    price: "₹42,000",
-    image:
-      "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?q=80&w=1200&auto=format&fit=crop",
-  },
-  {
-    name: "Walnut Platform Bed",
-    room: "Bedroom",
-    price: "₹78,500",
-    image:
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
-  },
-  {
-    name: "Sheesham Dining Table",
-    room: "Dining",
-    price: "₹65,000",
-    image:
-      "https://images.unsplash.com/photo-1617806118233-18e1de247200?q=80&w=1200&auto=format&fit=crop",
-  },
-  {
-    name: "Heritage Bookshelf",
-    room: "Office",
-    price: "₹38,900",
-    image:
-      "https://images.unsplash.com/photo-1592804589252-3f7cb1ec5cd1?q=80&w=1200&auto=format&fit=crop",
-  },
-];
+import { formatINR } from "@/lib/format";
+import Link from "next/link";
 
-export function BestSellers() {
+const CATEGORIES: Record<string, string> = {
+  LIVING_ROOM: "Living Room",
+  BEDROOM: "Bedroom",
+  DINING: "Dining",
+  OFFICE: "Office",
+  OUTDOOR: "Outdoor",
+};
+
+export type BestSellerProduct = {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+  price: string | number;
+  images: string[];
+};
+
+export function BestSellers({ products }: { products: BestSellerProduct[] }) {
+  if (!products || products.length === 0) return null;
+
   return (
     <section className="bg-ivory px-6 py-28 lg:px-10">
       <div className="mx-auto max-w-7xl">
@@ -51,36 +42,42 @@ export function BestSellers() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {PRODUCTS.map((p, i) => (
+          {products.map((p, i) => (
             <motion.div
-              key={p.name}
+              key={p.id}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: i * 0.08 }}
               className="group"
             >
-              <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-cream">
-                <Image
-                  src={p.image}
-                  alt={p.name}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <button
-                  aria-label="Add to wishlist"
-                  className="absolute right-3 top-3 rounded-full bg-ivory/90 p-2 text-charcoal transition-colors hover:text-brand-red"
-                >
-                  <Heart size={16} />
-                </button>
-              </div>
-              <p className="mt-4 text-xs uppercase tracking-wider text-bronze">
-                {p.room}
-              </p>
-              <h3 className="mt-1 font-heading text-lg text-charcoal">
-                {p.name}
-              </h3>
-              <p className="mt-1 text-sm text-graphite/70">{p.price}</p>
+              <Link href={`/products/${p.slug}`} className="block">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-cream">
+                  <Image
+                    src={p.images[0] || "/brand/logo.jpeg"}
+                    alt={p.name}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <button
+                    aria-label="Add to wishlist"
+                    className="absolute right-3 top-3 rounded-full bg-ivory/90 p-2 text-charcoal transition-colors hover:text-brand-red"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      // Wishlist functionality can be wired here
+                    }}
+                  >
+                    <Heart size={16} />
+                  </button>
+                </div>
+                <p className="mt-4 text-xs uppercase tracking-wider text-bronze">
+                  {CATEGORIES[p.category] || p.category}
+                </p>
+                <h3 className="mt-1 font-heading text-lg text-charcoal group-hover:text-bronze transition-colors">
+                  {p.name}
+                </h3>
+                <p className="mt-1 text-sm text-graphite/70">{formatINR(p.price.toString())}</p>
+              </Link>
             </motion.div>
           ))}
         </div>

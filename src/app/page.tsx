@@ -14,16 +14,36 @@ import { ShowroomFaqContact } from "@/components/sections/ShowroomFaqContact";
 import { getSiteSettings } from "@/lib/site-settings";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCartItemCount } from "@/lib/cart";
+import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [settings, user] = await Promise.all([
+  const [settings, user, testimonials, featuredProducts, counts] = await Promise.all([
     getSiteSettings(),
     getCurrentUser(),
+    prisma.testimonial.findMany({
+      where: { isPublished: true },
+      orderBy: { sortOrder: "asc" },
+    }),
+    prisma.product.findMany({
+      where: { featured: true },
+      take: 4,
+    }),
+    prisma.product.groupBy({
+      by: ["category"],
+      _count: {
+        id: true,
+      },
+    }),
   ]);
 
   const cartItemCount = user ? await getCartItemCount(user.sub) : 0;
+
+  const categoryCounts = counts.reduce((acc, curr) => {
+    acc[curr.category] = curr._count.id;
+    return acc;
+  }, {} as Record<string, number>);
 
   return (
     <>
@@ -36,13 +56,20 @@ export default async function Home() {
           deliveryMessage={settings.deliveryMessage}
         />
         <BrandStatement label={settings.brandLabel} headline={settings.brandHeadline} />
-        <Collections />
+        <Collections categoryCounts={categoryCounts} />
         <Craftsmanship />
         <Materials />
         <CustomStudio />
-        <BestSellers />
+        <BestSellers products={featuredProducts.map(p => ({
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          category: p.category,
+          price: p.price.toString(),
+          images: p.images,
+        }))} />
         <RoomInspirations />
-        <Testimonials />
+        <Testimonials testimonials={testimonials} />
         <TrustBuilders
           yearsExperience={settings.statYearsExperience}
           projectsDelivered={settings.statProjectsDelivered}

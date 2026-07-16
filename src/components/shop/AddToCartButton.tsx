@@ -28,13 +28,18 @@ export function AddToCartButton({
     setError(null);
     try {
       const result = await addToCart({ productId, variantId, comboId, quantity });
+      if (result?.requiresAuth) {
+        router.push(`/login?next=${encodeURIComponent(pathname)}`);
+        return;
+      }
       if (result?.error) {
         setError(result.error);
-      } else {
-        router.push("/cart");
+        return;
       }
+      router.push("/cart");
     } catch {
-      router.push(`/login?next=${encodeURIComponent(pathname)}`);
+      // A real failure (network, server) — don't misreport it as signed-out.
+      setError("Something went wrong. Please try again.");
     } finally {
       setPending(false);
     }

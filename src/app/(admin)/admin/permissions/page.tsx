@@ -18,6 +18,9 @@ const CAPABILITIES: {
   { label: "User & role management", roles: { OWNER: true, ADMIN: true, MANAGER: false, CUSTOMER: false } },
   { label: "Website settings", roles: { OWNER: true, ADMIN: true, MANAGER: false, CUSTOMER: false } },
   { label: "Modify Owner accounts", roles: { OWNER: true, ADMIN: false, MANAGER: false, CUSTOMER: false } },
+  { label: "Grant the Owner role", roles: { OWNER: true, ADMIN: false, MANAGER: false, CUSTOMER: false } },
+  { label: "Change your own role", roles: { OWNER: false, ADMIN: false, MANAGER: false, CUSTOMER: false } },
+  { label: "View the audit log", roles: { OWNER: true, ADMIN: false, MANAGER: false, CUSTOMER: false } },
 ];
 
 const ROLE_NOTES: { role: string; note: string }[] = [

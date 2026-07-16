@@ -10,14 +10,12 @@ import {
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getLowStockVariants } from "@/lib/analytics";
+import { formatINR } from "@/lib/money";
 
 const REVENUE_STATUSES = ["CONFIRMED", "PACKED", "SHIPPED", "DELIVERED"] as const;
 
-function inr(value: number) {
-  return `₹${new Intl.NumberFormat("en-IN", {
-    maximumFractionDigits: 0,
-  }).format(value)}`;
-}
+/** Kept as a thin alias; formatting lives in @/lib/money so it stays uniform. */
+const inr = (value: number) => formatINR(value);
 
 export default async function AdminOverviewPage() {
   const user = await getCurrentUser();
@@ -115,7 +113,7 @@ export default async function AdminOverviewPage() {
             className={`rounded-xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
               card.alert
                 ? "border-amber-500/40 bg-amber-500/5 hover:border-amber-500 hover:bg-amber-500/10"
-                : "border-white/5 bg-[#1E1B18] hover:border-[#B08D57]/40 hover:bg-[#25211e]"
+                : "border-border bg-card hover:border-bronze/40 hover:bg-accent"
             }`}
           >
             <div className="flex items-center justify-between">
@@ -124,7 +122,7 @@ export default async function AdminOverviewPage() {
               </p>
               <card.icon
                 size={16}
-                className={card.alert ? "text-amber-500" : "text-[#B08D57]"}
+                className={card.alert ? "text-amber-500" : "text-gold"}
               />
             </div>
             <p

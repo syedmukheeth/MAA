@@ -43,7 +43,11 @@ const COLLECTIONS = [
   },
 ];
 
-export function Collections() {
+export function Collections({
+  categoryCounts = {},
+}: {
+  categoryCounts?: Record<string, number>;
+}) {
   return (
     <section id="collections" className="bg-cream px-6 py-28 lg:px-10">
       <div className="mx-auto max-w-7xl">
@@ -63,39 +67,44 @@ export function Collections() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {COLLECTIONS.map((c, i) => (
-            <motion.div
-              key={c.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.7, delay: (i % 2) * 0.1 }}
-              className={`group relative overflow-hidden rounded-2xl ${
-                i === 0 ? "md:col-span-2 md:row-span-1 aspect-[16/9]" : "aspect-[4/5]"
-              }`}
-            >
-              <Link href={`/products?category=${c.category}`} className="block h-full w-full">
-                <Image
-                  src={c.image}
-                  alt={c.name}
-                  fill
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/10 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-7">
-                  <div>
-                    <h3 className="font-heading text-2xl text-ivory">
-                      {c.name}
-                    </h3>
-                    <p className="mt-1 text-sm text-ivory/75">{c.tagline}</p>
+          {COLLECTIONS.map((c, i) => {
+            const count = categoryCounts[c.category] ?? 0;
+            return (
+              <motion.div
+                key={c.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.7, delay: (i % 2) * 0.1 }}
+                className={`group relative overflow-hidden rounded-2xl ${
+                  i === 0 ? "md:col-span-2 md:row-span-1 aspect-[16/9]" : "aspect-[4/5]"
+                }`}
+              >
+                <Link href={`/products?category=${c.category}`} className="block h-full w-full">
+                  <Image
+                    src={c.image}
+                    alt={c.name}
+                    fill
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/10 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-7">
+                    <div>
+                      <h3 className="font-heading text-2xl text-ivory">
+                        {c.name}
+                      </h3>
+                      <p className="mt-1 text-sm text-ivory/75">
+                        {c.tagline} · {count} {count === 1 ? "product" : "products"}
+                      </p>
+                    </div>
+                    <span className="rounded-full border border-ivory/40 p-2.5 text-ivory transition-colors group-hover:border-bronze group-hover:text-bronze">
+                      <ArrowUpRight size={18} />
+                    </span>
                   </div>
-                  <span className="rounded-full border border-ivory/40 p-2.5 text-ivory transition-colors group-hover:border-bronze group-hover:text-bronze">
-                    <ArrowUpRight size={18} />
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

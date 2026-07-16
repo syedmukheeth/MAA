@@ -12,12 +12,16 @@ import { placeOrder } from "@/actions/orders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+// From @/lib/format, not @/lib/money — money imports Prisma, which cannot be
+// bundled into a client component.
+import { formatINR } from "@/lib/format";
 
 export function ShippingAddressForm({
-  subtotal,
+  total,
   defaults,
 }: {
-  subtotal: number;
+  /** Decimal as string — the final amount incl. delivery, matching OrderTotals. */
+  total: string;
   defaults?: Partial<ShippingAddressInput>;
 }) {
   const router = useRouter();
@@ -111,7 +115,7 @@ export function ShippingAddressForm({
         disabled={isSubmitting}
         className="w-full rounded-full bg-bronze text-ivory hover:bg-bronze/90"
       >
-        {isSubmitting ? "Placing order..." : `Place Order · ₹${subtotal.toFixed(2)}`}
+        {isSubmitting ? "Placing order..." : `Place Order · ${formatINR(total)}`}
       </Button>
     </form>
   );

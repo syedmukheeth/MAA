@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/session";
 import { productSchema, type ProductInput } from "@/lib/validations/product";
 import { applyStockMovement, recomputeProductStock } from "@/lib/inventory";
+import { recordAudit } from "@/lib/audit";
 
 const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
 
@@ -177,7 +178,7 @@ export async function updateProduct(
 }
 
 export async function deleteProduct(id: string): Promise<{ error?: string }> {
-  await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...MANAGE_ROLES]);
 
   const usedInCombo = await prisma.comboItem.findFirst({
     where: { productId: id },
@@ -197,7 +198,24 @@ export async function deleteProduct(id: string): Promise<{ error?: string }> {
     };
   }
 
+  const doomed = await prisma.product.findUnique({
+    where: { id },
+    select: { name: true, slug: true, price: true },
+  });
+
   await prisma.product.delete({ where: { id } });
+
+  await recordAudit({
+    actorId: session.sub,
+    action: "product.delete",
+    entity: "Product",
+    entityId: id,
+    summary: `Deleted product "${doomed?.name ?? id}"`,
+    metadata: doomed
+      ? { name: doomed.name, slug: doomed.slug, price: doomed.price.toString() }
+      : undefined,
+  });
+
   revalidatePath("/admin/products");
   revalidatePath("/products");
   return {};
