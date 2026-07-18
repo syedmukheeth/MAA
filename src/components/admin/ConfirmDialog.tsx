@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 export function ConfirmDialog({
   open,
@@ -42,7 +43,9 @@ export function ConfirmDialog({
             variant="destructive"
             onClick={onConfirm}
             disabled={pending}
+            className="flex items-center justify-center gap-1.5"
           >
+            {pending && <Loader2 className="animate-spin" size={14} />}
             {pending ? "Working..." : confirmLabel}
           </Button>
         </DialogFooter>

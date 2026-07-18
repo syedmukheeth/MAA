@@ -59,6 +59,7 @@ export function RoomInspirations() {
                 src={r.image}
                 alt={r.name}
                 fill
+                sizes="(min-width: 640px) 288px, 256px"
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-charcoal/75 via-transparent to-transparent" />

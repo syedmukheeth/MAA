@@ -48,7 +48,7 @@ function generateOrderNumber() {
 }
 
 export async function placeOrder(
-  input: ShippingAddressInput
+  input: ShippingAddressInput & { saveAddress?: boolean }
 ): Promise<{ error?: string; orderId?: string }> {
   const session = await requireAuth();
   const parsed = shippingAddressSchema.safeParse(input);
@@ -204,6 +204,37 @@ export async function placeOrder(
           items: { create: orderItemsData },
         },
       });
+
+      if (input.saveAddress) {
+        const existing = await tx.address.findFirst({
+          where: {
+            userId: session.sub,
+            name: parsed.data.shippingName,
+            phone: parsed.data.shippingPhone,
+            line1: parsed.data.shippingLine1,
+            line2: parsed.data.shippingLine2 ?? null,
+            city: parsed.data.shippingCity,
+            state: parsed.data.shippingState,
+            pincode: parsed.data.shippingPincode,
+          },
+        });
+        if (!existing) {
+          const count = await tx.address.count({ where: { userId: session.sub } });
+          await tx.address.create({
+            data: {
+              userId: session.sub,
+              name: parsed.data.shippingName,
+              phone: parsed.data.shippingPhone,
+              line1: parsed.data.shippingLine1,
+              line2: parsed.data.shippingLine2 ?? null,
+              city: parsed.data.shippingCity,
+              state: parsed.data.shippingState,
+              pincode: parsed.data.shippingPincode,
+              isDefault: count === 0,
+            },
+          });
+        }
+      }
 
       for (const [variantId, req] of required) {
         await applyStockMovement(tx, {

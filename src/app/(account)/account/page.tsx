@@ -4,10 +4,11 @@ import { requireAuth } from "@/lib/auth/session";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
 import { formatINR } from "@/lib/money";
 import { ProfileForm } from "@/components/shop/ProfileForm";
+import { AddressManager } from "@/components/shop/AddressManager";
 
 export default async function AccountPage() {
   const session = await requireAuth();
-  const [user, orderCount, recentOrders] = await Promise.all([
+  const [user, orderCount, recentOrders, addresses] = await Promise.all([
     prisma.user.findUnique({ where: { id: session.sub } }),
     prisma.order.count({ where: { userId: session.sub } }),
     prisma.order.findMany({
@@ -15,11 +16,11 @@ export default async function AccountPage() {
       orderBy: { createdAt: "desc" },
       take: 3,
     }),
+    prisma.address.findMany({
+      where: { userId: session.sub },
+      orderBy: [{ isDefault: "desc" }, { updatedAt: "desc" }],
+    }),
   ]);
-
-  // Latest shipping address doubles as the saved address until addresses get
-  // their own model
-  const lastAddress = recentOrders[0];
 
   return (
     <div>
@@ -54,36 +55,8 @@ export default async function AccountPage() {
           </div>
         </div>
 
-        <div className="space-y-4 rounded-2xl bg-cream p-8 h-fit">
-          <h2 className="font-heading text-lg text-charcoal">
-            Saved delivery address
-          </h2>
-          {lastAddress ? (
-            <div className="text-sm leading-relaxed text-graphite/80">
-              <p className="text-charcoal">
-                {lastAddress.shippingName} · {lastAddress.shippingPhone}
-              </p>
-              <p>
-                {lastAddress.shippingLine1}
-                {lastAddress.shippingLine2
-                  ? `, ${lastAddress.shippingLine2}`
-                  : ""}
-              </p>
-              <p>
-                {lastAddress.shippingCity}, {lastAddress.shippingState} -{" "}
-                {lastAddress.shippingPincode}
-              </p>
-              <p className="mt-3 text-xs text-graphite/50">
-                From your most recent order. It will be pre-suggested at
-                checkout.
-              </p>
-            </div>
-          ) : (
-            <p className="text-sm text-graphite/60">
-              No address yet — it is saved automatically with your first
-              order.
-            </p>
-          )}
+        <div className="rounded-2xl bg-cream p-8 h-fit">
+          <AddressManager addresses={addresses} />
         </div>
       </div>
 

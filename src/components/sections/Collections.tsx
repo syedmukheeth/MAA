@@ -85,6 +85,11 @@ export function Collections({
                     src={c.image}
                     alt={c.name}
                     fill
+                    sizes={
+                      i === 0
+                        ? "(min-width: 1024px) 100vw, 100vw"
+                        : "(min-width: 768px) 50vw, 100vw"
+                    }
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/10 to-transparent" />

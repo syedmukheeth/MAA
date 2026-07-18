@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { prisma } from "@/lib/db";
 import { ComboItemsPicker } from "@/components/shop/ComboItemsPicker";
+import { ComboMainImage } from "@/components/shop/ComboMainImage";
 import { formatINR } from "@/lib/money";
 import { getSiteUrl, SITE_NAME } from "@/lib/site-url";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -85,6 +86,7 @@ export default async function ComboDetailPage({
     comboItemId: i.id,
     productName: i.product.name,
     image: i.product.images[0] ?? null,
+    images: i.product.images,
     quantity: i.quantity,
     options: i.options.map((o) => ({
       variantId: o.variantId,
@@ -92,6 +94,11 @@ export default async function ComboDetailPage({
       inStock: o.variant.stock >= i.quantity,
     })),
   }));
+
+  const allImages = [
+    ...(combo.image ? [combo.image] : []),
+    ...combo.items.flatMap((i) => i.product.images),
+  ];
 
   const comboSchema = {
     "@context": "https://schema.org",
@@ -119,7 +126,7 @@ export default async function ComboDetailPage({
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
         <div className="relative aspect-square overflow-hidden rounded-2xl bg-cream">
           {combo.image ? (
-            <Image src={combo.image} alt={combo.name} fill className="object-cover" />
+            <ComboMainImage src={combo.image} alt={combo.name} allImages={allImages} />
           ) : null}
         </div>
 

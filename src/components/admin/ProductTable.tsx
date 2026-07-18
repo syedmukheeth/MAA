@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Pencil, Search, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Pencil, Search, Trash2, Loader2 } from "lucide-react";
 import { deleteProduct, setProductActive } from "@/actions/products";
 import { isInStock, isLowStock } from "@/lib/products";
 import { CATEGORY_LABELS } from "@/lib/validations/product";
@@ -180,9 +180,15 @@ export function ProductTable({ products }: { products: ProductRow[] }) {
                           ? "Deactivate (hide from storefront)"
                           : "Activate (show on storefront)"
                       }
-                      className="rounded-md p-1.5 text-muted-foreground hover:text-foreground"
+                      className="rounded-md p-1.5 text-muted-foreground hover:text-foreground flex items-center justify-center"
                     >
-                      {p.isActive ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {isPending && togglingId === p.id ? (
+                        <Loader2 className="animate-spin" size={16} />
+                      ) : p.isActive ? (
+                        <EyeOff size={16} />
+                      ) : (
+                        <Eye size={16} />
+                      )}
                     </button>
                     <Link
                       href={`/admin/products/${p.id}/edit`}

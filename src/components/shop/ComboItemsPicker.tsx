@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { AddToCartButton } from "@/components/shop/AddToCartButton";
+import { SafeImage } from "./SafeImage";
+import { ImageLightbox } from "./ImageLightbox";
 
 export type ComboPickerItem = {
   comboItemId: string;
   productName: string;
   image: string | null;
+  images: string[];
   quantity: number;
   options: { variantId: string; label: string; inStock: boolean }[];
 };
@@ -36,6 +38,9 @@ export function ComboItemsPicker({
     )
   );
 
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+
   return (
     <div>
       <div className="space-y-3">
@@ -47,13 +52,27 @@ export function ComboItemsPicker({
           >
             <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-cream">
               {item.image ? (
-                <Image
-                  src={item.image}
-                  alt={item.productName}
-                  fill
-                  sizes="64px"
-                  className="object-cover"
-                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLightboxImages(
+                      item.images && item.images.length > 0
+                        ? item.images
+                        : [item.image!]
+                    );
+                    setLightboxOpen(true);
+                  }}
+                  aria-label={`View images for ${item.productName}`}
+                  className="group relative block size-full cursor-zoom-in overflow-hidden"
+                >
+                  <SafeImage
+                    src={item.image}
+                    alt={item.productName}
+                    fill
+                    sizes="64px"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </button>
               ) : (
                 <div className="flex h-full items-center justify-center text-[10px] text-graphite/40">
                   No image
@@ -108,6 +127,14 @@ export function ComboItemsPicker({
           disabled={disabled}
         />
       </div>
+
+      <ImageLightbox
+        images={lightboxImages}
+        startIndex={0}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        alt="Product image viewer"
+      />
     </div>
   );
 }

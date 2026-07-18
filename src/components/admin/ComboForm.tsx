@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Plus, Search, Trash2 } from "lucide-react";
+import { ChevronDown, Plus, Search, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -387,8 +387,9 @@ export function ComboForm({
       <Button
         type="submit"
         disabled={submitting}
-        className="rounded-full bg-bronze text-ivory hover:bg-bronze/90"
+        className="rounded-full bg-bronze text-ivory hover:bg-bronze/90 flex items-center justify-center gap-2"
       >
+        {submitting && <Loader2 className="animate-spin" size={16} />}
         {submitting ? "Saving..." : isEdit ? "Save Changes" : "Create Combo"}
       </Button>
     </form>

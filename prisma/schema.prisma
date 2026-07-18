@@ -102,8 +102,30 @@ model User {
   auditLogs               AuditLog[]                @relation("AuditActor")
   cart                    Cart?
   orders                  Order[]
+  addresses               Address[]
 
   @@index([role])
+}
+
+/// Reusable saved delivery addresses. Customers manage these from their
+/// profile; checkout pre-fills from the default one.
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String?
+  name      String
+  phone     String
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  pincode   String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Product {
