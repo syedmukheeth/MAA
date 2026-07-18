@@ -83,8 +83,12 @@ export default async function ComboDetailPage({
   };
 
   const pickerItems = combo.items.map((i) => ({
+    productId: i.product.id,
     comboItemId: i.id,
     productName: i.product.name,
+    description: i.product.description,
+    materials: i.product.materials,
+    dimensions: i.product.dimensions,
     image: i.product.images[0] ?? null,
     images: i.product.images,
     quantity: i.quantity,

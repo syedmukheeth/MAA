@@ -3,11 +3,15 @@
 import { useState } from "react";
 import { AddToCartButton } from "@/components/shop/AddToCartButton";
 import { SafeImage } from "./SafeImage";
-import { ImageLightbox } from "./ImageLightbox";
+import { ComboProductInspector } from "./ComboProductInspector";
 
 export type ComboPickerItem = {
+  productId: string;
   comboItemId: string;
   productName: string;
+  description: string;
+  materials: string[];
+  dimensions: string | null;
   image: string | null;
   images: string[];
   quantity: number;
@@ -38,31 +42,41 @@ export function ComboItemsPicker({
     )
   );
 
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState("");
+
+  const inspectorProducts = items.map((i) => ({
+    id: i.productId,
+    name: i.productName,
+    description: i.description,
+    price: "",
+    materials: i.materials,
+    dimensions: i.dimensions,
+    images: i.images,
+  }));
+
+  const handleOpenInspector = (productId: string) => {
+    setSelectedProductId(productId);
+    setInspectorOpen(true);
+  };
 
   return (
     <div>
       <div className="space-y-3">
-        <p className="text-sm text-charcoal">This combo includes:</p>
+        <p className="text-sm text-charcoal font-semibold uppercase tracking-wider text-graphite/40">
+          This combo includes:
+        </p>
         {items.map((item) => (
           <div
             key={item.comboItemId}
-            className="flex gap-3 rounded-xl border border-linen/70 bg-white/50 p-3"
+            className="flex gap-3 rounded-xl border border-linen/70 bg-white/50 p-3 hover:border-bronze/35 transition-colors duration-300"
           >
             <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-cream">
               {item.image ? (
                 <button
                   type="button"
-                  onClick={() => {
-                    setLightboxImages(
-                      item.images && item.images.length > 0
-                        ? item.images
-                        : [item.image!]
-                    );
-                    setLightboxOpen(true);
-                  }}
-                  aria-label={`View images for ${item.productName}`}
+                  onClick={() => handleOpenInspector(item.productId)}
+                  aria-label={`Inspect ${item.productName}`}
                   className="group relative block size-full cursor-zoom-in overflow-hidden"
                 >
                   <SafeImage
@@ -80,9 +94,13 @@ export function ComboItemsPicker({
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm text-charcoal">
+              <button
+                type="button"
+                onClick={() => handleOpenInspector(item.productId)}
+                className="text-left font-medium text-sm text-charcoal hover:text-bronze transition-colors focus:outline-none"
+              >
                 {item.quantity} × {item.productName}
-              </p>
+              </button>
               {item.options.length > 0 ? (
                 <label className="mt-1.5 block text-xs text-graphite/60">
                   Choose an option
@@ -128,12 +146,11 @@ export function ComboItemsPicker({
         />
       </div>
 
-      <ImageLightbox
-        images={lightboxImages}
-        startIndex={0}
-        open={lightboxOpen}
-        onClose={() => setLightboxOpen(false)}
-        alt="Product image viewer"
+      <ComboProductInspector
+        products={inspectorProducts}
+        open={inspectorOpen}
+        onClose={() => setInspectorOpen(false)}
+        initialProductId={selectedProductId}
       />
     </div>
   );

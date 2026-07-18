@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { MotionProvider } from "@/components/MotionProvider";
 import { getSiteUrl, SITE_NAME } from "@/lib/site-url";
+import { NavigationProgressBar } from "@/components/layout/NavigationProgressBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,6 +57,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <NavigationProgressBar />
         <MotionProvider>{children}</MotionProvider>
       </body>
     </html>
