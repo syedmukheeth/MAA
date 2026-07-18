@@ -15,6 +15,7 @@ export async function addToCart(input: {
   productId?: string;
   variantId?: string;
   comboId?: string;
+  comboSelections?: { comboItemId: string; variantId: string }[];
   quantity: number;
 }): Promise<{ error?: string; requiresAuth?: boolean }> {
   // The catalogue is public, so an anonymous visitor reaching this is a normal
@@ -36,7 +37,7 @@ export async function addToCart(input: {
     const product = await prisma.product.findUnique({
       where: { id: input.productId },
     });
-    if (!product) return { error: "Product not found" };
+    if (!product || !product.isActive) return { error: "Product not found" };
 
     const variant = input.variantId
       ? await prisma.variant.findUnique({ where: { id: input.variantId } })
@@ -71,9 +72,33 @@ export async function addToCart(input: {
   } else if (input.comboId) {
     const combo = await prisma.combo.findUnique({
       where: { id: input.comboId },
-      include: { items: { include: { product: true } } },
+      include: {
+        items: {
+          include: {
+            product: true,
+            options: { include: { variant: true } },
+          },
+        },
+      },
     });
     if (!combo || !combo.isActive) return { error: "Combo not found" };
+    if (combo.items.some((i) => !i.product.isActive)) {
+      return { error: "This combo is currently unavailable" };
+    }
+
+    // Resolve one variant per option-bearing item: the customer's pick if it
+    // is one of the allowed options, otherwise the first option.
+    const requested = new Map(
+      (input.comboSelections ?? []).map((s) => [s.comboItemId, s.variantId])
+    );
+    const resolvedSelections: { comboItemId: string; variantId: string }[] = [];
+    for (const item of combo.items) {
+      if (item.options.length === 0) continue;
+      const picked = requested.get(item.id);
+      const option =
+        item.options.find((o) => o.variantId === picked) ?? item.options[0];
+      resolvedSelections.push({ comboItemId: item.id, variantId: option.variantId });
+    }
 
     const existingItem = await prisma.cartItem.findUnique({
       where: { cartId_comboId: { cartId: cart.id, comboId: combo.id } },
@@ -81,19 +106,52 @@ export async function addToCart(input: {
     const nextQty = (existingItem?.quantity ?? 0) + quantity;
 
     for (const item of combo.items) {
-      if (item.quantity * nextQty > item.product.stockQuantity) {
+      const selection = resolvedSelections.find((s) => s.comboItemId === item.id);
+      if (selection) {
+        const variant = item.options.find(
+          (o) => o.variantId === selection.variantId
+        )!.variant;
+        if (item.quantity * nextQty > variant.stock) {
+          return {
+            error: `${item.product.name} (${variant.name}) doesn't have enough stock for this combo`,
+          };
+        }
+      } else if (item.quantity * nextQty > item.product.stockQuantity) {
         return { error: `${item.product.name} doesn't have enough stock for this combo` };
       }
     }
 
     if (existingItem) {
-      await prisma.cartItem.update({
-        where: { id: existingItem.id },
-        data: { quantity: nextQty },
-      });
+      // Re-adding the same combo updates the stored option choices too.
+      await prisma.$transaction([
+        prisma.cartItem.update({
+          where: { id: existingItem.id },
+          data: { quantity: nextQty },
+        }),
+        prisma.cartComboSelection.deleteMany({
+          where: { cartItemId: existingItem.id },
+        }),
+        prisma.cartComboSelection.createMany({
+          data: resolvedSelections.map((s) => ({
+            cartItemId: existingItem.id,
+            comboItemId: s.comboItemId,
+            variantId: s.variantId,
+          })),
+        }),
+      ]);
     } else {
       await prisma.cartItem.create({
-        data: { cartId: cart.id, comboId: combo.id, quantity },
+        data: {
+          cartId: cart.id,
+          comboId: combo.id,
+          quantity,
+          comboSelections: {
+            create: resolvedSelections.map((s) => ({
+              comboItemId: s.comboItemId,
+              variantId: s.variantId,
+            })),
+          },
+        },
       });
     }
   }
@@ -114,6 +172,7 @@ export async function updateCartItemQuantity(
       product: true,
       variant: true,
       combo: { include: { items: { include: { product: true } } } },
+      comboSelections: { include: { variant: true } },
     },
   });
   if (!item || item.cart.userId !== session.sub) {
@@ -134,7 +193,16 @@ export async function updateCartItemQuantity(
   }
   if (item.combo) {
     for (const comboItem of item.combo.items) {
-      if (comboItem.quantity * quantity > comboItem.product.stockQuantity) {
+      const selection = item.comboSelections.find(
+        (s) => s.comboItemId === comboItem.id
+      );
+      if (selection) {
+        if (comboItem.quantity * quantity > selection.variant.stock) {
+          return {
+            error: `${comboItem.product.name} (${selection.variant.name}) doesn't have enough stock`,
+          };
+        }
+      } else if (comboItem.quantity * quantity > comboItem.product.stockQuantity) {
         return { error: `${comboItem.product.name} doesn't have enough stock` };
       }
     }

@@ -42,6 +42,11 @@ export default async function AccountOrderDetailPage({
                     ({item.variantName})
                   </span>
                 )}
+                {item.optionsSummary && (
+                  <span className="mt-0.5 block text-xs text-graphite/50">
+                    {item.optionsSummary}
+                  </span>
+                )}
               </span>
               <span className="text-graphite/70">
                 {formatINR(item.lineTotal.toString())}

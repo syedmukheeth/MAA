@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 
-import { formatINR } from "@/lib/format";
 import Link from "next/link";
+import { PriceBlock } from "@/components/shop/PriceBlock";
 
 const CATEGORIES: Record<string, string> = {
   LIVING_ROOM: "Living Room",
@@ -21,6 +21,7 @@ export type BestSellerProduct = {
   slug: string;
   category: string;
   price: string | number;
+  mrp?: string | number | null;
   images: string[];
 };
 
@@ -76,7 +77,9 @@ export function BestSellers({ products }: { products: BestSellerProduct[] }) {
                 <h3 className="mt-1 font-heading text-lg text-charcoal group-hover:text-bronze transition-colors">
                   {p.name}
                 </h3>
-                <p className="mt-1 text-sm text-graphite/70">{formatINR(p.price.toString())}</p>
+                <div className="mt-1">
+                  <PriceBlock price={p.price} mrp={p.mrp} size="sm" />
+                </div>
               </Link>
             </motion.div>
           ))}

@@ -5,12 +5,11 @@ import { BrandStatement } from "@/components/sections/BrandStatement";
 import { Collections } from "@/components/sections/Collections";
 import { Craftsmanship } from "@/components/sections/Craftsmanship";
 import { Materials } from "@/components/sections/Materials";
-import { CustomStudio } from "@/components/sections/CustomStudio";
+import { CustomStudioTeaser } from "@/components/sections/CustomStudioTeaser";
 import { BestSellers } from "@/components/sections/BestSellers";
-import { RoomInspirations } from "@/components/sections/RoomInspirations";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { TrustBuilders } from "@/components/sections/TrustBuilders";
-import { ShowroomFaqContact } from "@/components/sections/ShowroomFaqContact";
+import { ShowroomTeaser } from "@/components/sections/ShowroomTeaser";
 import { getSiteSettings } from "@/lib/site-settings";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCartItemCount } from "@/lib/cart";
@@ -27,11 +26,12 @@ export default async function Home() {
       orderBy: { sortOrder: "asc" },
     }),
     prisma.product.findMany({
-      where: { featured: true },
+      where: { featured: true, isActive: true },
       take: 4,
     }),
     prisma.product.groupBy({
       by: ["category"],
+      where: { isActive: true },
       _count: {
         id: true,
       },
@@ -59,16 +59,16 @@ export default async function Home() {
         <Collections categoryCounts={categoryCounts} />
         <Craftsmanship />
         <Materials />
-        <CustomStudio />
+        <CustomStudioTeaser />
         <BestSellers products={featuredProducts.map(p => ({
           id: p.id,
           name: p.name,
           slug: p.slug,
           category: p.category,
           price: p.price.toString(),
+          mrp: p.mrp?.toString() ?? null,
           images: p.images,
         }))} />
-        <RoomInspirations />
         <Testimonials testimonials={testimonials} />
         <TrustBuilders
           yearsExperience={settings.statYearsExperience}
@@ -76,11 +76,9 @@ export default async function Home() {
           happyFamilies={settings.statHappyFamilies}
           googleRating={settings.statGoogleRating}
         />
-        <ShowroomFaqContact
+        <ShowroomTeaser
           address={settings.showroomAddress}
           hours={settings.showroomHours}
-          phone={settings.showroomPhone}
-          whatsapp={settings.showroomWhatsapp}
         />
       </main>
       <Footer

@@ -61,10 +61,12 @@ function getWoodColorHex(wood: string | null): string | null {
 export function VariantPicker({
   productId,
   basePrice,
+  mrp = null,
   variants,
 }: {
   productId: string;
   basePrice: number;
+  mrp?: number | null;
   variants: VariantOption[];
 }) {
   const [selectedId, setSelectedId] = useState<string>(
@@ -84,6 +86,10 @@ export function VariantPicker({
   );
 
   const price = basePrice + (selected?.priceDelta ?? 0);
+  // MRP is fixed per product; the discount is recomputed against the
+  // delta-adjusted selling price and hidden if the delta erases it.
+  const hasOffer = mrp !== null && mrp > price;
+  const offPct = hasOffer ? Math.round(((mrp - price) / mrp) * 100) : 0;
   const inStock = (selected?.stock ?? 0) > 0;
   const lowStock =
     inStock && (selected?.stock ?? 0) <= (selected?.lowStockThreshold ?? 0);
@@ -101,9 +107,19 @@ export function VariantPicker({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 15 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="text-2xl font-semibold text-charcoal"
+            className="flex items-baseline gap-2 text-2xl font-semibold text-charcoal"
           >
-            &#8377;{formatInr(price)}
+            <span>&#8377;{formatInr(price)}</span>
+            {hasOffer && (
+              <>
+                <span className="text-base font-normal text-graphite/50 line-through">
+                  &#8377;{formatInr(mrp)}
+                </span>
+                <span className="text-sm font-semibold text-green-600">
+                  {offPct}% off
+                </span>
+              </>
+            )}
           </motion.p>
         </AnimatePresence>
       </div>

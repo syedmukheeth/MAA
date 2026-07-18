@@ -64,6 +64,7 @@ export async function placeOrder(
           product: true,
           variant: true,
           combo: { include: { items: { include: { product: true } } } },
+          comboSelections: { include: { variant: true } },
         },
       },
     },
@@ -96,12 +97,16 @@ export async function placeOrder(
         variantId: string | null;
         variantName: string | null;
         name: string;
+        optionsSummary: string | null;
         unitPrice: Money;
         quantity: number;
       }[] = [];
 
       for (const item of cart.items) {
         if (item.product) {
+          if (!item.product.isActive) {
+            throw new Error(`${item.product.name} is no longer available`);
+          }
           const variant =
             item.variant ?? (await getDefaultVariant(tx, item.product.id));
           addRequired(variant.id, item.product.name, item.quantity);
@@ -111,18 +116,32 @@ export async function placeOrder(
             variantId: variant.id,
             variantName: variant.isDefault ? null : variant.name,
             name: item.product.name,
+            optionsSummary: null,
             // Decimal throughout — never Number(). See src/lib/money.ts.
             unitPrice: toPaise(money(item.product.price).plus(money(variant.priceDelta))),
             quantity: item.quantity,
           });
         } else if (item.combo) {
+          const summaryParts: string[] = [];
           for (const comboItem of item.combo.items) {
-            const variant = await getDefaultVariant(tx, comboItem.productId);
+            if (!comboItem.product.isActive) {
+              throw new Error(`${item.combo.name} is no longer available`);
+            }
+            // Customer's chosen option deducts THAT variant, not the default.
+            const selection = item.comboSelections.find(
+              (s) => s.comboItemId === comboItem.id
+            );
+            const variant =
+              selection?.variant ??
+              (await getDefaultVariant(tx, comboItem.productId));
             addRequired(
               variant.id,
               comboItem.product.name,
               comboItem.quantity * item.quantity
             );
+            if (selection) {
+              summaryParts.push(`${comboItem.product.name}: ${variant.name}`);
+            }
           }
           lines.push({
             productId: null,
@@ -130,6 +149,7 @@ export async function placeOrder(
             variantId: null,
             variantName: null,
             name: item.combo.name,
+            optionsSummary: summaryParts.length > 0 ? summaryParts.join("; ") : null,
             unitPrice: toPaise(money(item.combo.bundlePrice)),
             quantity: item.quantity,
           });
@@ -152,6 +172,7 @@ export async function placeOrder(
         variantId: line.variantId,
         variantName: line.variantName,
         name: line.name,
+        optionsSummary: line.optionsSummary,
         unitPrice: line.unitPrice,
         quantity: line.quantity,
         lineTotal: toPaise(line.unitPrice.times(line.quantity)),
