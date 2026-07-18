@@ -16,17 +16,17 @@ const COLUMNS = [
   {
     title: "Studio",
     links: [
-      { label: "Custom Furniture", href: "/#custom-studio" },
+      { label: "Custom Furniture", href: "/custom-studio" },
       { label: "Combo Offers", href: "/combos" },
       { label: "Materials", href: "/#materials" },
-      { label: "Room Inspirations", href: "/#room-inspirations" },
+      { label: "Room Inspirations", href: "/showroom" },
     ],
   },
   {
     title: "Company",
     links: [
       { label: "Our Story", href: "/#craftsmanship" },
-      { label: "Showroom", href: "/#showroom" },
+      { label: "Showroom", href: "/showroom" },
       { label: "Reviews", href: "/#testimonials" },
       { label: "All Products", href: "/products" },
     ],

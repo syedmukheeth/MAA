@@ -10,11 +10,13 @@ export function AddToCartButton({
   productId,
   variantId,
   comboId,
+  comboSelections,
   disabled,
 }: {
   productId?: string;
   variantId?: string;
   comboId?: string;
+  comboSelections?: { comboItemId: string; variantId: string }[];
   disabled?: boolean;
 }) {
   const router = useRouter();
@@ -27,7 +29,13 @@ export function AddToCartButton({
     setPending(true);
     setError(null);
     try {
-      const result = await addToCart({ productId, variantId, comboId, quantity });
+      const result = await addToCart({
+        productId,
+        variantId,
+        comboId,
+        comboSelections,
+        quantity,
+      });
       if (result?.requiresAuth) {
         router.push(`/login?next=${encodeURIComponent(pathname)}`);
         return;

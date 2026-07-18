@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { prisma } from "@/lib/db";
 import { CATEGORY_LABELS } from "@/lib/validations/product";
 import { isInStock, isLowStock } from "@/lib/products";
 import { AddToCartButton } from "@/components/shop/AddToCartButton";
 import { VariantPicker } from "@/components/shop/VariantPicker";
-import { formatINR } from "@/lib/money";
+import { ProductGallery } from "@/components/shop/ProductGallery";
+import { ProductCard } from "@/components/shop/ProductCard";
+import { PriceBlock } from "@/components/shop/PriceBlock";
 import { getSiteUrl, SITE_NAME } from "@/lib/site-url";
 import { JsonLd } from "@/components/seo/JsonLd";
 
@@ -77,7 +78,14 @@ export default async function ProductDetailPage({
 }) {
   const { slug } = await params;
   const product = await findProduct(slug);
-  if (!product) notFound();
+  // Deactivated products disappear from the storefront entirely.
+  if (!product || !product.isActive) notFound();
+
+  const similar = await prisma.product.findMany({
+    where: { category: product.category, id: { not: product.id }, isActive: true },
+    orderBy: { createdAt: "desc" },
+    take: 4,
+  });
 
   const inStock = isInStock(product);
   const lowStock = isLowStock(product);
@@ -126,30 +134,7 @@ export default async function ProductDetailPage({
     <div className="mx-auto max-w-6xl px-6 py-16 lg:px-10">
       <JsonLd data={productSchema} />
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-        <div className="space-y-4">
-          <div className="relative aspect-square overflow-hidden rounded-2xl bg-cream">
-            {product.images[0] ? (
-              <Image
-                src={product.images[0]}
-                alt={product.name}
-                fill
-                className="object-cover"
-              />
-            ) : null}
-          </div>
-          {product.images.length > 1 && (
-            <div className="grid grid-cols-4 gap-3">
-              {product.images.slice(1).map((img) => (
-                <div
-                  key={img}
-                  className="relative aspect-square overflow-hidden rounded-lg bg-cream"
-                >
-                  <Image src={img} alt={product.name} fill className="object-cover" />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ProductGallery images={product.images} alt={product.name} />
 
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-bronze">
@@ -163,14 +148,19 @@ export default async function ProductDetailPage({
               <VariantPicker
                 productId={product.id}
                 basePrice={Number(product.price)}
+                mrp={product.mrp ? Number(product.mrp) : null}
                 variants={variantOptions}
               />
             </div>
           ) : (
             <>
-              <p className="mt-4 text-2xl text-charcoal">
-                {formatINR(product.price.toString())}
-              </p>
+              <div className="mt-4">
+                <PriceBlock
+                  price={product.price.toString()}
+                  mrp={product.mrp?.toString()}
+                  size="lg"
+                />
+              </div>
 
               <p className="mt-2 text-sm">
                 {!inStock ? (
@@ -210,6 +200,32 @@ export default async function ProductDetailPage({
           )}
         </div>
       </div>
+
+      {similar.length > 0 && (
+        <section className="mt-20">
+          <h2 className="font-heading text-2xl text-charcoal">
+            You may also like
+          </h2>
+          <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-8 lg:grid-cols-4">
+            {similar.map((p) => (
+              <ProductCard
+                key={p.id}
+                product={{
+                  id: p.id,
+                  name: p.name,
+                  slug: p.slug,
+                  price: p.price.toString(),
+                  mrp: p.mrp?.toString() ?? null,
+                  category: p.category,
+                  images: p.images,
+                  stockQuantity: p.stockQuantity,
+                  lowStockThreshold: p.lowStockThreshold,
+                }}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

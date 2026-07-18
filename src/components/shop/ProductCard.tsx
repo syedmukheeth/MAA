@@ -2,12 +2,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { CATEGORY_LABELS } from "@/lib/validations/product";
 import { isInStock } from "@/lib/products";
+import { PriceBlock } from "@/components/shop/PriceBlock";
 
 export type ProductCardData = {
   id: string;
   name: string;
   slug: string;
   price: string;
+  mrp?: string | null;
   category: keyof typeof CATEGORY_LABELS;
   images: string[];
   stockQuantity: number;
@@ -55,7 +57,9 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       <h3 className="mt-1 font-heading text-base text-charcoal group-hover:text-bronze transition-colors duration-300">
         {product.name}
       </h3>
-      <p className="mt-1 text-sm font-medium text-graphite/80">&#8377;{product.price}</p>
+      <div className="mt-1">
+        <PriceBlock price={product.price} mrp={product.mrp} size="sm" />
+      </div>
     </Link>
   );
 }

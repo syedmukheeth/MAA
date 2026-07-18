@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { prisma } from "@/lib/db";
-import { AddToCartButton } from "@/components/shop/AddToCartButton";
+import { ComboItemsPicker } from "@/components/shop/ComboItemsPicker";
 import { formatINR } from "@/lib/money";
 import { getSiteUrl, SITE_NAME } from "@/lib/site-url";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -55,13 +55,43 @@ export default async function ComboDetailPage({
   const { slug } = await params;
   const combo = await prisma.combo.findUnique({
     where: { slug },
-    include: { items: { include: { product: true } } },
+    include: {
+      items: {
+        include: {
+          product: true,
+          options: { include: { variant: true } },
+        },
+      },
+    },
   });
   if (!combo || !combo.isActive) notFound();
 
-  const outOfStock = combo.items.some(
-    (i) => i.product.stockQuantity < i.quantity
-  );
+  const hasInactiveProduct = combo.items.some((i) => !i.product.isActive);
+  const outOfStock =
+    hasInactiveProduct ||
+    combo.items.some((i) => i.product.stockQuantity < i.quantity);
+
+  const variantLabel = (v: {
+    name: string;
+    woodType: string | null;
+    finish: string | null;
+    size: string | null;
+  }) => {
+    const detail = [v.woodType, v.finish, v.size].filter(Boolean).join(" / ");
+    return detail || v.name;
+  };
+
+  const pickerItems = combo.items.map((i) => ({
+    comboItemId: i.id,
+    productName: i.product.name,
+    image: i.product.images[0] ?? null,
+    quantity: i.quantity,
+    options: i.options.map((o) => ({
+      variantId: o.variantId,
+      label: variantLabel(o.variant),
+      inStock: o.variant.stock >= i.quantity,
+    })),
+  }));
 
   const comboSchema = {
     "@context": "https://schema.org",
@@ -108,22 +138,17 @@ export default async function ComboDetailPage({
             {combo.description}
           </p>
 
-          <div className="mt-6 space-y-2">
-            <p className="text-sm text-charcoal">Includes:</p>
-            <ul className="space-y-1 text-sm text-graphite/70">
-              {combo.items.map((i) => (
-                <li key={i.id}>
-                  {i.quantity} x {i.product.name}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="mt-8">
-            <AddToCartButton comboId={combo.id} disabled={outOfStock} />
+          <div className="mt-6">
+            <ComboItemsPicker
+              comboId={combo.id}
+              items={pickerItems}
+              disabled={outOfStock}
+            />
             {outOfStock && (
               <p className="mt-2 text-sm text-brand-red">
-                One or more items in this combo are out of stock.
+                {hasInactiveProduct
+                  ? "This combo is currently unavailable."
+                  : "One or more items in this combo are out of stock."}
               </p>
             )}
           </div>

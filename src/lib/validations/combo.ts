@@ -3,6 +3,8 @@ import { z } from "zod";
 export const comboItemSchema = z.object({
   productId: z.string().min(1, "Choose a product"),
   quantity: z.coerce.number().int().min(1),
+  /// Variant ids the customer may pick for this item; empty = fixed item.
+  optionVariantIds: z.array(z.string()).default([]),
 });
 
 export const comboSchema = z.object({

@@ -19,11 +19,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: base, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
     { url: `${base}/products`, changeFrequency: "daily", priority: 0.9 },
     { url: `${base}/combos`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/custom-studio`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/showroom`, changeFrequency: "monthly", priority: 0.7 },
   ];
 
   try {
     const [products, combos] = await Promise.all([
-      prisma.product.findMany({ select: { slug: true, updatedAt: true } }),
+      prisma.product.findMany({
+        where: { isActive: true },
+        select: { slug: true, updatedAt: true },
+      }),
       prisma.combo.findMany({
         where: { isActive: true },
         select: { slug: true, updatedAt: true },

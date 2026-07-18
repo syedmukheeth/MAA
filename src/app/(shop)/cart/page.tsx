@@ -15,7 +15,14 @@ export default async function CartPage() {
       where: { userId: session.sub },
       include: {
         items: {
-          include: { product: true, variant: true, combo: true },
+          include: {
+            product: true,
+            variant: true,
+            combo: true,
+            comboSelections: {
+              include: { variant: true, comboItem: { include: { product: true } } },
+            },
+          },
           orderBy: { createdAt: "asc" },
         },
       },
@@ -58,7 +65,16 @@ export default async function CartPage() {
                   id: item.id,
                   name: item.product?.name ?? item.combo?.name ?? "Item",
                   variantLabel:
-                    item.variant && !item.variant.isDefault ? item.variant.name : null,
+                    item.variant && !item.variant.isDefault
+                      ? item.variant.name
+                      : item.comboSelections.length > 0
+                        ? item.comboSelections
+                            .map(
+                              (s) =>
+                                `${s.comboItem.product.name}: ${s.variant.name}`
+                            )
+                            .join("; ")
+                        : null,
                   image: item.product?.images[0] ?? item.combo?.image ?? null,
                   unitPrice: unitPriceOf(item).toString(),
                   quantity: item.quantity,

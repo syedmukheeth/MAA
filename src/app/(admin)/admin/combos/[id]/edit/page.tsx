@@ -13,8 +13,21 @@ export default async function EditComboPage({
   const { id } = await params;
 
   const [combo, products] = await Promise.all([
-    prisma.combo.findUnique({ where: { id }, include: { items: true } }),
-    prisma.product.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.combo.findUnique({
+      where: { id },
+      include: { items: { include: { options: true } } },
+    }),
+    prisma.product.findMany({
+      select: {
+        id: true,
+        name: true,
+        variants: {
+          select: { id: true, name: true, woodType: true, finish: true, size: true },
+          orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+        },
+      },
+      orderBy: { name: "asc" },
+    }),
   ]);
   if (!combo) notFound();
 
@@ -35,6 +48,7 @@ export default async function EditComboPage({
           items: combo.items.map((i) => ({
             productId: i.productId,
             quantity: i.quantity,
+            optionVariantIds: i.options.map((o) => o.variantId),
           })),
         }}
       />

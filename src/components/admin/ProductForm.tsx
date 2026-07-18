@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ROOM_CATEGORIES, CATEGORY_LABELS } from "@/lib/validations/product";
+import { slugify } from "@/lib/slugify";
 import { createProduct, updateProduct } from "@/actions/products";
 import { getProductImageUploadSignature } from "@/actions/upload";
 import { ImageUploader } from "@/components/admin/ImageUploader";
@@ -37,12 +38,14 @@ type ProductDefaults = {
   slug: string;
   description: string;
   price: string;
+  mrp?: string;
   category: (typeof ROOM_CATEGORIES)[number];
   materials: string;
   dimensions: string;
   images: string[];
   variants: VariantRow[];
   featured: boolean;
+  isActive?: boolean;
 };
 
 const EMPTY_VARIANT: VariantRow = {
@@ -75,9 +78,12 @@ export function ProductForm({
   defaults?: ProductDefaults;
 }) {
   const router = useRouter();
-  const [values, setValues] = useState(defaults);
+  const [values, setValues] = useState({ mrp: "", ...defaults });
   const [category, setCategory] = useState(defaults.category);
   const [featured, setFeatured] = useState(defaults.featured);
+  const [isActive, setIsActive] = useState(defaults.isActive ?? true);
+  // Slug follows the name automatically until the manager edits it by hand.
+  const [slugTouched, setSlugTouched] = useState(Boolean(defaults.id));
   const [variants, setVariants] = useState<VariantRow[]>(
     defaults.variants.length > 0 ? defaults.variants : [{ ...EMPTY_VARIANT }]
   );
@@ -115,6 +121,7 @@ export function ProductForm({
       slug: values.slug,
       description: values.description,
       price: values.price,
+      mrp: values.mrp,
       category,
       materials: values.materials,
       dimensions: values.dimensions,
@@ -132,6 +139,7 @@ export function ProductForm({
           v.lowStockThreshold === "" ? 3 : Number(v.lowStockThreshold),
       })),
       featured,
+      isActive,
     };
 
     const result = isEdit
@@ -154,18 +162,39 @@ export function ProductForm({
           <Input
             id="name"
             required
+            placeholder="Oakridge Lounge Chair"
             value={values.name}
-            onChange={(e) => setValues({ ...values, name: e.target.value })}
+            onChange={(e) =>
+              setValues({
+                ...values,
+                name: e.target.value,
+                slug: slugTouched ? values.slug : slugify(e.target.value),
+              })
+            }
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="slug">Slug</Label>
+          <Label htmlFor="slug">
+            URL slug{" "}
+            <span className="text-xs font-normal text-muted-foreground">
+              (auto-generated from name)
+            </span>
+          </Label>
           <Input
             id="slug"
             required
             placeholder="oakridge-lounge-chair"
             value={values.slug}
-            onChange={(e) => setValues({ ...values, slug: e.target.value })}
+            onChange={(e) => {
+              setSlugTouched(true);
+              // Light cleanup while typing; full slugify would eat the
+              // hyphen as it is being typed.
+              setValues({
+                ...values,
+                slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-"),
+              });
+            }}
+            onBlur={() => setValues((v) => ({ ...v, slug: slugify(v.slug) }))}
           />
         </div>
       </div>
@@ -185,7 +214,7 @@ export function ProductForm({
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="price">Base price (INR)</Label>
+          <Label htmlFor="price">Selling price (INR)</Label>
           <Input
             id="price"
             type="number"
@@ -195,6 +224,30 @@ export function ProductForm({
             value={values.price}
             onChange={(e) => setValues({ ...values, price: e.target.value })}
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="mrp">MRP (optional)</Label>
+          <Input
+            id="mrp"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Struck-through price"
+            value={values.mrp}
+            onChange={(e) => setValues({ ...values, mrp: e.target.value })}
+          />
+          {Number(values.mrp) > Number(values.price) &&
+            Number(values.price) > 0 && (
+              <p className="text-xs text-green-600">
+                Customers see{" "}
+                {Math.round(
+                  ((Number(values.mrp) - Number(values.price)) /
+                    Number(values.mrp)) *
+                    100
+                )}
+                % off
+              </p>
+            )}
         </div>
         <div className="space-y-2">
           <Label>Category</Label>
@@ -371,15 +424,26 @@ export function ProductForm({
         />
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-foreground">
-        <input
-          type="checkbox"
-          checked={featured}
-          onChange={(e) => setFeatured(e.target.checked)}
-          className="size-4 rounded border-border"
-        />
-        Featured on storefront
-      </label>
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            checked={featured}
+            onChange={(e) => setFeatured(e.target.checked)}
+            className="size-4 rounded border-border"
+          />
+          Featured on storefront
+        </label>
+        <label className="flex items-center gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+            className="size-4 rounded border-border"
+          />
+          Active (visible and purchasable on the storefront)
+        </label>
+      </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 

@@ -112,6 +112,8 @@ model Product {
   slug              String       @unique
   description       String
   price             Decimal      @db.Decimal(10, 2)
+  /// Compare-at price (MRP). Shown struck-through when greater than price.
+  mrp               Decimal?     @db.Decimal(10, 2)
   category          RoomCategory
   materials         String[]
   dimensions        String?
@@ -119,6 +121,9 @@ model Product {
   stockQuantity     Int          @default(0)
   lowStockThreshold Int          @default(5)
   featured          Boolean      @default(false)
+  /// Soft deactivate: inactive products are hidden from the storefront and
+  /// block any combo that contains them, without destroying order history.
+  isActive          Boolean      @default(true)
   createdById       String
   createdBy         User         @relation("ProductCreatedBy", fields: [createdById], references: [id])
   comboItems        ComboItem[]
@@ -147,6 +152,8 @@ model Variant {
   cartItems         CartItem[]
   orderItems        OrderItem[]
   movements         StockMovement[]
+  comboItemOptions  ComboItemOption[]
+  comboSelections   CartComboSelection[]
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
@@ -188,14 +195,28 @@ model Combo {
 }
 
 model ComboItem {
-  id        String  @id @default(cuid())
+  id        String            @id @default(cuid())
   comboId   String
-  combo     Combo   @relation(fields: [comboId], references: [id], onDelete: Cascade)
+  combo     Combo             @relation(fields: [comboId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int     @default(1)
+  product   Product           @relation(fields: [productId], references: [id])
+  quantity  Int               @default(1)
+  /// Variants the manager allows the customer to choose for this item.
+  /// Empty = fixed item, storefront shows "no other options available".
+  options        ComboItemOption[]
+  cartSelections CartComboSelection[]
 
   @@unique([comboId, productId])
+}
+
+model ComboItemOption {
+  id          String    @id @default(cuid())
+  comboItemId String
+  comboItem   ComboItem @relation(fields: [comboItemId], references: [id], onDelete: Cascade)
+  variantId   String
+  variant     Variant   @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([comboItemId, variantId])
 }
 
 model Cart {
@@ -220,9 +241,23 @@ model CartItem {
   quantity  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  comboSelections CartComboSelection[]
 
   @@unique([cartId, variantId])
   @@unique([cartId, comboId])
+}
+
+/// Customer's chosen variant for one option-bearing item inside a combo cart line.
+model CartComboSelection {
+  id          String    @id @default(cuid())
+  cartItemId  String
+  cartItem    CartItem  @relation(fields: [cartItemId], references: [id], onDelete: Cascade)
+  comboItemId String
+  comboItem   ComboItem @relation(fields: [comboItemId], references: [id], onDelete: Cascade)
+  variantId   String
+  variant     Variant   @relation(fields: [variantId], references: [id])
+
+  @@unique([cartItemId, comboItemId])
 }
 
 model Order {
@@ -270,6 +305,9 @@ model OrderItem {
   variant     Variant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
   variantName String?
   name        String
+  /// Human-readable snapshot of per-item option choices for combo lines,
+  /// e.g. "Dining Table: Teak / Walnut; Chairs: Oak".
+  optionsSummary String?
   unitPrice   Decimal  @db.Decimal(10, 2)
   quantity    Int
   lineTotal   Decimal  @db.Decimal(10, 2)
