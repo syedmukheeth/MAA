@@ -25,7 +25,8 @@ export const DEFAULT_SITE_SETTINGS = {
   statHappyFamilies: 3600,
   statGoogleRating: "4.9/5",
 
-  showroomAddress: "MAA FURNITURE Showroom, Main Road, Kurnool, Andhra Pradesh",
+  showroomAddress:
+    "Door No 87/1240, MAA FURNITURE, Ramalingam Subhashini Complex, 4th employees colony, near by Shakthi Auto Mobiles, Revenue Colony, Sree Rama Nagar, Kurnool, Kalluru, Andhra Pradesh 518002",
   showroomHours: "Mon - Sat: 10:00 AM - 8:00 PM · Sun: 11:00 AM - 6:00 PM",
   showroomPhone: "",
   showroomWhatsapp: "",
