@@ -28,7 +28,7 @@ const STEPS = [
     title: "Assembly",
     desc: "Joinery over hardware wherever possible, built to outlast trends.",
     image:
-      "https://images.unsplash.com/photo-1610557892470-76d747e4927f?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=1600&auto=format&fit=crop",
   },
   {
     title: "Hand Finishing",
@@ -64,6 +64,7 @@ export function Craftsmanship() {
   const sentinelsRef = useRef<(HTMLDivElement | null)[]>([]);
   const [active, setActive] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const scrollTicking = useRef(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -95,17 +96,23 @@ export function Craftsmanship() {
   }, [isMobile]);
 
   const handleMobileScroll = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const scrollLeft = container.scrollLeft;
-    const width = container.getBoundingClientRect().width;
-    // Account for slight offsets
-    const newActive = Math.min(
-      STEPS.length - 1,
-      Math.max(0, Math.round(scrollLeft / (width - 16)))
-    );
-    if (newActive !== active) {
-      setActive(newActive);
+    if (!scrollTicking.current) {
+      window.requestAnimationFrame(() => {
+        const container = scrollContainerRef.current;
+        if (container) {
+          const scrollLeft = container.scrollLeft;
+          const width = container.getBoundingClientRect().width;
+          const newActive = Math.min(
+            STEPS.length - 1,
+            Math.max(0, Math.round(scrollLeft / (width - 16)))
+          );
+          if (newActive !== active) {
+            setActive(newActive);
+          }
+        }
+        scrollTicking.current = false;
+      });
+      scrollTicking.current = true;
     }
   };
 

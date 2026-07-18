@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/components/shop/SafeImage";
 import { CATEGORY_LABELS } from "@/lib/validations/product";
 import { isInStock } from "@/lib/products";
 import { PriceBlock } from "@/components/shop/PriceBlock";
@@ -25,17 +25,19 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-cream border border-linen/60 transition-colors duration-300 group-hover:border-bronze/30">
         {image ? (
           <>
-            <Image
+            <SafeImage
               src={image}
               alt={product.name}
               fill
+              sizes="(min-width: 1024px) 25vw, 50vw"
               className="object-cover transition-transform duration-700 ease-out group-hover:scale-104"
             />
             {product.images[1] && (
-              <Image
+              <SafeImage
                 src={product.images[1]}
                 alt={product.name}
                 fill
+                sizes="(min-width: 1024px) 25vw, 50vw"
                 className="object-cover absolute inset-0 opacity-0 transition-opacity duration-700 ease-in-out group-hover:opacity-100"
               />
             )}

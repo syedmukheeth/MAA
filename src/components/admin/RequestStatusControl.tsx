@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { updateRequestStatus } from "@/actions/custom-requests";
+import { Loader2 } from "lucide-react";
 import {
   REQUEST_STATUS_FLOW,
   REQUEST_STATUS_LABELS,
@@ -77,8 +78,9 @@ export function RequestStatusControl({
               size="sm"
               disabled={isPending}
               onClick={() => move(next)}
-              className="rounded-full bg-bronze text-ivory hover:bg-bronze/90"
+              className="rounded-full bg-bronze text-ivory hover:bg-bronze/90 flex items-center justify-center gap-1.5"
             >
+              {isPending && <Loader2 className="animate-spin" size={14} />}
               {REQUEST_ACTION_LABELS[next]}
             </Button>
           )
@@ -103,7 +105,9 @@ export function RequestStatusControl({
               variant="destructive"
               disabled={isPending || reason.trim().length < 3}
               onClick={() => move("CLOSED", reason)}
+              className="flex items-center justify-center gap-1.5"
             >
+              {isPending && <Loader2 className="animate-spin" size={14} />}
               {isPending ? "Saving..." : "Confirm"}
             </Button>
             <Button

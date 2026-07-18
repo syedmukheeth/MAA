@@ -57,6 +57,7 @@ export function Materials() {
                 src={m.image}
                 alt={m.name}
                 fill
+                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                 className="object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/10 to-transparent" />

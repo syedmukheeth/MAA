@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/components/shop/SafeImage";
 import { CATEGORY_LABELS } from "@/lib/validations/product";
 import { isInStock } from "@/lib/products";
 import { PriceBlock } from "@/components/shop/PriceBlock";
@@ -21,7 +21,7 @@ export function ProductListItem({
     >
       <div className="relative aspect-square w-28 shrink-0 overflow-hidden rounded-lg bg-cream sm:w-40">
         {image ? (
-          <Image
+          <SafeImage
             src={image}
             alt={product.name}
             fill

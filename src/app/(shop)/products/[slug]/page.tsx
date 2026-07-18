@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { prisma } from "@/lib/db";
 import { CATEGORY_LABELS } from "@/lib/validations/product";
 import { isInStock, isLowStock } from "@/lib/products";
@@ -19,14 +20,14 @@ import { JsonLd } from "@/components/seo/JsonLd";
  */
 export const revalidate = 300;
 
-function findProduct(slug: string) {
+const findProduct = cache((slug: string) => {
   return prisma.product.findUnique({
     where: { slug },
     include: {
       variants: { orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }] },
     },
   });
-}
+});
 
 export async function generateMetadata({
   params,

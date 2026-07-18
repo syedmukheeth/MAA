@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/components/shop/SafeImage";
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { PriceBlock } from "@/components/shop/PriceBlock";
@@ -160,7 +160,7 @@ export function SearchBar({
                   >
                     <span className="relative block size-10 shrink-0 overflow-hidden rounded-md bg-cream">
                       {s.image && (
-                        <Image
+                        <SafeImage
                           src={s.image}
                           alt=""
                           fill
