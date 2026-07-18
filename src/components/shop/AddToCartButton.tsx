@@ -6,6 +6,8 @@ import { ShoppingCart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addToCart } from "@/actions/cart";
 
+import { WishlistToggleButton } from "@/components/shop/WishlistToggleButton";
+
 export function AddToCartButton({
   productId,
   variantId,
@@ -85,6 +87,7 @@ export function AddToCartButton({
           )}
           {pending ? "Adding to Cart..." : "Add to Cart"}
         </Button>
+        {productId && <WishlistToggleButton productId={productId} />}
       </div>
       {error && <p className="mt-2 text-sm text-brand-red">{error}</p>}
     </div>

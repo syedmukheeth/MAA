@@ -190,7 +190,7 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
         <div className="space-y-2">
           <Label>Delivery message (shown on homepage)</Label>
           <Input
-            placeholder="Pan-India Delivery Available"
+            placeholder="Delivery in Andhra Pradesh Only"
             value={values.deliveryMessage}
             onChange={(e) => set("deliveryMessage", e.target.value)}
           />

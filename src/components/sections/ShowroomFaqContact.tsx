@@ -21,7 +21,7 @@ const FAQS = [
   },
   {
     q: "Do you deliver outside your city?",
-    a: "Yes, we ship pan-India with white-glove delivery and in-home placement for larger pieces like beds, sofas, and dining sets.",
+    a: "Currently, we deliver only within Andhra Pradesh. If you reside in another state, we hope to serve you soon! Feel free to contact us at 8886995345 or 9912330151 for inquiries.",
   },
   {
     q: "What warranty do you offer?",
