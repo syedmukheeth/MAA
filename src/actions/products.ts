@@ -261,3 +261,41 @@ export async function deleteProduct(id: string): Promise<{ error?: string }> {
   revalidatePath("/products");
   return {};
 }
+
+export async function getProductsByIds(ids: string[]) {
+  try {
+    const products = await prisma.product.findMany({
+      where: {
+        id: { in: ids },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        category: true,
+        price: true,
+        mrp: true,
+        images: true,
+        stockQuantity: true,
+        lowStockThreshold: true,
+      },
+    });
+    return {
+      products: products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        category: p.category,
+        price: p.price.toString(),
+        mrp: p.mrp?.toString() ?? null,
+        images: p.images,
+        stockQuantity: p.stockQuantity,
+        lowStockThreshold: p.lowStockThreshold,
+      })),
+    };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to load products" };
+  }
+}
+

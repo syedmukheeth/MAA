@@ -67,7 +67,7 @@ export default async function Image() {
             MAA FURNITURE
           </div>
           <div style={{ fontSize: 22, color: "rgba(251,250,247,0.6)" }}>
-            Pan-India Delivery
+            Andhra Pradesh Delivery
           </div>
         </div>
       </div>

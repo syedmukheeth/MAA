@@ -67,6 +67,16 @@ export function Footer({
               generations.
               {deliveryMessage ? ` ${deliveryMessage}.` : ""}
             </p>
+            <div className="mt-4 text-xs text-ivory/70 space-y-1">
+              <p>
+                <span className="text-bronze font-medium">Primary:</span>{" "}
+                <a href="tel:8886995345" className="hover:text-ivory transition-colors">8886995345</a>
+              </p>
+              <p>
+                <span className="text-bronze font-medium">Secondary:</span>{" "}
+                <a href="tel:9912330151" className="hover:text-ivory transition-colors">9912330151</a>
+              </p>
+            </div>
             <div className="mt-6 flex gap-4">
               <a
                 href={instagramUrl || "#"}

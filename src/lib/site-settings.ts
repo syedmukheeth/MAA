@@ -28,13 +28,13 @@ export const DEFAULT_SITE_SETTINGS = {
   showroomAddress:
     "Door No 87/1240, MAA FURNITURE, Ramalingam Subhashini Complex, 4th employees colony, near by Shakthi Auto Mobiles, Revenue Colony, Sree Rama Nagar, Kurnool, Kalluru, Andhra Pradesh 518002",
   showroomHours: "Mon - Sat: 10:00 AM - 8:00 PM · Sun: 11:00 AM - 6:00 PM",
-  showroomPhone: "",
-  showroomWhatsapp: "",
+  showroomPhone: "8886995345, 9912330151",
+  showroomWhatsapp: "8886995345",
 
-  instagramUrl: null as string | null,
+  instagramUrl: "https://www.instagram.com/maa.furnitures" as string | null,
   facebookUrl: null as string | null,
 
-  deliveryMessage: "Pan-India Delivery Available",
+  deliveryMessage: "Delivery in Andhra Pradesh Only",
 };
 
 export type SiteSettings = typeof DEFAULT_SITE_SETTINGS;
