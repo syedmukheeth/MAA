@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addToCart } from "@/actions/cart";
 
@@ -46,7 +46,6 @@ export function AddToCartButton({
       }
       router.push("/cart");
     } catch {
-      // A real failure (network, server) — don't misreport it as signed-out.
       setError("Something went wrong. Please try again.");
     } finally {
       setPending(false);
@@ -77,10 +76,14 @@ export function AddToCartButton({
           type="button"
           disabled={disabled || pending}
           onClick={onClick}
-          className="flex-1 rounded-full bg-bronze text-ivory hover:bg-bronze/90"
+          className="flex-1 rounded-full bg-bronze text-ivory hover:bg-bronze/90 flex items-center justify-center"
         >
-          <ShoppingCart className="mr-2" size={16} />
-          {pending ? "Adding..." : "Add to Cart"}
+          {pending ? (
+            <Loader2 className="mr-2 animate-spin" size={16} />
+          ) : (
+            <ShoppingCart className="mr-2" size={16} />
+          )}
+          {pending ? "Adding to Cart..." : "Add to Cart"}
         </Button>
       </div>
       {error && <p className="mt-2 text-sm text-brand-red">{error}</p>}

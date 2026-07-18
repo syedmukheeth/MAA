@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Image from "next/image";
-import { Trash2 } from "lucide-react";
+import { SafeImage } from "./SafeImage";
+import { Trash2, Loader2 } from "lucide-react";
 import { updateCartItemQuantity, removeFromCart } from "@/actions/cart";
 
 export type CartLineItemData = {
@@ -44,7 +44,7 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
     <div className="flex items-center gap-4 border-b border-border py-5">
       <div className="relative size-20 flex-none overflow-hidden rounded-lg bg-cream">
         {item.image && (
-          <Image src={item.image} alt={item.name} fill className="object-cover" />
+          <SafeImage src={item.image} alt={item.name} fill sizes="80px" className="object-cover" />
         )}
       </div>
       <div className="flex-1">
@@ -70,7 +70,13 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
         >
           -
         </button>
-        <span className="w-8 text-center text-sm">{quantity}</span>
+        {isPending ? (
+          <span className="flex w-8 justify-center items-center text-graphite/40">
+            <Loader2 className="animate-spin" size={14} />
+          </span>
+        ) : (
+          <span className="w-8 text-center text-sm">{quantity}</span>
+        )}
         <button
           disabled={isPending}
           className="px-3 py-1.5 text-graphite/70"

@@ -21,12 +21,10 @@ export type SortValue = (typeof SORT_OPTIONS)[number]["value"];
 export function ShopToolbar({
   scope = "products",
   listPath = "/products",
-  woodTypes = [],
   showViewToggle = true,
 }: {
   scope?: "products" | "combos";
   listPath?: string;
-  woodTypes?: string[];
   showViewToggle?: boolean;
 }) {
   const router = useRouter();
@@ -47,7 +45,6 @@ export function ShopToolbar({
   );
 
   const sort = searchParams.get("sort") ?? "newest";
-  const wood = searchParams.get("wood") ?? "";
   const view = searchParams.get("view") === "list" ? "list" : "grid";
 
   return (
@@ -80,24 +77,6 @@ export function ShopToolbar({
             ))}
           </select>
         </label>
-
-        {woodTypes.length > 0 && (
-          <label className="flex items-center gap-2 text-xs text-graphite/60">
-            Wood
-            <select
-              value={wood}
-              onChange={(e) => setParam("wood", e.target.value || null)}
-              className="h-9 rounded-full border border-border bg-white/70 px-3 text-sm text-charcoal outline-none focus:border-bronze"
-            >
-              <option value="">All woods</option>
-              {woodTypes.map((w) => (
-                <option key={w} value={w}>
-                  {w}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
 
         {showViewToggle && (
           <div

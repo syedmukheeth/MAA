@@ -34,13 +34,29 @@ export default async function CheckoutPage() {
     settings
   );
 
-  // Pre-fill from the customer's most recent order
-  const lastOrder = await prisma.order.findFirst({
-    where: { userId: session.sub },
-    orderBy: { createdAt: "desc" },
+  // Prefer default saved address, otherwise fall back to last order
+  const defaultAddress = await prisma.address.findFirst({
+    where: { userId: session.sub, isDefault: true },
   });
-  const defaults = lastOrder
-    ? {
+
+  let defaults = undefined;
+  if (defaultAddress) {
+    defaults = {
+      shippingName: defaultAddress.name,
+      shippingPhone: defaultAddress.phone,
+      shippingLine1: defaultAddress.line1,
+      shippingLine2: defaultAddress.line2 ?? undefined,
+      shippingCity: defaultAddress.city,
+      shippingState: defaultAddress.state,
+      shippingPincode: defaultAddress.pincode,
+    };
+  } else {
+    const lastOrder = await prisma.order.findFirst({
+      where: { userId: session.sub },
+      orderBy: { createdAt: "desc" },
+    });
+    if (lastOrder) {
+      defaults = {
         shippingName: lastOrder.shippingName,
         shippingPhone: lastOrder.shippingPhone,
         shippingLine1: lastOrder.shippingLine1,
@@ -48,8 +64,9 @@ export default async function CheckoutPage() {
         shippingCity: lastOrder.shippingCity,
         shippingState: lastOrder.shippingState,
         shippingPincode: lastOrder.shippingPincode,
-      }
-    : undefined;
+      };
+    }
+  }
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16 lg:px-10">

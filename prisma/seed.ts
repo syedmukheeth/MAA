@@ -209,7 +209,7 @@ const PRODUCTS: SeedProduct[] = [
     category: "DINING",
     materials: ["Mango Wood", "Granite"],
     dimensions: '48" x 20" x 42"',
-    images: [unsplash("photo-1572297870735-065dcf9dca86")],
+    images: [unsplash("photo-1517248135467-4c7edcad34c4")],
     variants: [{ name: "Default", stock: 2, lowStockThreshold: 2 }],
   },
   // OFFICE
@@ -250,7 +250,7 @@ const PRODUCTS: SeedProduct[] = [
     category: "OFFICE",
     materials: ["Mango Wood", "Iron"],
     dimensions: '32" x 14" x 74"',
-    images: [unsplash("photo-1592804589252-3f7cb1ec5cd1")],
+    images: [unsplash("photo-1544644181-1484b3fdfc62")],
     variants: [
       { name: "5-tier", size: "5-tier", stock: 6 },
       { name: "3-tier", size: "3-tier", priceDelta: -6500, stock: 9 },

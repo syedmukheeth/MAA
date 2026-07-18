@@ -21,7 +21,6 @@ type ProductsSearchParams = {
   q?: string;
   sort?: string;
   view?: string;
-  wood?: string;
 };
 
 const SORT_MAP: Record<SortValue, Prisma.ProductOrderByWithRelationInput> = {
@@ -58,7 +57,7 @@ export default async function ProductsPage({
 }: {
   searchParams: Promise<ProductsSearchParams>;
 }) {
-  const { category, page, q, sort, view, wood } = await searchParams;
+  const { category, page, q, sort, view } = await searchParams;
   const activeCategory = ROOM_CATEGORIES.includes(
     category as (typeof ROOM_CATEGORIES)[number]
   )
@@ -69,23 +68,15 @@ export default async function ProductsPage({
   const activeSort: SortValue =
     sort && sort in SORT_MAP ? (sort as SortValue) : "newest";
   const listView = view === "list";
-  const woodFilter = wood?.trim() || undefined;
 
   const currentPage = Math.max(1, Number.parseInt(page ?? "1", 10) || 1);
   const where: Prisma.ProductWhereInput = {
     isActive: true,
     ...(activeCategory ? { category: activeCategory } : {}),
     ...(query ? { name: { contains: query, mode: "insensitive" } } : {}),
-    ...(woodFilter
-      ? {
-          variants: {
-            some: { woodType: { equals: woodFilter, mode: "insensitive" } },
-          },
-        }
-      : {}),
   };
 
-  const [products, totalCount, woodRows] = await Promise.all([
+  const [products, totalCount] = await Promise.all([
     prisma.product.findMany({
       where,
       orderBy: SORT_MAP[activeSort],
@@ -93,17 +84,8 @@ export default async function ProductsPage({
       take: PAGE_SIZE,
     }),
     prisma.product.count({ where }),
-    prisma.variant.findMany({
-      where: { woodType: { not: null }, product: { isActive: true } },
-      distinct: ["woodType"],
-      select: { woodType: true },
-      orderBy: { woodType: "asc" },
-    }),
   ]);
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-  const woodTypes = woodRows
-    .map((w) => w.woodType)
-    .filter((w): w is string => Boolean(w));
 
   const buildParams = (overrides: Record<string, string | undefined>) => {
     const params = new URLSearchParams();
@@ -112,7 +94,6 @@ export default async function ProductsPage({
       q: query,
       sort: activeSort === "newest" ? undefined : activeSort,
       view: listView ? "list" : undefined,
-      wood: woodFilter,
       ...overrides,
     };
     for (const [key, value] of Object.entries(merged)) {
@@ -172,7 +153,7 @@ export default async function ProductsPage({
 
       <div className="mt-8">
         <Suspense fallback={null}>
-          <ShopToolbar listPath="/products" woodTypes={woodTypes} />
+          <ShopToolbar listPath="/products" />
         </Suspense>
       </div>
 
