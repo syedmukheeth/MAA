@@ -20,6 +20,7 @@ export default async function AdminProductsPage() {
     stockQuantity: p.stockQuantity,
     lowStockThreshold: p.lowStockThreshold,
     featured: p.featured,
+    isActive: p.isActive,
   }));
 
   return (

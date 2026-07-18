@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { REQUEST_STATUS_LABELS } from "@/lib/validations/custom-request";
 
 export type RequestRow = {
   id: string;
@@ -51,7 +52,9 @@ export function RequestTable({ requests }: { requests: RequestRow[] }) {
                     STATUS_COLORS[r.status] ?? "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {r.status}
+                  {REQUEST_STATUS_LABELS[
+                    r.status as keyof typeof REQUEST_STATUS_LABELS
+                  ] ?? r.status}
                 </span>
               </td>
               <td className="px-4 py-3 text-muted-foreground">{r.createdAt}</td>

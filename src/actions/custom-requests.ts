@@ -13,7 +13,8 @@ const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
 
 export async function updateRequestStatus(
   id: string,
-  status: (typeof REQUEST_STATUSES)[number]
+  status: (typeof REQUEST_STATUSES)[number],
+  note?: string
 ): Promise<{ error?: string }> {
   const session = await requireRole([...MANAGE_ROLES]);
 
@@ -28,6 +29,8 @@ export async function updateRequestStatus(
     return { error: `Cannot move request from ${request.status} to ${status}` };
   }
 
+  const trimmedNote = note?.trim() || undefined;
+
   await prisma.customFurnitureRequest.update({
     where: { id },
     data: { status },
@@ -38,8 +41,8 @@ export async function updateRequestStatus(
     action: "request.status_change",
     entity: "CustomFurnitureRequest",
     entityId: id,
-    summary: `${request.name}: ${request.status} → ${status}`,
-    metadata: { from: request.status, to: status },
+    summary: `${request.name}: ${request.status} → ${status}${trimmedNote ? ` — ${trimmedNote}` : ""}`,
+    metadata: { from: request.status, to: status, note: trimmedNote },
   });
 
   revalidatePath("/admin/requests");

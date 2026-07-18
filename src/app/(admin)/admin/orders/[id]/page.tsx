@@ -60,6 +60,11 @@ export default async function AdminOrderDetailPage({
                     ({item.variantName})
                   </span>
                 )}
+                {item.optionsSummary && (
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {item.optionsSummary}
+                  </span>
+                )}
               </span>
               <span className="text-muted-foreground">
                 {formatINR(item.lineTotal.toString())}

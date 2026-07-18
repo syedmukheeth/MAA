@@ -9,12 +9,11 @@ import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/actions/auth";
 
 const NAV_LINKS = [
+  { label: "Home", href: "/" },
   { label: "Shop", href: "/products" },
-  { label: "Combos", href: "/combos" },
-  { label: "Collections", href: "/#collections" },
-  { label: "Craftsmanship", href: "/#craftsmanship" },
-  { label: "Custom Studio", href: "/#custom-studio" },
-  { label: "Showroom", href: "/#showroom" },
+  { label: "Combo Offers", href: "/combos" },
+  { label: "Custom Studio", href: "/custom-studio" },
+  { label: "Showroom", href: "/showroom" },
 ];
 
 export type NavbarUser = {
@@ -31,7 +30,6 @@ export function Navbar({
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<string>("");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -40,45 +38,12 @@ export function Navbar({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    if (pathname !== "/") return;
-
-    const handleScroll = () => {
-      const sections = ["collections", "craftsmanship", "custom-studio", "showroom"];
-      let currentSection = "";
-      sections.forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top < 300 && rect.bottom > 100) {
-            currentSection = id;
-          }
-        }
-      });
-      setActiveSection(currentSection);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    
-    // Call asynchronously to prevent cascading render warning
-    const timer = setTimeout(handleScroll, 0);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      clearTimeout(timer);
-    };
-  }, [pathname]);
-
   const isHome = pathname === "/";
   const solid = !isHome || scrolled || open;
   const isStaff = user != null && user.role !== "CUSTOMER";
 
   const isLinkActive = (href: string) => {
-    if (href.startsWith("/#")) {
-      if (pathname !== "/") return false;
-      const id = href.substring(2);
-      return activeSection === id;
-    }
+    if (href === "/") return pathname === "/";
     if (href === "/products") {
       return pathname.startsWith("/products") || pathname.startsWith("/product/");
     }
@@ -207,7 +172,7 @@ export function Navbar({
 
           {/* CTA (Desktop) */}
           <Button
-            render={<Link href="/#custom-studio" />}
+            render={<Link href="/custom-studio" />}
             size="sm"
             className="hidden sm:inline-flex rounded-full bg-bronze px-5 text-xs uppercase tracking-wider text-ivory hover:bg-bronze/90"
           >

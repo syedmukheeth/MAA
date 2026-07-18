@@ -101,12 +101,36 @@ type OrderItemForRestock = {
 /**
  * Restores stock for a cancelled order with RETURNED movements.
  * Shared by customer self-cancel and staff cancellation.
+ *
+ * Reverses the order's actual SOLD ledger rows rather than re-deriving from
+ * the combo definition — combo items can carry customer-chosen variants (not
+ * the default), and the combo itself may have been edited since purchase.
  */
 export async function restockOrderItems(
   tx: Tx,
   order: { id: string; items: OrderItemForRestock[] },
   byUserId?: string
 ): Promise<void> {
+  const sold = await tx.stockMovement.findMany({
+    where: { orderId: order.id, type: "SOLD" },
+    select: { variantId: true, qty: true },
+  });
+
+  if (sold.length > 0) {
+    for (const movement of sold) {
+      await applyStockMovement(tx, {
+        variantId: movement.variantId,
+        type: "RETURNED",
+        qty: -movement.qty,
+        reason: "Order cancelled",
+        orderId: order.id,
+        byUserId,
+      });
+    }
+    return;
+  }
+
+  // Fallback for legacy orders that predate per-order SOLD ledger rows.
   for (const item of order.items) {
     if (item.variantId) {
       await applyStockMovement(tx, {

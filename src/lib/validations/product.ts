@@ -39,6 +39,10 @@ export const productSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens only"),
   description: z.string().min(10),
   price: z.coerce.number().positive("Price must be greater than 0"),
+  mrp: z
+    .union([z.literal(""), z.coerce.number().positive("MRP must be greater than 0")])
+    .optional()
+    .transform((v) => (v === "" || v === undefined ? undefined : v)),
   category: z.enum(ROOM_CATEGORIES),
   materials: z
     .string()
@@ -52,6 +56,10 @@ export const productSchema = z.object({
   images: z.array(z.string()).min(1, "Upload at least one image"),
   variants: z.array(variantSchema).min(1, "Add at least one variant"),
   featured: z.coerce.boolean().default(false),
+  isActive: z.coerce.boolean().default(true),
+}).refine((d) => d.mrp === undefined || d.mrp >= d.price, {
+  message: "MRP must be greater than or equal to the selling price",
+  path: ["mrp"],
 });
 
 export type ProductInput = z.input<typeof productSchema>;

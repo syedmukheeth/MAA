@@ -31,3 +31,21 @@ export const REQUEST_STATUS_FLOW: Record<RequestStatusValue, RequestStatusValue[
   CONVERTED: [],
   CLOSED: ["IN_REVIEW"],
 };
+
+/** Manager-friendly names for each status. */
+export const REQUEST_STATUS_LABELS: Record<RequestStatusValue, string> = {
+  NEW: "New",
+  IN_REVIEW: "In Process",
+  QUOTED: "Quoted",
+  CONVERTED: "Converted",
+  CLOSED: "Rejected / Cancelled",
+};
+
+/** Button label for moving a request INTO the given status. */
+export const REQUEST_ACTION_LABELS: Record<RequestStatusValue, string> = {
+  NEW: "Mark New",
+  IN_REVIEW: "Accept",
+  QUOTED: "Send Quote",
+  CONVERTED: "Mark Converted",
+  CLOSED: "Reject / Cancel",
+};

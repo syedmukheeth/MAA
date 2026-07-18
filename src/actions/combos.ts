@@ -9,6 +9,27 @@ import { recordAudit } from "@/lib/audit";
 
 const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
 
+/** Every optionVariantId must be a variant of that item's product. */
+async function validateItemOptions(
+  items: { productId: string; optionVariantIds: string[] }[]
+): Promise<string | null> {
+  const variantIds = items.flatMap((i) => i.optionVariantIds);
+  if (variantIds.length === 0) return null;
+  const variants = await prisma.variant.findMany({
+    where: { id: { in: variantIds } },
+    select: { id: true, productId: true },
+  });
+  const byId = new Map(variants.map((v) => [v.id, v.productId]));
+  for (const item of items) {
+    for (const vid of item.optionVariantIds) {
+      if (byId.get(vid) !== item.productId) {
+        return "One of the selected options does not belong to its product";
+      }
+    }
+  }
+  return null;
+}
+
 export async function createCombo(input: ComboInput): Promise<{ error?: string }> {
   const session = await requireRole([...MANAGE_ROLES]);
   const parsed = comboSchema.safeParse(input);
@@ -18,6 +39,9 @@ export async function createCombo(input: ComboInput): Promise<{ error?: string }
 
   const existing = await prisma.combo.findUnique({ where: { slug: parsed.data.slug } });
   if (existing) return { error: "A combo with this slug already exists" };
+
+  const optionError = await validateItemOptions(parsed.data.items);
+  if (optionError) return { error: optionError };
 
   await prisma.combo.create({
     data: {
@@ -32,6 +56,9 @@ export async function createCombo(input: ComboInput): Promise<{ error?: string }
         create: parsed.data.items.map((i) => ({
           productId: i.productId,
           quantity: i.quantity,
+          options: {
+            create: i.optionVariantIds.map((variantId) => ({ variantId })),
+          },
         })),
       },
     },
@@ -57,6 +84,9 @@ export async function updateCombo(
   });
   if (conflict) return { error: "A combo with this slug already exists" };
 
+  const optionError = await validateItemOptions(parsed.data.items);
+  if (optionError) return { error: optionError };
+
   await prisma.$transaction(async (tx) => {
     await tx.comboItem.deleteMany({ where: { comboId: id } });
     await tx.combo.update({
@@ -72,6 +102,9 @@ export async function updateCombo(
           create: parsed.data.items.map((i) => ({
             productId: i.productId,
             quantity: i.quantity,
+            options: {
+              create: i.optionVariantIds.map((variantId) => ({ variantId })),
+            },
           })),
         },
       },

@@ -33,6 +33,7 @@ export default async function EditProductPage({
           slug: product.slug,
           description: product.description,
           price: product.price.toString(),
+          mrp: product.mrp?.toString() ?? "",
           category: product.category,
           materials: product.materials.join(", "),
           dimensions: product.dimensions ?? "",
@@ -49,6 +50,7 @@ export default async function EditProductPage({
             lowStockThreshold: String(v.lowStockThreshold),
           })),
           featured: product.featured,
+          isActive: product.isActive,
         }}
       />
     </div>

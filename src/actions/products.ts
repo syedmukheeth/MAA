@@ -10,6 +10,26 @@ import { recordAudit } from "@/lib/audit";
 
 const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
 
+/** Find a slug that isn't taken yet, appending -2, -3, ... on conflict. */
+async function resolveFreeSlug(
+  slug: string,
+  excludeId?: string
+): Promise<string> {
+  const taken = await prisma.product.findMany({
+    where: {
+      slug: { startsWith: slug },
+      ...(excludeId ? { NOT: { id: excludeId } } : {}),
+    },
+    select: { slug: true },
+  });
+  const takenSet = new Set(taken.map((p) => p.slug));
+  if (!takenSet.has(slug)) return slug;
+  for (let n = 2; ; n++) {
+    const candidate = `${slug}-${n}`;
+    if (!takenSet.has(candidate)) return candidate;
+  }
+}
+
 export async function createProduct(
   input: ProductInput
 ): Promise<{ error?: string }> {
@@ -19,20 +39,15 @@ export async function createProduct(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  const existing = await prisma.product.findUnique({
-    where: { slug: parsed.data.slug },
-  });
-  if (existing) {
-    return { error: "A product with this slug already exists" };
-  }
-
   const { variants, ...productData } = parsed.data;
+  productData.slug = await resolveFreeSlug(productData.slug);
 
   try {
     await prisma.$transaction(async (tx) => {
       const product = await tx.product.create({
         data: {
           ...productData,
+          mrp: productData.mrp ?? null,
           createdById: session.sub,
         },
       });
@@ -84,14 +99,8 @@ export async function updateProduct(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  const conflict = await prisma.product.findFirst({
-    where: { slug: parsed.data.slug, NOT: { id } },
-  });
-  if (conflict) {
-    return { error: "A product with this slug already exists" };
-  }
-
   const { variants, ...productData } = parsed.data;
+  productData.slug = await resolveFreeSlug(productData.slug, id);
 
   const existingVariants = await prisma.variant.findMany({
     where: { productId: id },
@@ -115,7 +124,9 @@ export async function updateProduct(
     await prisma.$transaction(async (tx) => {
       await tx.product.update({
         where: { id },
-        data: productData,
+        // mrp must be written explicitly: undefined would leave a cleared
+        // MRP in place instead of removing it.
+        data: { ...productData, mrp: productData.mrp ?? null },
       });
 
       for (const v of toDelete) {
@@ -173,8 +184,38 @@ export async function updateProduct(
 
   revalidatePath("/admin/products");
   revalidatePath("/products");
-  revalidatePath(`/products/${parsed.data.slug}`);
+  revalidatePath(`/products/${productData.slug}`);
   redirect("/admin/products");
+}
+
+export async function setProductActive(
+  id: string,
+  isActive: boolean
+): Promise<{ error?: string }> {
+  const session = await requireRole([...MANAGE_ROLES]);
+
+  const product = await prisma.product.findUnique({
+    where: { id },
+    select: { name: true, slug: true, isActive: true },
+  });
+  if (!product) return { error: "Product not found" };
+  if (product.isActive === isActive) return {};
+
+  await prisma.product.update({ where: { id }, data: { isActive } });
+
+  await recordAudit({
+    actorId: session.sub,
+    action: isActive ? "product.activate" : "product.deactivate",
+    entity: "Product",
+    entityId: id,
+    summary: `${isActive ? "Activated" : "Deactivated"} product "${product.name}"`,
+  });
+
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+  revalidatePath(`/products/${product.slug}`);
+  revalidatePath("/combos");
+  return {};
 }
 
 export async function deleteProduct(id: string): Promise<{ error?: string }> {

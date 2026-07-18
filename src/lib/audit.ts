@@ -22,6 +22,8 @@ export type AuditAction =
   | "product.create"
   | "product.update"
   | "product.delete"
+  | "product.activate"
+  | "product.deactivate"
   | "combo.create"
   | "combo.update"
   | "combo.delete"
