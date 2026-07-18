@@ -4,9 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Menu, ShoppingCart, User, X, LogOut, ArrowRight } from "lucide-react";
+import { LayoutDashboard, Menu, ShoppingCart, User, X, LogOut, ArrowRight, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/actions/auth";
+import { useWishlist } from "@/hooks/use-wishlist";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -30,6 +31,8 @@ export function Navbar({
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const { wishlist, isLoaded } = useWishlist();
+  const wishlistCount = isLoaded ? wishlist.length : 0;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -105,6 +108,25 @@ export function Navbar({
 
         {/* Desktop and Mobile Controls */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Wishlist Icon */}
+          <Link
+            href="/wishlist"
+            aria-label="Wishlist"
+            title="Wishlist"
+            className={`relative rounded-full border p-2 transition-colors duration-300 hover:border-bronze hover:text-bronze ${
+              solid
+                ? "border-linen text-graphite bg-white/50"
+                : "border-ivory/20 text-ivory hover:bg-white/10"
+            }`}
+          >
+            <Heart size={16} />
+            {wishlistCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-bronze text-[9px] font-bold text-ivory">
+                {wishlistCount}
+              </span>
+            )}
+          </Link>
+
           {/* Cart Icon */}
           <Link
             href="/cart"
