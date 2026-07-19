@@ -89,6 +89,7 @@ export default async function CheckoutPage() {
           name: item.product.name,
           price: item.product.price.toString(),
           images: item.product.images,
+          slug: item.product.slug,
         }
       : null,
     variant: item.variant
@@ -101,6 +102,7 @@ export default async function CheckoutPage() {
       ? {
           name: item.combo.name,
           bundlePrice: item.combo.bundlePrice.toString(),
+          slug: item.combo.slug,
         }
       : null,
     quantity: item.quantity,

@@ -54,6 +54,14 @@ model SiteSettings {
   upiId      String?
   upiQrImage String?
 
+  /// JSON array of enabled RoomCategory keys, e.g. ["LIVING_ROOM","BEDROOM"].
+  /// Null means all categories are shown (default behaviour).
+  shopSections   String?
+  /// JSON arrays for Custom Studio dropdowns. Null = use built-in defaults.
+  studioWoods    String?
+  studioFinishes String?
+  studioBudgets  String?
+
   updatedAt DateTime @updatedAt
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { SafeImage } from "./SafeImage";
 import { Trash2, Loader2 } from "lucide-react";
 import { updateCartItemQuantity, removeFromCart } from "@/actions/cart";
@@ -8,6 +9,8 @@ import { updateCartItemQuantity, removeFromCart } from "@/actions/cart";
 export type CartLineItemData = {
   id: string;
   name: string;
+  slug?: string | null;
+  comboSlug?: string | null;
   variantLabel?: string | null;
   image: string | null;
   unitPrice: string;
@@ -40,8 +43,12 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
     });
   }
 
-  return (
-    <div className="flex items-center gap-4 border-b border-border py-5">
+  const productHref = item.isCombo
+    ? (item.comboSlug ? `/combos/${item.comboSlug}` : null)
+    : (item.slug ? `/products/${item.slug}` : null);
+
+  const imageAndName = (
+    <>
       <div className="relative size-20 flex-none overflow-hidden rounded-lg bg-cream">
         {item.image && (
           <SafeImage src={item.image} alt={item.name} fill sizes="80px" className="object-cover" />
@@ -62,7 +69,24 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
         <p className="mt-1 text-sm text-graphite/60">&#8377;{item.unitPrice}</p>
         {error && <p className="mt-1 text-xs text-brand-red">{error}</p>}
       </div>
-      <div className="flex items-center rounded-full border border-border">
+    </>
+  );
+
+  return (
+    <div className="flex items-center gap-4 border-b border-border py-5">
+      {productHref ? (
+        <Link
+          href={productHref}
+          className="flex items-center gap-4 flex-1 min-w-0 hover:opacity-80 transition-opacity"
+        >
+          {imageAndName}
+        </Link>
+      ) : (
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          {imageAndName}
+        </div>
+      )}
+      <div className="flex items-center rounded-full border border-border shrink-0">
         <button
           disabled={isPending || quantity <= 1}
           className="px-3 py-1.5 text-graphite/70 disabled:opacity-40"
@@ -88,7 +112,7 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
       <button
         disabled={isPending}
         onClick={remove}
-        className="p-2 text-graphite/50 hover:text-brand-red"
+        className="p-2 text-graphite/50 hover:text-brand-red shrink-0"
       >
         <Trash2 size={16} />
       </button>

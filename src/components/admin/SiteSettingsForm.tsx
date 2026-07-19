@@ -9,6 +9,91 @@ import { updateSiteSettings } from "@/actions/site-settings";
 import type { SiteSettings } from "@/lib/site-settings";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { getProductImageUploadSignature } from "@/actions/upload";
+import { ROOM_CATEGORIES, CATEGORY_LABELS } from "@/lib/validations/product";
+import { X, Plus } from "lucide-react";
+
+/* ─── Reusable tag-list editor ─────────────────────────────── */
+function TagListEditor({
+  label,
+  hint,
+  items,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  items: string[];
+  onChange: (items: string[]) => void;
+}) {
+  const [draft, setDraft] = useState("");
+
+  function addItem() {
+    const v = draft.trim();
+    if (v && !items.includes(v)) {
+      onChange([...items, v]);
+    }
+    setDraft("");
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      {hint && <p className="text-xs text-graphite/50">{hint}</p>}
+      <div className="flex flex-wrap gap-2">
+        {items.map((item) => (
+          <span
+            key={item}
+            className="flex items-center gap-1.5 rounded-full bg-cream border border-linen px-3 py-1 text-sm text-charcoal"
+          >
+            {item}
+            <button
+              type="button"
+              onClick={() => onChange(items.filter((i) => i !== item))}
+              className="text-graphite/40 hover:text-brand-red transition-colors"
+              aria-label={`Remove ${item}`}
+            >
+              <X size={12} />
+            </button>
+          </span>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addItem();
+            }
+          }}
+          placeholder="Type and press Enter or Add"
+          className="flex-1"
+        />
+        <Button type="button" variant="outline" size="sm" onClick={addItem} className="shrink-0">
+          <Plus size={14} className="mr-1" /> Add
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Helper: JSON-serialise list ──────────────────────────── */
+function toJson(items: string[]): string | null {
+  return items.length === 0 ? null : JSON.stringify(items);
+}
+function fromJson(raw: string | null, fallback: string[]): string[] {
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+const DEFAULT_WOODS = ["Teak", "Sheesham", "Oak", "Walnut", "Mango Wood"];
+const DEFAULT_FINISHES = ["Matte", "Satin", "High Gloss", "Natural Oil"];
+const DEFAULT_BUDGETS = ["Under ₹50,000", "₹50,000 – ₹1,50,000", "₹1,50,000 – ₹5,00,000", "₹5,00,000+"];
 
 export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
   const [values, setValues] = useState({
@@ -24,10 +109,20 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
     allowUPI: defaults.allowUPI ?? true,
     upiId: defaults.upiId ?? "",
     upiQrImage: defaults.upiQrImage ?? "",
+    shopSections: defaults.shopSections ?? null,
+    studioWoods: defaults.studioWoods ?? null,
+    studioFinishes: defaults.studioFinishes ?? null,
+    studioBudgets: defaults.studioBudgets ?? null,
   });
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Derived list state for UI (decoded from JSON strings)
+  const enabledSections = fromJson(values.shopSections, [...ROOM_CATEGORIES]);
+  const studioWoods = fromJson(values.studioWoods, DEFAULT_WOODS);
+  const studioFinishes = fromJson(values.studioFinishes, DEFAULT_FINISHES);
+  const studioBudgets = fromJson(values.studioBudgets, DEFAULT_BUDGETS);
 
   function set<K extends keyof typeof values>(key: K, val: (typeof values)[K]) {
     setValues((v) => ({ ...v, [key]: val }));
@@ -103,9 +198,7 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
             <Input
               type="number"
               value={values.statYearsExperience}
-              onChange={(e) =>
-                set("statYearsExperience", Number(e.target.value))
-              }
+              onChange={(e) => set("statYearsExperience", Number(e.target.value))}
             />
           </div>
           <div className="space-y-2">
@@ -113,9 +206,7 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
             <Input
               type="number"
               value={values.statProjectsDelivered}
-              onChange={(e) =>
-                set("statProjectsDelivered", Number(e.target.value))
-              }
+              onChange={(e) => set("statProjectsDelivered", Number(e.target.value))}
             />
           </div>
           <div className="space-y-2">
@@ -123,9 +214,7 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
             <Input
               type="number"
               value={values.statHappyFamilies}
-              onChange={(e) =>
-                set("statHappyFamilies", Number(e.target.value))
-              }
+              onChange={(e) => set("statHappyFamilies", Number(e.target.value))}
             />
           </div>
           <div className="space-y-2">
@@ -291,6 +380,77 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
             </div>
           </div>
         )}
+      </section>
+
+      {/* ─── Shop Sections (item 4) ─────────────────── */}
+      <section className="space-y-4 rounded-xl border border-linen bg-cream/30 p-5">
+        <div>
+          <h2 className="font-heading text-lg text-foreground">Shop Category Sections</h2>
+          <p className="text-xs text-graphite/50 mt-1">
+            Choose which room categories appear as filter pills in the shop. Remove a category to hide it from customers.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {ROOM_CATEGORIES.map((cat) => {
+            const isEnabled = enabledSections.includes(cat);
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => {
+                  const next = isEnabled
+                    ? enabledSections.filter((c) => c !== cat)
+                    : [...enabledSections, cat];
+                  // If all selected, store null (show all = default)
+                  const allSelected = ROOM_CATEGORIES.every((c) => next.includes(c));
+                  set("shopSections", allSelected ? null : toJson(next));
+                }}
+                className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all ${
+                  isEnabled
+                    ? "border-bronze bg-bronze text-ivory"
+                    : "border-border bg-white text-graphite/50 hover:border-bronze/50"
+                }`}
+              >
+                {CATEGORY_LABELS[cat]}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-graphite/40">
+          {enabledSections.length === ROOM_CATEGORIES.length
+            ? "All categories are shown (default)"
+            : `Showing: ${enabledSections.map((c) => CATEGORY_LABELS[c as (typeof ROOM_CATEGORIES)[number]]).join(", ")}`}
+        </p>
+      </section>
+
+      {/* ─── Custom Studio Options (item 7) ─────────── */}
+      <section className="space-y-6 rounded-xl border border-linen bg-cream/30 p-5">
+        <div>
+          <h2 className="font-heading text-lg text-foreground">Custom Studio Options</h2>
+          <p className="text-xs text-graphite/50 mt-1">
+            Edit the dropdown options shown in the Custom Furniture Studio request form.
+          </p>
+        </div>
+
+        <TagListEditor
+          label="Wood Types"
+          hint="Woods customers can choose from"
+          items={studioWoods}
+          onChange={(items) => set("studioWoods", toJson(items))}
+        />
+        <TagListEditor
+          label="Finish Options"
+          hint="Finish types customers can select"
+          items={studioFinishes}
+          onChange={(items) => set("studioFinishes", toJson(items))}
+        />
+        <TagListEditor
+          label="Budget Ranges"
+          hint="Budget ranges shown in the studio form"
+          items={studioBudgets}
+          onChange={(items) => set("studioBudgets", toJson(items))}
+        />
       </section>
 
       {error && <p className="text-sm text-destructive">{error}</p>}

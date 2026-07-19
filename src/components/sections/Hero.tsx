@@ -80,7 +80,7 @@ export function Hero({
           className="mt-10 flex flex-col gap-4 sm:flex-row"
         >
           <Button
-            render={<Link href="#collections" />}
+            render={<Link href="/products" />}
             size="lg"
             className="rounded-full bg-bronze px-8 text-ivory hover:bg-bronze/90 shadow-md transition-all hover:shadow-lg cursor-pointer"
           >

@@ -6,7 +6,7 @@ import { CATEGORY_LABELS } from "@/lib/validations/product";
 import { isInStock } from "@/lib/products";
 import { PriceBlock } from "@/components/shop/PriceBlock";
 import { useWishlist } from "@/hooks/use-wishlist";
-import { Heart } from "lucide-react";
+import { Heart, Star } from "lucide-react";
 
 export type ProductCardData = {
   id: string;
@@ -18,6 +18,7 @@ export type ProductCardData = {
   images: string[];
   stockQuantity: number;
   lowStockThreshold: number;
+  featured?: boolean;
 };
 
 export function ProductCard({ product }: { product: ProductCardData }) {
@@ -54,8 +55,20 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             No image
           </div>
         )}
-        {!inStock && (
+        {/* Best seller badge */}
+        {product.featured && (
+          <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-bronze px-2.5 py-1 text-[10px] font-semibold text-ivory shadow-sm z-10">
+            <Star size={10} className="fill-ivory" />
+            Best Seller
+          </span>
+        )}
+        {!inStock && !product.featured && (
           <span className="absolute left-3 top-3 rounded-full bg-charcoal/80 px-3 py-1 text-xs text-ivory">
+            Out of stock
+          </span>
+        )}
+        {!inStock && product.featured && (
+          <span className="absolute left-3 top-12 rounded-full bg-charcoal/80 px-3 py-1 text-xs text-ivory">
             Out of stock
           </span>
         )}

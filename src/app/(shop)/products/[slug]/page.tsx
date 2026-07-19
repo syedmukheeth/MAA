@@ -162,6 +162,7 @@ export default async function ProductDetailPage({
                   images: p.images,
                   stockQuantity: p.stockQuantity,
                   lowStockThreshold: p.lowStockThreshold,
+                  featured: p.featured,
                 }}
               />
             ))}

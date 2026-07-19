@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CustomStudio } from "@/components/sections/CustomStudio";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const revalidate = 300;
 
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
     "Design your dream furniture. Send us a photo, a Pinterest board, or a description and our team builds it exactly for your space.",
 };
 
-export default function CustomStudioPage() {
+export default async function CustomStudioPage() {
+  const settings = await getSiteSettings();
+
   return (
     <div className="-mt-20">
       <div className="bg-charcoal pt-20">
@@ -23,7 +26,11 @@ export default function CustomStudioPage() {
           </p>
         </div>
       </div>
-      <CustomStudio />
+      <CustomStudio
+        studioWoods={settings.studioWoods}
+        studioFinishes={settings.studioFinishes}
+        studioBudgets={settings.studioBudgets}
+      />
     </div>
   );
 }
