@@ -31,6 +31,12 @@ export const siteSettingsSchema = z.object({
   gstRate: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0 && parseFloat(val) <= 100, "GST Rate must be between 0 and 100"),
   deliveryFee: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, "Delivery fee must be 0 or more"),
   freeDeliveryThreshold: z.string().transform((val) => val === "" ? null : val).nullable().optional().refine((val) => !val || (!isNaN(parseFloat(val)) && parseFloat(val) >= 0), "Threshold must be 0 or more"),
+
+  // Admin-configurable lists
+  shopSections: z.string().optional().nullable().transform((val) => val === "" ? null : val),
+  studioWoods: z.string().optional().nullable().transform((val) => val === "" ? null : val),
+  studioFinishes: z.string().optional().nullable().transform((val) => val === "" ? null : val),
+  studioBudgets: z.string().optional().nullable().transform((val) => val === "" ? null : val),
 });
 
 export type SiteSettingsInput = z.infer<typeof siteSettingsSchema>;

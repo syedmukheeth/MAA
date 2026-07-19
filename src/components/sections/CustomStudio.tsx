@@ -17,11 +17,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const WOODS = ["Teak", "Sheesham", "Oak", "Walnut", "Mango Wood"];
-const FINISHES = ["Matte", "Satin", "High Gloss", "Natural Oil"];
-const BUDGETS = ["Under ₹50,000", "₹50,000 – ₹1,50,000", "₹1,50,000 – ₹5,00,000", "₹5,00,000+"];
+const DEFAULT_WOODS = ["Teak", "Sheesham", "Oak", "Walnut", "Mango Wood"];
+const DEFAULT_FINISHES = ["Matte", "Satin", "High Gloss", "Natural Oil"];
+const DEFAULT_BUDGETS = ["Under ₹50,000", "₹50,000 – ₹1,50,000", "₹1,50,000 – ₹5,00,000", "₹5,00,000+"];
 
-export function CustomStudio() {
+function parseJsonList(raw: string | null, fallback: string[]): string[] {
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function CustomStudio({
+  studioWoods,
+  studioFinishes,
+  studioBudgets,
+}: {
+  studioWoods?: string | null;
+  studioFinishes?: string | null;
+  studioBudgets?: string | null;
+}) {
+  const WOODS = parseJsonList(studioWoods ?? null, DEFAULT_WOODS);
+  const FINISHES = parseJsonList(studioFinishes ?? null, DEFAULT_FINISHES);
+  const BUDGETS = parseJsonList(studioBudgets ?? null, DEFAULT_BUDGETS);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -3,6 +3,7 @@ import { SafeImage } from "@/components/shop/SafeImage";
 import { CATEGORY_LABELS } from "@/lib/validations/product";
 import { isInStock } from "@/lib/products";
 import { PriceBlock } from "@/components/shop/PriceBlock";
+import { Star } from "lucide-react";
 import type { ProductCardData } from "@/components/shop/ProductCard";
 
 /** Horizontal card for the list view: image left, details right. */
@@ -40,9 +41,17 @@ export function ProductListItem({
         )}
       </div>
       <div className="min-w-0 flex-1 py-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-bronze">
-          {CATEGORY_LABELS[product.category]}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-bronze">
+            {CATEGORY_LABELS[product.category]}
+          </p>
+          {product.featured && (
+            <span className="flex items-center gap-1 rounded-full bg-bronze/10 px-2 py-0.5 text-[10px] font-semibold text-bronze border border-bronze/20">
+              <Star size={9} className="fill-bronze" />
+              Best Seller
+            </span>
+          )}
+        </div>
         <h3 className="mt-1 font-heading text-lg text-charcoal transition-colors duration-300 group-hover:text-bronze">
           {product.name}
         </h3>
