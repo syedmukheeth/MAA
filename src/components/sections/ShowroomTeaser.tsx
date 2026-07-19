@@ -29,10 +29,15 @@ export function ShowroomTeaser({
             Walk through it before you own it.
           </h2>
           <div className="mt-8 space-y-5">
-            <div className="flex items-start gap-3">
-              <MapPin className="mt-0.5 text-bronze" size={20} />
-              <p className="text-sm text-graphite/80">{address}</p>
-            </div>
+            <a
+              href="https://maps.app.goo.gl/S6U6o7R79U3My4m46"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-start gap-3 hover:text-bronze transition-colors"
+            >
+              <MapPin className="mt-0.5 text-bronze shrink-0" size={20} />
+              <p className="text-sm text-graphite/80 hover:text-bronze transition-colors">{address}</p>
+            </a>
             <div className="flex items-start gap-3">
               <Clock className="mt-0.5 text-bronze" size={20} />
               <p className="text-sm text-graphite/80">{hours}</p>

@@ -64,6 +64,7 @@ export async function createProduct(
             sku: v.sku || null,
             lowStockThreshold: v.lowStockThreshold,
             isDefault: index === 0,
+            image: v.image || null,
           },
         });
         if (v.stock > 0) {
@@ -147,6 +148,7 @@ export async function updateProduct(
               sku: v.sku || null,
               lowStockThreshold: v.lowStockThreshold,
               isDefault: index === 0,
+              image: v.image || null,
             },
           });
         } else {
@@ -161,6 +163,7 @@ export async function updateProduct(
               sku: v.sku || null,
               lowStockThreshold: v.lowStockThreshold,
               isDefault: index === 0,
+              image: v.image || null,
             },
           });
           if (v.stock > 0) {

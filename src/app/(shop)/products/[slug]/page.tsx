@@ -3,12 +3,9 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { prisma } from "@/lib/db";
 import { CATEGORY_LABELS } from "@/lib/validations/product";
-import { isInStock, isLowStock } from "@/lib/products";
-import { AddToCartButton } from "@/components/shop/AddToCartButton";
-import { VariantPicker } from "@/components/shop/VariantPicker";
-import { ProductGallery } from "@/components/shop/ProductGallery";
+import { isInStock } from "@/lib/products";
+import { ProductInspector } from "@/components/shop/ProductInspector";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { PriceBlock } from "@/components/shop/PriceBlock";
 import { getSiteUrl, SITE_NAME } from "@/lib/site-url";
 import { JsonLd } from "@/components/seo/JsonLd";
 
@@ -89,10 +86,6 @@ export default async function ProductDetailPage({
   });
 
   const inStock = isInStock(product);
-  const lowStock = isLowStock(product);
-  const hasVariantChoices =
-    product.variants.length > 1 ||
-    (product.variants.length === 1 && !product.variants[0].isDefault);
   const variantOptions = product.variants.map((v) => ({
     id: v.id,
     name: v.name,
@@ -103,7 +96,21 @@ export default async function ProductDetailPage({
     stock: v.stock,
     lowStockThreshold: v.lowStockThreshold,
     isDefault: v.isDefault,
+    image: v.image,
   }));
+
+  const inspectorProduct = {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    description: product.description,
+    price: product.price.toString(),
+    mrp: product.mrp ? product.mrp.toString() : null,
+    category: product.category,
+    materials: product.materials,
+    dimensions: product.dimensions,
+    images: product.images,
+  };
 
   const base = getSiteUrl();
   const productSchema = {
@@ -134,73 +141,7 @@ export default async function ProductDetailPage({
   return (
     <div className="mx-auto max-w-6xl px-6 py-16 lg:px-10">
       <JsonLd data={productSchema} />
-      <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-        <ProductGallery images={product.images} alt={product.name} />
-
-        <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-bronze">
-            {CATEGORY_LABELS[product.category]}
-          </p>
-          <h1 className="mt-4 font-heading text-3xl text-charcoal sm:text-4xl">
-            {product.name}
-          </h1>
-          {hasVariantChoices ? (
-            <div className="mt-4">
-              <VariantPicker
-                productId={product.id}
-                basePrice={Number(product.price)}
-                mrp={product.mrp ? Number(product.mrp) : null}
-                variants={variantOptions}
-              />
-            </div>
-          ) : (
-            <>
-              <div className="mt-4">
-                <PriceBlock
-                  price={product.price.toString()}
-                  mrp={product.mrp?.toString()}
-                  size="lg"
-                />
-              </div>
-
-              <p className="mt-2 text-sm">
-                {!inStock ? (
-                  <span className="text-brand-red">Out of stock</span>
-                ) : lowStock ? (
-                  <span className="text-amber-600">
-                    Only {product.stockQuantity} left
-                  </span>
-                ) : (
-                  <span className="text-graphite/60">In stock</span>
-                )}
-              </p>
-            </>
-          )}
-
-          <p className="mt-6 leading-relaxed text-graphite/80">
-            {product.description}
-          </p>
-
-          {product.materials.length > 0 && (
-            <p className="mt-4 text-sm text-graphite/60">
-              <span className="text-charcoal">Materials:</span>{" "}
-              {product.materials.join(", ")}
-            </p>
-          )}
-          {product.dimensions && (
-            <p className="mt-1 text-sm text-graphite/60">
-              <span className="text-charcoal">Dimensions:</span>{" "}
-              {product.dimensions}
-            </p>
-          )}
-
-          {!hasVariantChoices && (
-            <div className="mt-8">
-              <AddToCartButton productId={product.id} disabled={!inStock} />
-            </div>
-          )}
-        </div>
-      </div>
+      <ProductInspector product={inspectorProduct} variants={variantOptions} />
 
       {similar.length > 0 && (
         <section className="mt-20">

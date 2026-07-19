@@ -48,6 +48,7 @@ export default async function EditProductPage({
             sku: v.sku ?? "",
             stock: String(v.stock),
             lowStockThreshold: String(v.lowStockThreshold),
+            image: v.image ?? "",
           })),
           featured: product.featured,
           isActive: product.isActive,
