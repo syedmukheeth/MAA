@@ -5,6 +5,7 @@ import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
 import { OrderStatusControl } from "@/components/admin/OrderStatusControl";
 import { BackLink } from "@/components/admin/BackLink";
 import { formatINR } from "@/lib/money";
+import { OrderTimelineStepper } from "@/components/shop/OrderTimelineStepper";
 
 export default async function AdminOrderDetailPage({
   params,
@@ -28,6 +29,13 @@ export default async function AdminOrderDetailPage({
           {order.orderNumber}
         </h1>
         <OrderStatusBadge status={order.status} />
+      </div>
+
+      <div className="mb-6">
+        <OrderTimelineStepper
+          status={order.status}
+          cancelReason={order.cancelReason}
+        />
       </div>
 
       <div className="rounded-xl border border-border p-6">

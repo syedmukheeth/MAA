@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { RoomInspirations } from "@/components/sections/RoomInspirations";
 import { ShowroomFaqContact } from "@/components/sections/ShowroomFaqContact";
 import { getSiteSettings } from "@/lib/site-settings";
 
@@ -31,7 +30,6 @@ export default async function ShowroomPage() {
         phone={settings.showroomPhone}
         whatsapp={settings.showroomWhatsapp}
       />
-      <RoomInspirations />
     </div>
   );
 }

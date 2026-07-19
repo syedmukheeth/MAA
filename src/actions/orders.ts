@@ -48,7 +48,7 @@ function generateOrderNumber() {
 }
 
 export async function placeOrder(
-  input: ShippingAddressInput & { saveAddress?: boolean }
+  input: ShippingAddressInput & { saveAddress?: boolean; paymentMethod?: string }
 ): Promise<{ error?: string; orderId?: string }> {
   const session = await requireAuth();
   const parsed = shippingAddressSchema.safeParse(input);
@@ -201,6 +201,7 @@ export async function placeOrder(
           shippingCity: parsed.data.shippingCity,
           shippingState: parsed.data.shippingState,
           shippingPincode: parsed.data.shippingPincode,
+          paymentMethod: input.paymentMethod || "COD",
           items: { create: orderItemsData },
         },
       });
@@ -286,7 +287,8 @@ export async function placeOrder(
 
 export async function updateOrderStatus(
   orderId: string,
-  nextStatus: string
+  nextStatus: string,
+  cancelReason?: string
 ): Promise<{ error?: string }> {
   const session = await requireRole([...MANAGE_ROLES]);
 
@@ -306,7 +308,10 @@ export async function updateOrderStatus(
       // Guard against a concurrent transition (double-click / two staff)
       const updated = await tx.order.updateMany({
         where: { id: orderId, status: order.status },
-        data: { status: nextStatus as never },
+        data: {
+          status: nextStatus as never,
+          cancelReason: nextStatus === "CANCELLED" ? (cancelReason || "Cancelled by store management") : undefined,
+        },
       });
       if (updated.count === 0) {
         throw new Error("Order status changed by someone else. Refresh and retry.");
@@ -327,6 +332,7 @@ export async function updateOrderStatus(
             to: nextStatus,
             orderNumber: order.orderNumber,
             total: order.total.toString(),
+            cancelReason: nextStatus === "CANCELLED" ? cancelReason : undefined,
           },
         },
         tx

@@ -49,6 +49,11 @@ model SiteSettings {
 
   deliveryMessage String
 
+  allowCOD   Boolean @default(true)
+  allowUPI   Boolean @default(true)
+  upiId      String?
+  upiQrImage String?
+
   updatedAt DateTime @updatedAt
 }
 
@@ -171,6 +176,7 @@ model Variant {
   stock             Int             @default(0)
   lowStockThreshold Int             @default(3)
   isDefault         Boolean         @default(false)
+  image             String?
   cartItems         CartItem[]
   orderItems        OrderItem[]
   movements         StockMovement[]
@@ -302,6 +308,7 @@ model Order {
   total Decimal @db.Decimal(10, 2)
 
   paymentMethod   String      @default("COD")
+  cancelReason    String?
   shippingName    String
   shippingPhone   String
   shippingLine1   String

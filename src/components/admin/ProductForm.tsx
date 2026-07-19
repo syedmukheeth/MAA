@@ -30,6 +30,7 @@ export type VariantRow = {
   sku: string;
   stock: string;
   lowStockThreshold: string;
+  image?: string;
 };
 
 type ProductDefaults = {
@@ -57,6 +58,7 @@ const EMPTY_VARIANT: VariantRow = {
   sku: "",
   stock: "0",
   lowStockThreshold: "3",
+  image: "",
 };
 
 const EMPTY: ProductDefaults = {
@@ -137,6 +139,7 @@ export function ProductForm({
         stock: v.stock === "" ? 0 : Number(v.stock),
         lowStockThreshold:
           v.lowStockThreshold === "" ? 3 : Number(v.lowStockThreshold),
+        image: v.image || undefined,
       })),
       featured,
       isActive,
@@ -305,7 +308,7 @@ export function ProductForm({
           {variants.map((v, index) => (
             <div
               key={v.id ?? `new-${index}`}
-              className="rounded-lg border border-border p-4"
+              className="rounded-lg border border-border p-4 space-y-4"
             >
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <div className="space-y-1">
@@ -377,7 +380,7 @@ export function ProductForm({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Low-stock alert at</Label>
+                  <Label className="text-xs font-semibold">Low-stock alert at</Label>
                   <Input
                     type="number"
                     min="0"
@@ -387,6 +390,15 @@ export function ProductForm({
                     }
                   />
                 </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold">Variant Image (optional)</Label>
+                <ImageUploader
+                  multiple={false}
+                  value={v.image ? [v.image] : []}
+                  onChange={(images) => setVariant(index, { image: images[0] ?? "" })}
+                  getSignature={getProductImageUploadSignature}
+                />
               </div>
               {variants.length > 1 && (
                 <button

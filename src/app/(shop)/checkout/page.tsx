@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/session";
-import { ShippingAddressForm } from "@/components/shop/ShippingAddressForm";
-import { OrderTotals } from "@/components/shop/OrderTotals";
+import { CheckoutWizard } from "@/components/shop/CheckoutWizard";
 import { getSiteSettings } from "@/lib/site-settings";
 import { computeCartTotals } from "@/lib/cart";
 import { money, toPaise } from "@/lib/money";
@@ -68,27 +67,54 @@ export default async function CheckoutPage() {
     }
   }
 
-  return (
-    <div className="mx-auto max-w-3xl px-6 py-16 lg:px-10">
-      <h1 className="font-heading text-3xl text-charcoal sm:text-4xl">Checkout</h1>
+  const totalsData = {
+    subtotal: totals.subtotal.toString(),
+    deliveryFee: totals.deliveryFee.toString(),
+    taxRate: totals.taxRate.toString(),
+    taxAmount: totals.taxAmount.toString(),
+    total: totals.total.toString(),
+  };
 
-      <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-start">
-        <div className="rounded-2xl bg-cream p-8">
-          <ShippingAddressForm total={totals.total.toString()} defaults={defaults} />
-        </div>
-        <div className="lg:w-72">
-          <OrderTotals
-            subtotal={totals.subtotal.toString()}
-            deliveryFee={totals.deliveryFee.toString()}
-            taxRate={totals.taxRate.toString()}
-            taxAmount={totals.taxAmount.toString()}
-            total={totals.total.toString()}
-          />
-          <p className="mt-4 px-1 text-xs text-graphite/60">
-            Cash on delivery. Pay when your furniture arrives.
-          </p>
-        </div>
-      </div>
+  const settingsData = {
+    allowCOD: settings.allowCOD,
+    allowUPI: settings.allowUPI,
+    upiId: settings.upiId,
+    upiQrImage: settings.upiQrImage,
+  };
+
+  const cartItemsData = cart.items.map((item) => ({
+    id: item.id,
+    product: item.product
+      ? {
+          name: item.product.name,
+          price: item.product.price.toString(),
+          images: item.product.images,
+        }
+      : null,
+    variant: item.variant
+      ? {
+          name: item.variant.name,
+          priceDelta: Number(item.variant.priceDelta),
+        }
+      : null,
+    combo: item.combo
+      ? {
+          name: item.combo.name,
+          bundlePrice: item.combo.bundlePrice.toString(),
+        }
+      : null,
+    quantity: item.quantity,
+  }));
+
+  return (
+    <div className="mx-auto max-w-4xl px-6 py-16 lg:px-10">
+      <h1 className="font-heading text-3xl text-charcoal sm:text-4xl">Checkout</h1>
+      <CheckoutWizard
+        cartItems={cartItemsData}
+        defaults={defaults}
+        totals={totalsData}
+        settings={settingsData}
+      />
     </div>
   );
 }

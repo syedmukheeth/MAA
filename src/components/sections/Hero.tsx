@@ -87,7 +87,7 @@ export function Hero({
             Explore Collection
           </Button>
           <Button
-            render={<Link href="#custom-studio" />}
+            render={<Link href="/custom-studio" />}
             size="lg"
             variant="outline"
             className="rounded-full border-ivory/80 bg-transparent px-8 text-ivory hover:bg-ivory hover:text-charcoal shadow-md transition-all cursor-pointer"

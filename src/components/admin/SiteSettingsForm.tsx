@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { updateSiteSettings } from "@/actions/site-settings";
 import type { SiteSettings } from "@/lib/site-settings";
+import { ImageUploader } from "@/components/admin/ImageUploader";
+import { getProductImageUploadSignature } from "@/actions/upload";
 
 export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
   const [values, setValues] = useState({
@@ -18,6 +20,10 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
     gstRate: defaults.gstRate ?? "18",
     deliveryFee: defaults.deliveryFee ?? "0",
     freeDeliveryThreshold: defaults.freeDeliveryThreshold ?? "",
+    allowCOD: defaults.allowCOD ?? true,
+    allowUPI: defaults.allowUPI ?? true,
+    upiId: defaults.upiId ?? "",
+    upiQrImage: defaults.upiQrImage ?? "",
   });
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -238,6 +244,53 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
             />
           </div>
         </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="font-heading text-lg text-foreground">Payment Settings</h2>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={values.allowCOD}
+              onChange={(e) => set("allowCOD", e.target.checked)}
+              className="size-4 rounded border-border"
+            />
+            Allow Cash on Delivery (COD)
+          </label>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={values.allowUPI}
+              onChange={(e) => set("allowUPI", e.target.checked)}
+              className="size-4 rounded border-border"
+            />
+            Allow UPI / QR Code Payments
+          </label>
+        </div>
+
+        {values.allowUPI && (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="upiId">UPI ID</Label>
+              <Input
+                id="upiId"
+                placeholder="e.g. business@upi"
+                value={values.upiId}
+                onChange={(e) => set("upiId", e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>UPI QR Code Image (Empty = None)</Label>
+              <ImageUploader
+                multiple={false}
+                value={values.upiQrImage ? [values.upiQrImage] : []}
+                onChange={(images) => set("upiQrImage", images[0] ?? "")}
+                getSignature={getProductImageUploadSignature}
+              />
+            </div>
+          </div>
+        )}
       </section>
 
       {error && <p className="text-sm text-destructive">{error}</p>}

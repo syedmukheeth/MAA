@@ -14,6 +14,7 @@ export type VariantOption = {
   stock: number;
   lowStockThreshold: number;
   isDefault: boolean;
+  image?: string | null;
 };
 
 const ATTRIBUTES = [
@@ -63,17 +64,25 @@ export function VariantPicker({
   basePrice,
   mrp = null,
   variants,
+  selectedId: controlledSelectedId,
+  onSelect: controlledOnSelect,
 }: {
   productId: string;
   basePrice: number;
   mrp?: number | null;
   variants: VariantOption[];
+  selectedId?: string;
+  onSelect?: (id: string) => void;
 }) {
-  const [selectedId, setSelectedId] = useState<string>(
+  const [internalSelectedId, setInternalSelectedId] = useState<string>(
     variants.find((v) => v.isDefault && v.stock > 0)?.id ??
       variants.find((v) => v.stock > 0)?.id ??
       variants[0]?.id
   );
+
+  const selectedId = controlledSelectedId !== undefined ? controlledSelectedId : internalSelectedId;
+  const onSelect = controlledOnSelect !== undefined ? controlledOnSelect : setInternalSelectedId;
+
   const selected = variants.find((v) => v.id === selectedId) ?? variants[0];
 
   // Which attributes actually vary across variants
@@ -141,7 +150,7 @@ export function VariantPicker({
               label="Option"
               variants={variants}
               selectedId={selectedId}
-              onSelect={setSelectedId}
+              onSelect={onSelect}
               display={(v) => v.name}
             />
           ) : (
@@ -162,7 +171,7 @@ export function VariantPicker({
                     <button
                       key={v.id}
                       type="button"
-                      onClick={() => setSelectedId(v.id)}
+                      onClick={() => onSelect(v.id)}
                       className={`inline-flex items-center gap-2 rounded-full border px-4.5 py-2 text-xs uppercase tracking-wider font-semibold transition-all duration-300 cursor-pointer ${
                         isSelected
                           ? "border-[#B08D57] bg-[#B08D57] text-ivory scale-[1.02] shadow-sm"

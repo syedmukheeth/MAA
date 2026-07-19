@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Clock, MessageCircle, Send } from "lucide-react";
+import { MapPin, Clock, MessageCircle, Send, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,7 +29,7 @@ const FAQS = [
   },
   {
     q: "Can I visit the showroom before ordering?",
-    a: "Yes. Book an appointment below and our design team will walk you through materials, finishes, and live pieces in person.",
+    a: "Yes. You can visit our showroom during working hours to explore materials, finishes, and live pieces in person. No appointment is needed.",
   },
 ];
 
@@ -61,23 +61,29 @@ export function ShowroomFaqContact({
             </h2>
 
             <div className="mt-8 space-y-5">
-              <div className="flex items-start gap-3">
-                <MapPin className="mt-0.5 text-bronze" size={20} />
-                <p className="text-sm text-graphite/80">{address}</p>
-              </div>
+              <a
+                href="https://maps.app.goo.gl/S6U6o7R79U3My4m46"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 hover:text-bronze transition-colors"
+              >
+                <MapPin className="mt-0.5 text-bronze shrink-0" size={20} />
+                <p className="text-sm text-graphite/80 hover:text-bronze transition-colors">{address}</p>
+              </a>
               <div className="flex items-start gap-3">
                 <Clock className="mt-0.5 text-bronze" size={20} />
                 <p className="text-sm text-graphite/80">{hours}</p>
               </div>
+              <a
+                href={`tel:${phone}`}
+                className="flex items-start gap-3 hover:text-bronze transition-colors"
+              >
+                <Phone className="mt-0.5 text-bronze shrink-0" size={20} />
+                <p className="text-sm text-graphite/80 hover:text-bronze transition-colors">{phone}</p>
+              </a>
             </div>
 
             <div className="mt-8 flex flex-wrap gap-4">
-              <Button
-                render={<a href={phone ? `tel:${phone}` : "#contact"} />}
-                className="rounded-full bg-charcoal text-ivory hover:bg-charcoal/90"
-              >
-                Book Appointment
-              </Button>
               <Button
                 render={
                   <a
@@ -90,8 +96,7 @@ export function ShowroomFaqContact({
                     rel="noopener noreferrer"
                   />
                 }
-                variant="outline"
-                className="rounded-full border-graphite/30"
+                className="rounded-full bg-charcoal text-ivory hover:bg-charcoal/90"
               >
                 <MessageCircle className="mr-2" size={16} />
                 WhatsApp Us
@@ -104,7 +109,7 @@ export function ShowroomFaqContact({
               title="MAA FURNITURE Showroom Location"
               className="absolute inset-0 h-full w-full border-0"
               loading="lazy"
-              src={`https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
+              src="https://www.google.com/maps?q=MAA+FURNITURE+Kurnool&output=embed"
             />
           </div>
         </div>
