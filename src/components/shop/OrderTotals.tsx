@@ -1,4 +1,4 @@
-import { formatINR } from "@/lib/money";
+import { formatINR } from "@/lib/format";
 
 /**
  * The money summary, shared by cart, checkout, and order detail so the customer
