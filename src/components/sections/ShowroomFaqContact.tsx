@@ -109,7 +109,9 @@ export function ShowroomFaqContact({
               title="MAA FURNITURE Showroom Location"
               className="absolute inset-0 h-full w-full border-0"
               loading="lazy"
-              src="https://www.google.com/maps?q=MAA+FURNITURE+Kurnool&output=embed"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3815.6388!2d78.0206856!3d15.8375006!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bb5dd6d6cc56eef%3A0x731e09d8ec60ef2d!2sMAA%20FURNITURE!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
             />
           </div>
         </div>

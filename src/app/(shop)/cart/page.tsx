@@ -64,6 +64,8 @@ export default async function CartPage() {
                 item={{
                   id: item.id,
                   name: item.product?.name ?? item.combo?.name ?? "Item",
+                  slug: item.product?.slug ?? null,
+                  comboSlug: item.combo?.slug ?? null,
                   variantLabel:
                     item.variant && !item.variant.isDefault
                       ? item.variant.name

@@ -40,6 +40,12 @@ export const DEFAULT_SITE_SETTINGS = {
   allowUPI: true,
   upiId: null as string | null,
   upiQrImage: null as string | null,
+
+  // Null = show all categories / use built-in defaults
+  shopSections: null as string | null,
+  studioWoods: null as string | null,
+  studioFinishes: null as string | null,
+  studioBudgets: null as string | null,
 };
 
 export type SiteSettings = typeof DEFAULT_SITE_SETTINGS;
@@ -74,6 +80,10 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       allowUPI: row.allowUPI,
       upiId: row.upiId,
       upiQrImage: row.upiQrImage,
+      shopSections: row.shopSections ?? null,
+      studioWoods: row.studioWoods ?? null,
+      studioFinishes: row.studioFinishes ?? null,
+      studioBudgets: row.studioBudgets ?? null,
     };
   } catch {
     return DEFAULT_SITE_SETTINGS;

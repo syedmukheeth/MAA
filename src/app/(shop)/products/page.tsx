@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { prisma } from "@/lib/db";
+import { getSiteSettings } from "@/lib/site-settings";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { ProductListItem } from "@/components/shop/ProductListItem";
 import { ShopToolbar, type SortValue } from "@/components/shop/ShopToolbar";
@@ -21,6 +22,7 @@ type ProductsSearchParams = {
   q?: string;
   sort?: string;
   view?: string;
+  best_sellers?: string;
 };
 
 const SORT_MAP: Record<SortValue, Prisma.ProductOrderByWithRelationInput> = {
@@ -57,7 +59,11 @@ export default async function ProductsPage({
 }: {
   searchParams: Promise<ProductsSearchParams>;
 }) {
-  const { category, page, q, sort, view } = await searchParams;
+  const [{ category, page, q, sort, view, best_sellers }, settings] = await Promise.all([
+    searchParams,
+    getSiteSettings(),
+  ]);
+
   const activeCategory = ROOM_CATEGORIES.includes(
     category as (typeof ROOM_CATEGORIES)[number]
   )
@@ -68,12 +74,28 @@ export default async function ProductsPage({
   const activeSort: SortValue =
     sort && sort in SORT_MAP ? (sort as SortValue) : "newest";
   const listView = view === "list";
+  const onlyBestSellers = best_sellers === "1";
+
+  // Determine which categories to show in the filter pills
+  let enabledCategories: (typeof ROOM_CATEGORIES)[number][] = [...ROOM_CATEGORIES];
+  if (settings.shopSections) {
+    try {
+      const parsed = JSON.parse(settings.shopSections) as string[];
+      const valid = parsed.filter((k): k is (typeof ROOM_CATEGORIES)[number] =>
+        ROOM_CATEGORIES.includes(k as (typeof ROOM_CATEGORIES)[number])
+      );
+      if (valid.length > 0) enabledCategories = valid;
+    } catch {
+      // Malformed JSON — fall back to all categories
+    }
+  }
 
   const currentPage = Math.max(1, Number.parseInt(page ?? "1", 10) || 1);
   const where: Prisma.ProductWhereInput = {
     isActive: true,
     ...(activeCategory ? { category: activeCategory } : {}),
     ...(query ? { name: { contains: query, mode: "insensitive" } } : {}),
+    ...(onlyBestSellers ? { featured: true } : {}),
   };
 
   const [products, totalCount] = await Promise.all([
@@ -94,6 +116,7 @@ export default async function ProductsPage({
       q: query,
       sort: activeSort === "newest" ? undefined : activeSort,
       view: listView ? "list" : undefined,
+      best_sellers: onlyBestSellers ? "1" : undefined,
       ...overrides,
     };
     for (const [key, value] of Object.entries(merged)) {
@@ -112,6 +135,7 @@ export default async function ProductsPage({
     images: p.images,
     stockQuantity: p.stockQuantity,
     lowStockThreshold: p.lowStockThreshold,
+    featured: p.featured,
   });
 
   return (
@@ -121,29 +145,49 @@ export default async function ProductsPage({
       </h1>
 
       <div className="mt-6 flex flex-wrap gap-3">
+        {/* All */}
         {(() => {
-          const allParams = buildParams({ category: undefined, page: undefined });
+          const allParams = buildParams({ category: undefined, page: undefined, best_sellers: undefined });
           return (
             <Link
               href={allParams ? `/products?${allParams}` : "/products"}
               className={`rounded-full border px-4 py-1.5 text-sm ${
-                !activeCategory
+                !activeCategory && !onlyBestSellers
                   ? "border-bronze bg-bronze text-ivory"
-                  : "border-border text-graphite/70"
+                  : "border-border text-graphite/70 hover:border-bronze/50"
               }`}
             >
               All
             </Link>
           );
         })()}
-        {ROOM_CATEGORIES.map((c) => (
+
+        {/* Best Sellers pill */}
+        {(() => {
+          const bsParams = buildParams({ category: undefined, page: undefined, best_sellers: onlyBestSellers ? undefined : "1" });
+          return (
+            <Link
+              href={`/products?${bsParams}`}
+              className={`rounded-full border px-4 py-1.5 text-sm flex items-center gap-1.5 ${
+                onlyBestSellers
+                  ? "border-bronze bg-bronze text-ivory"
+                  : "border-border text-graphite/70 hover:border-bronze/50"
+              }`}
+            >
+              ⭐ Best Sellers
+            </Link>
+          );
+        })()}
+
+        {/* Category pills — only show admin-enabled categories */}
+        {enabledCategories.map((c) => (
           <Link
             key={c}
-            href={`/products?${buildParams({ category: c, page: undefined })}`}
+            href={`/products?${buildParams({ category: c, page: undefined, best_sellers: undefined })}`}
             className={`rounded-full border px-4 py-1.5 text-sm ${
               activeCategory === c
                 ? "border-bronze bg-bronze text-ivory"
-                : "border-border text-graphite/70"
+                : "border-border text-graphite/70 hover:border-bronze/50"
             }`}
           >
             {CATEGORY_LABELS[c]}
@@ -211,6 +255,7 @@ export default async function ProductsPage({
         {totalCount} {totalCount === 1 ? "piece" : "pieces"}
         {activeCategory ? ` in ${CATEGORY_LABELS[activeCategory]}` : ""}
         {query ? ` matching "${query}"` : ""}
+        {onlyBestSellers ? " (Best Sellers)" : ""}
       </p>
     </div>
   );

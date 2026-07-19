@@ -53,9 +53,6 @@ export function Collections({
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-end">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-bronze">
-              Featured Collections
-            </p>
             <h2 className="mt-5 max-w-xl font-heading text-3xl text-charcoal sm:text-4xl">
               Every room, its own story.
             </h2>
