@@ -35,6 +35,11 @@ export const DEFAULT_SITE_SETTINGS = {
   facebookUrl: null as string | null,
 
   deliveryMessage: "Delivery in Andhra Pradesh Only",
+
+  allowCOD: true,
+  allowUPI: true,
+  upiId: null as string | null,
+  upiQrImage: null as string | null,
 };
 
 export type SiteSettings = typeof DEFAULT_SITE_SETTINGS;
@@ -65,6 +70,10 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       instagramUrl: row.instagramUrl,
       facebookUrl: row.facebookUrl,
       deliveryMessage: row.deliveryMessage,
+      allowCOD: row.allowCOD,
+      allowUPI: row.allowUPI,
+      upiId: row.upiId,
+      upiQrImage: row.upiQrImage,
     };
   } catch {
     return DEFAULT_SITE_SETTINGS;

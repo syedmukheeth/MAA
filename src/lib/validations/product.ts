@@ -26,6 +26,7 @@ export const variantSchema = z.object({
   sku: z.string().max(60).optional(),
   stock: z.coerce.number().int().min(0).default(0),
   lowStockThreshold: z.coerce.number().int().min(0).default(3),
+  image: z.string().optional(),
 });
 
 export type VariantInput = z.input<typeof variantSchema>;
