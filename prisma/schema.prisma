@@ -57,10 +57,16 @@ model SiteSettings {
   /// JSON array of enabled RoomCategory keys, e.g. ["LIVING_ROOM","BEDROOM"].
   /// Null means all categories are shown (default behaviour).
   shopSections   String?
+  /// JSON array of admin-defined extra shop sections, e.g.
+  /// [{"label":"Wardrobes","query":"wardrobe"}]. Rendered as extra filter pills.
+  shopCustomSections String?
   /// JSON arrays for Custom Studio dropdowns. Null = use built-in defaults.
   studioWoods    String?
   studioFinishes String?
   studioBudgets  String?
+  /// JSON array of admin-defined extra studio features, e.g.
+  /// [{"label":"Handle Style","options":["Brass","Steel"]}].
+  studioFeatures String?
 
   updatedAt DateTime @updatedAt
 }
@@ -408,6 +414,9 @@ model CustomFurnitureRequest {
   finish         String?
   budgetRange    String?
   description    String?
+  /// JSON object of admin-defined custom feature answers, e.g.
+  /// {"Handle Style":"Brass"}. Null when no custom features were configured.
+  customOptions  String?
   status         RequestStatus @default(NEW)
   submittedById  String?
   submittedBy    User?         @relation("SubmittedBy", fields: [submittedById], references: [id])

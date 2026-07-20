@@ -34,9 +34,11 @@ export const siteSettingsSchema = z.object({
 
   // Admin-configurable lists
   shopSections: z.string().optional().nullable().transform((val) => val === "" ? null : val),
+  shopCustomSections: z.string().optional().nullable().transform((val) => val === "" ? null : val),
   studioWoods: z.string().optional().nullable().transform((val) => val === "" ? null : val),
   studioFinishes: z.string().optional().nullable().transform((val) => val === "" ? null : val),
   studioBudgets: z.string().optional().nullable().transform((val) => val === "" ? null : val),
+  studioFeatures: z.string().optional().nullable().transform((val) => val === "" ? null : val),
 });
 
 export type SiteSettingsInput = z.infer<typeof siteSettingsSchema>;

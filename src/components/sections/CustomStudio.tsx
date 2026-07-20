@@ -31,18 +31,40 @@ function parseJsonList(raw: string | null, fallback: string[]): string[] {
   }
 }
 
+type StudioFeature = { label: string; options: string[] };
+
+function parseFeatures(raw: string | null | undefined): StudioFeature[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((f) => f && typeof f.label === "string" && f.label.trim().length > 0)
+      .map((f) => ({
+        label: f.label,
+        options: Array.isArray(f.options) ? f.options.filter((o: unknown) => typeof o === "string") : [],
+      }))
+      .filter((f) => f.options.length > 0);
+  } catch {
+    return [];
+  }
+}
+
 export function CustomStudio({
   studioWoods,
   studioFinishes,
   studioBudgets,
+  studioFeatures,
 }: {
   studioWoods?: string | null;
   studioFinishes?: string | null;
   studioBudgets?: string | null;
+  studioFeatures?: string | null;
 }) {
   const WOODS = parseJsonList(studioWoods ?? null, DEFAULT_WOODS);
   const FINISHES = parseJsonList(studioFinishes ?? null, DEFAULT_FINISHES);
   const BUDGETS = parseJsonList(studioBudgets ?? null, DEFAULT_BUDGETS);
+  const FEATURES = parseFeatures(studioFeatures);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +81,7 @@ export function CustomStudio({
   const [finish, setFinish] = useState("");
   const [budgetRange, setBudgetRange] = useState("");
   const [description, setDescription] = useState("");
+  const [featureAnswers, setFeatureAnswers] = useState<Record<string, string>>({});
 
   async function onFileSelected(file: File | undefined) {
     if (!file) return;
@@ -116,6 +139,10 @@ export function CustomStudio({
           finish,
           budgetRange,
           description,
+          customOptions:
+            Object.keys(featureAnswers).length > 0
+              ? JSON.stringify(featureAnswers)
+              : undefined,
         }),
       });
       if (!res.ok) {
@@ -296,6 +323,33 @@ export function CustomStudio({
                   </SelectContent>
                 </Select>
               </div>
+
+              {FEATURES.length > 0 && (
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  {FEATURES.map((feature) => (
+                    <div key={feature.label} className="space-y-2">
+                      <Label>{feature.label}</Label>
+                      <Select
+                        value={featureAnswers[feature.label] ?? ""}
+                        onValueChange={(v) =>
+                          setFeatureAnswers((prev) => ({ ...prev, [feature.label]: v ?? "" }))
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder={`Choose ${feature.label.toLowerCase()}`} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {feature.options.map((opt) => (
+                            <SelectItem key={opt} value={opt}>
+                              {opt}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="desc">Describe what you need</Label>

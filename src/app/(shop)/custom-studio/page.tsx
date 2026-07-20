@@ -30,6 +30,7 @@ export default async function CustomStudioPage() {
         studioWoods={settings.studioWoods}
         studioFinishes={settings.studioFinishes}
         studioBudgets={settings.studioBudgets}
+        studioFeatures={settings.studioFeatures}
       />
     </div>
   );

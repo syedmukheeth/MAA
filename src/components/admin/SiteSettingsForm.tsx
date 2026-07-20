@@ -91,6 +91,84 @@ function fromJson(raw: string | null, fallback: string[]): string[] {
   }
 }
 
+/* ─── Custom Studio Features ────────────────────────────────── */
+type StudioFeature = { label: string; options: string[] };
+
+function fromFeatureJson(raw: string | null): StudioFeature[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((f) => f && typeof f.label === "string")
+      .map((f) => ({
+        label: f.label,
+        options: Array.isArray(f.options) ? f.options.filter((o: unknown) => typeof o === "string") : [],
+      }));
+  } catch {
+    return [];
+  }
+}
+
+function toFeatureJson(features: StudioFeature[]): string | null {
+  const cleaned = features.filter((f) => f.label.trim().length > 0);
+  return cleaned.length === 0 ? null : JSON.stringify(cleaned);
+}
+
+function FeatureListEditor({
+  features,
+  onChange,
+}: {
+  features: StudioFeature[];
+  onChange: (features: StudioFeature[]) => void;
+}) {
+  function updateFeature(index: number, next: Partial<StudioFeature>) {
+    onChange(features.map((f, i) => (i === index ? { ...f, ...next } : f)));
+  }
+
+  return (
+    <div className="space-y-4">
+      {features.map((feature, i) => (
+        <div key={i} className="space-y-3 rounded-lg border border-border bg-background/50 p-4">
+          <div className="flex items-end gap-2">
+            <div className="flex-1 space-y-2">
+              <Label>Feature name</Label>
+              <Input
+                value={feature.label}
+                onChange={(e) => updateFeature(i, { label: e.target.value })}
+                placeholder="e.g. Handle Style"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onChange(features.filter((_, idx) => idx !== i))}
+              className="shrink-0 text-brand-red hover:text-brand-red"
+            >
+              <X size={14} className="mr-1" /> Remove
+            </Button>
+          </div>
+          <TagListEditor
+            label="Options"
+            hint="Choices customers can pick for this feature"
+            items={feature.options}
+            onChange={(items) => updateFeature(i, { options: items })}
+          />
+        </div>
+      ))}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => onChange([...features, { label: "", options: [] }])}
+      >
+        <Plus size={14} className="mr-1" /> Add Feature
+      </Button>
+    </div>
+  );
+}
+
 const DEFAULT_WOODS = ["Teak", "Sheesham", "Oak", "Walnut", "Mango Wood"];
 const DEFAULT_FINISHES = ["Matte", "Satin", "High Gloss", "Natural Oil"];
 const DEFAULT_BUDGETS = ["Under ₹50,000", "₹50,000 – ₹1,50,000", "₹1,50,000 – ₹5,00,000", "₹5,00,000+"];
@@ -110,9 +188,11 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
     upiId: defaults.upiId ?? "",
     upiQrImage: defaults.upiQrImage ?? "",
     shopSections: defaults.shopSections ?? null,
+    shopCustomSections: defaults.shopCustomSections ?? null,
     studioWoods: defaults.studioWoods ?? null,
     studioFinishes: defaults.studioFinishes ?? null,
     studioBudgets: defaults.studioBudgets ?? null,
+    studioFeatures: defaults.studioFeatures ?? null,
   });
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -120,9 +200,11 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
 
   // Derived list state for UI (decoded from JSON strings)
   const enabledSections = fromJson(values.shopSections, [...ROOM_CATEGORIES]);
+  const customSections = fromJson(values.shopCustomSections, []);
   const studioWoods = fromJson(values.studioWoods, DEFAULT_WOODS);
   const studioFinishes = fromJson(values.studioFinishes, DEFAULT_FINISHES);
   const studioBudgets = fromJson(values.studioBudgets, DEFAULT_BUDGETS);
+  const studioFeatures = fromFeatureJson(values.studioFeatures);
 
   function set<K extends keyof typeof values>(key: K, val: (typeof values)[K]) {
     setValues((v) => ({ ...v, [key]: val }));
@@ -422,6 +504,15 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
             ? "All categories are shown (default)"
             : `Showing: ${enabledSections.map((c) => CATEGORY_LABELS[c as (typeof ROOM_CATEGORIES)[number]]).join(", ")}`}
         </p>
+
+        <div className="border-t border-border pt-4">
+          <TagListEditor
+            label="Custom Sections"
+            hint="Add extra shop filter pills beyond the fixed room categories. Each links to a product search for that name."
+            items={customSections}
+            onChange={(items) => set("shopCustomSections", toJson(items))}
+          />
+        </div>
       </section>
 
       {/* ─── Custom Studio Options (item 7) ─────────── */}
@@ -451,6 +542,19 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
           items={studioBudgets}
           onChange={(items) => set("studioBudgets", toJson(items))}
         />
+
+        <div className="space-y-3 border-t border-border pt-5">
+          <div>
+            <Label>Custom Features</Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              Add your own dropdown features (with their own options) to the studio request form.
+            </p>
+          </div>
+          <FeatureListEditor
+            features={studioFeatures}
+            onChange={(features) => set("studioFeatures", toFeatureJson(features))}
+          />
+        </div>
       </section>
 
       {error && <p className="text-sm text-destructive">{error}</p>}

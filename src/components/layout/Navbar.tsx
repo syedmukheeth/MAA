@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Menu, ShoppingCart, User, X, LogOut, ArrowRight, Heart } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/actions/auth";
 import { useWishlist } from "@/hooks/use-wishlist";
 
@@ -191,15 +190,6 @@ export function Navbar({
               </button>
             </form>
           )}
-
-          {/* CTA (Desktop) */}
-          <Button
-            render={<Link href="/custom-studio" />}
-            size="sm"
-            className="hidden sm:inline-flex rounded-full bg-bronze px-5 text-xs uppercase tracking-wider text-ivory hover:bg-bronze/90"
-          >
-            Custom Design
-          </Button>
 
           {/* Hamburger Menu (Mobile) */}
           <button
