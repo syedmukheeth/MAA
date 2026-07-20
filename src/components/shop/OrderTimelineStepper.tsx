@@ -48,18 +48,24 @@ export function OrderTimelineStepper({
 
       <div className="relative pl-8 space-y-7">
         {STEPS.map((s, index) => {
-          const isCompleted = !isCancelled && index < activeIndex;
-          const isActive = !isCancelled && index === activeIndex;
+          // Delivered is a terminal, fully-complete state: when the order IS
+          // delivered, show the Delivered step itself as completed (green tick).
+          const isCompleted =
+            !isCancelled &&
+            (index < activeIndex ||
+              (status === "DELIVERED" && index === activeIndex));
+          const isActive =
+            !isCancelled && index === activeIndex && !isCompleted;
           const isLast = index === STEPS.length - 1;
 
           let dotClass = "bg-white border-linen text-transparent";
           let textColor = "text-graphite/40";
           let labelColor = "text-graphite/50";
           // Connector line colored green once this step is passed.
-          const lineClass = isCompleted ? "bg-bronze" : "bg-linen";
+          const lineClass = isCompleted ? "bg-sage" : "bg-linen";
 
           if (isCompleted) {
-            dotClass = "bg-bronze border-bronze text-ivory";
+            dotClass = "bg-sage border-sage text-ivory";
             textColor = "text-graphite/60";
             labelColor = "text-charcoal font-medium";
           } else if (isActive) {
