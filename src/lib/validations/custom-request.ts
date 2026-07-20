@@ -10,6 +10,8 @@ export const customRequestSchema = z.object({
   finish: z.string().optional(),
   budgetRange: z.string().optional(),
   description: z.string().optional(),
+  /// JSON string of custom feature answers, e.g. {"Handle Style":"Brass"}.
+  customOptions: z.string().optional(),
 });
 
 export type CustomRequestInput = z.infer<typeof customRequestSchema>;

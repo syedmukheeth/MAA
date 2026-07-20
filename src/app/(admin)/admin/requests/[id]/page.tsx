@@ -27,6 +27,22 @@ export default async function AdminRequestDetailPage({
     ["Budget", request.budgetRange],
   ];
 
+  // Admin-defined custom feature answers stored as a JSON object.
+  let customOptions: [string, string][] = [];
+  if (request.customOptions) {
+    try {
+      const parsed = JSON.parse(request.customOptions) as Record<string, unknown>;
+      customOptions = Object.entries(parsed)
+        .filter(([, v]) => typeof v === "string" && v.length > 0)
+        .map(([k, v]) => [k, v as string]);
+    } catch {
+      // Malformed JSON — skip
+    }
+  }
+  for (const [label, value] of customOptions) {
+    fields.push([label, value]);
+  }
+
   return (
     <div className="max-w-2xl">
       <BackLink href="/admin/requests" label="Back to Custom Requests" />
