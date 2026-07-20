@@ -1,6 +1,6 @@
 "use client";
 
-import { XCircle } from "lucide-react";
+import { XCircle, Check } from "lucide-react";
 
 export type OrderStatus =
   | "PENDING"
@@ -46,21 +46,24 @@ export function OrderTimelineStepper({
         </div>
       )}
 
-      <div className="relative pl-6 space-y-6 before:absolute before:left-[5px] before:top-2 before:bottom-2 before:w-[2px] before:bg-linen">
+      <div className="relative pl-8 space-y-7">
         {STEPS.map((s, index) => {
           const isCompleted = !isCancelled && index < activeIndex;
           const isActive = !isCancelled && index === activeIndex;
+          const isLast = index === STEPS.length - 1;
 
-          let dotClass = "bg-linen ring-linen/10";
+          let dotClass = "bg-white border-linen text-transparent";
           let textColor = "text-graphite/40";
           let labelColor = "text-graphite/50";
+          // Connector line colored green once this step is passed.
+          const lineClass = isCompleted ? "bg-bronze" : "bg-linen";
 
           if (isCompleted) {
-            dotClass = "bg-sage ring-sage/20";
+            dotClass = "bg-bronze border-bronze text-ivory";
             textColor = "text-graphite/60";
             labelColor = "text-charcoal font-medium";
           } else if (isActive) {
-            dotClass = "bg-bronze ring-bronze/30 scale-125";
+            dotClass = "bg-bronze border-bronze text-ivory ring-4 ring-bronze/20";
             textColor = "text-graphite/80";
             labelColor = "text-charcoal font-bold";
           } else if (isCancelled) {
@@ -70,10 +73,22 @@ export function OrderTimelineStepper({
 
           return (
             <div key={s.status} className="relative flex gap-4 items-start">
-              {/* Dot */}
+              {/* Connector line to next step */}
+              {!isLast && (
+                <span
+                  className={`absolute left-[-21px] top-6 h-[calc(100%+0.75rem)] w-[2px] ${lineClass}`}
+                />
+              )}
+              {/* Dot with tick when completed / active */}
               <div
-                className={`absolute -left-[25px] flex size-3 items-center justify-center rounded-full border-2 border-white ring-4 ${dotClass}`}
-              />
+                className={`absolute -left-[30px] top-0 flex size-6 items-center justify-center rounded-full border-2 transition-all ${dotClass}`}
+              >
+                {isCompleted ? (
+                  <Check size={14} strokeWidth={3} />
+                ) : isActive ? (
+                  <span className="size-2 rounded-full bg-ivory" />
+                ) : null}
+              </div>
 
               <div className="flex-1 min-w-0">
                 <p className={`text-sm ${labelColor}`}>{s.label}</p>

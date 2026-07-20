@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { ShoppingCart, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { ShoppingCart, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addToCart } from "@/actions/cart";
 
@@ -26,6 +27,7 @@ export function AddToCartButton({
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [added, setAdded] = useState(false);
 
   async function onClick() {
     setPending(true);
@@ -46,7 +48,11 @@ export function AddToCartButton({
         setError(result.error);
         return;
       }
-      router.push("/cart");
+      // Stay on the page — refresh so the navbar cart count updates,
+      // and show inline confirmation instead of redirecting to /cart.
+      router.refresh();
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2500);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -78,17 +84,29 @@ export function AddToCartButton({
           type="button"
           disabled={disabled || pending}
           onClick={onClick}
-          className="flex-1 rounded-full bg-bronze text-ivory hover:bg-bronze/90 flex items-center justify-center"
+          className={`flex-1 rounded-full flex items-center justify-center text-ivory ${
+            added ? "bg-sage hover:bg-sage/90" : "bg-bronze hover:bg-bronze/90"
+          }`}
         >
           {pending ? (
             <Loader2 className="mr-2 animate-spin" size={16} />
+          ) : added ? (
+            <Check className="mr-2" size={16} />
           ) : (
             <ShoppingCart className="mr-2" size={16} />
           )}
-          {pending ? "Adding to Cart..." : "Add to Cart"}
+          {pending ? "Adding to Cart..." : added ? "Added to Cart" : "Add to Cart"}
         </Button>
         {productId && <WishlistToggleButton productId={productId} />}
       </div>
+      {added && (
+        <p className="mt-2 text-sm text-graphite/70">
+          Item added.{" "}
+          <Link href="/cart" className="font-medium text-bronze hover:underline">
+            View cart →
+          </Link>
+        </p>
+      )}
       {error && <p className="mt-2 text-sm text-brand-red">{error}</p>}
     </div>
   );

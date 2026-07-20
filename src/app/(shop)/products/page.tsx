@@ -71,10 +71,12 @@ export default async function ProductsPage({
     : undefined;
 
   const query = q?.trim() || undefined;
+  // "best_sellers" is a sort-menu entry that filters featured items while
+  // keeping the newest ordering. Legacy ?best_sellers=1 links still work.
+  const onlyBestSellers = sort === "best_sellers" || best_sellers === "1";
   const activeSort: SortValue =
     sort && sort in SORT_MAP ? (sort as SortValue) : "newest";
   const listView = view === "list";
-  const onlyBestSellers = best_sellers === "1";
 
   // Determine which categories to show in the filter pills
   let enabledCategories: (typeof ROOM_CATEGORIES)[number][] = [...ROOM_CATEGORIES];
@@ -114,9 +116,12 @@ export default async function ProductsPage({
     const merged: Record<string, string | undefined> = {
       category: activeCategory,
       q: query,
-      sort: activeSort === "newest" ? undefined : activeSort,
+      sort: onlyBestSellers
+        ? "best_sellers"
+        : activeSort === "newest"
+          ? undefined
+          : activeSort,
       view: listView ? "list" : undefined,
-      best_sellers: onlyBestSellers ? "1" : undefined,
       ...overrides,
     };
     for (const [key, value] of Object.entries(merged)) {
@@ -147,12 +152,12 @@ export default async function ProductsPage({
       <div className="mt-6 flex flex-wrap gap-3">
         {/* All */}
         {(() => {
-          const allParams = buildParams({ category: undefined, page: undefined, best_sellers: undefined });
+          const allParams = buildParams({ category: undefined, page: undefined });
           return (
             <Link
               href={allParams ? `/products?${allParams}` : "/products"}
               className={`rounded-full border px-4 py-1.5 text-sm ${
-                !activeCategory && !onlyBestSellers
+                !activeCategory
                   ? "border-bronze bg-bronze text-ivory"
                   : "border-border text-graphite/70 hover:border-bronze/50"
               }`}
@@ -162,28 +167,11 @@ export default async function ProductsPage({
           );
         })()}
 
-        {/* Best Sellers pill */}
-        {(() => {
-          const bsParams = buildParams({ category: undefined, page: undefined, best_sellers: onlyBestSellers ? undefined : "1" });
-          return (
-            <Link
-              href={`/products?${bsParams}`}
-              className={`rounded-full border px-4 py-1.5 text-sm flex items-center gap-1.5 ${
-                onlyBestSellers
-                  ? "border-bronze bg-bronze text-ivory"
-                  : "border-border text-graphite/70 hover:border-bronze/50"
-              }`}
-            >
-              ⭐ Best Sellers
-            </Link>
-          );
-        })()}
-
         {/* Category pills — only show admin-enabled categories */}
         {enabledCategories.map((c) => (
           <Link
             key={c}
-            href={`/products?${buildParams({ category: c, page: undefined, best_sellers: undefined })}`}
+            href={`/products?${buildParams({ category: c, page: undefined })}`}
             className={`rounded-full border px-4 py-1.5 text-sm ${
               activeCategory === c
                 ? "border-bronze bg-bronze text-ivory"
@@ -197,7 +185,7 @@ export default async function ProductsPage({
 
       <div className="mt-8">
         <Suspense fallback={null}>
-          <ShopToolbar listPath="/products" />
+          <ShopToolbar listPath="/products" showBestSeller />
         </Suspense>
       </div>
 

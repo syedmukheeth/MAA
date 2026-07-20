@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { ComboItemsPicker } from "@/components/shop/ComboItemsPicker";
 import { ComboMainImage } from "@/components/shop/ComboMainImage";
@@ -127,6 +129,13 @@ export default async function ComboDetailPage({
   return (
     <div className="mx-auto max-w-6xl px-6 py-16 lg:px-10">
       <JsonLd data={comboSchema} />
+      <Link
+        href="/combos"
+        className="mb-8 inline-flex items-center gap-2 text-sm text-graphite/70 transition-colors hover:text-bronze"
+      >
+        <ArrowLeft size={16} />
+        Back to all combos
+      </Link>
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
         <div className="relative aspect-square overflow-hidden rounded-2xl bg-cream">
           {combo.image ? (
