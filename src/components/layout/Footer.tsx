@@ -49,7 +49,7 @@ export function Footer({
   return (
     <footer className="bg-charcoal text-ivory">
       <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
-        <div className="grid grid-cols-1 gap-14 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:gap-14 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-3">
               <Image

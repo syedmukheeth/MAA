@@ -92,6 +92,19 @@ export default async function ProductsPage({
     }
   }
 
+  // Admin-defined custom sections — rendered as extra pills that search by name.
+  let customSections: string[] = [];
+  if (settings.shopCustomSections) {
+    try {
+      const parsed = JSON.parse(settings.shopCustomSections) as unknown;
+      if (Array.isArray(parsed)) {
+        customSections = parsed.filter((s): s is string => typeof s === "string" && s.trim().length > 0);
+      }
+    } catch {
+      // Malformed JSON — no custom sections
+    }
+  }
+
   const currentPage = Math.max(1, Number.parseInt(page ?? "1", 10) || 1);
   const where: Prisma.ProductWhereInput = {
     isActive: true,
@@ -181,6 +194,24 @@ export default async function ProductsPage({
             {CATEGORY_LABELS[c]}
           </Link>
         ))}
+
+        {/* Custom section pills (admin-defined) — search by name */}
+        {customSections.map((label) => {
+          const isActive = !activeCategory && query?.toLowerCase() === label.toLowerCase();
+          return (
+            <Link
+              key={label}
+              href={`/products?q=${encodeURIComponent(label)}`}
+              className={`rounded-full border px-4 py-1.5 text-sm ${
+                isActive
+                  ? "border-bronze bg-bronze text-ivory"
+                  : "border-border text-graphite/70 hover:border-bronze/50"
+              }`}
+            >
+              {label}
+            </Link>
+          );
+        })}
       </div>
 
       <div className="mt-8">
