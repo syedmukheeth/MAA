@@ -22,10 +22,12 @@ export function ShopToolbar({
   scope = "products",
   listPath = "/products",
   showViewToggle = true,
+  showBestSeller = false,
 }: {
   scope?: "products" | "combos";
   listPath?: string;
   showViewToggle?: boolean;
+  showBestSeller?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -70,6 +72,9 @@ export function ShopToolbar({
             }
             className="h-9 rounded-full border border-border bg-white/70 px-3 text-sm text-charcoal outline-none focus:border-bronze"
           >
+            {showBestSeller && (
+              <option value="best_sellers">⭐ Best Sellers</option>
+            )}
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}

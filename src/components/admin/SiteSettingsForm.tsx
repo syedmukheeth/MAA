@@ -37,18 +37,18 @@ function TagListEditor({
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      {hint && <p className="text-xs text-graphite/50">{hint}</p>}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       <div className="flex flex-wrap gap-2">
         {items.map((item) => (
           <span
             key={item}
-            className="flex items-center gap-1.5 rounded-full bg-cream border border-linen px-3 py-1 text-sm text-charcoal"
+            className="flex items-center gap-1.5 rounded-full bg-secondary border border-border px-3 py-1 text-sm text-foreground"
           >
             {item}
             <button
               type="button"
               onClick={() => onChange(items.filter((i) => i !== item))}
-              className="text-graphite/40 hover:text-brand-red transition-colors"
+              className="text-muted-foreground hover:text-brand-red transition-colors"
               aria-label={`Remove ${item}`}
             >
               <X size={12} />
@@ -383,10 +383,10 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
       </section>
 
       {/* ─── Shop Sections (item 4) ─────────────────── */}
-      <section className="space-y-4 rounded-xl border border-linen bg-cream/30 p-5">
+      <section className="space-y-4 rounded-xl border border-border bg-muted/30 p-5">
         <div>
           <h2 className="font-heading text-lg text-foreground">Shop Category Sections</h2>
-          <p className="text-xs text-graphite/50 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Choose which room categories appear as filter pills in the shop. Remove a category to hide it from customers.
           </p>
         </div>
@@ -409,7 +409,7 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
                 className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all ${
                   isEnabled
                     ? "border-bronze bg-bronze text-ivory"
-                    : "border-border bg-white text-graphite/50 hover:border-bronze/50"
+                    : "border-border bg-secondary text-muted-foreground hover:border-bronze/50"
                 }`}
               >
                 {CATEGORY_LABELS[cat]}
@@ -417,7 +417,7 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
             );
           })}
         </div>
-        <p className="text-xs text-graphite/40">
+        <p className="text-xs text-muted-foreground">
           {enabledSections.length === ROOM_CATEGORIES.length
             ? "All categories are shown (default)"
             : `Showing: ${enabledSections.map((c) => CATEGORY_LABELS[c as (typeof ROOM_CATEGORIES)[number]]).join(", ")}`}
@@ -425,10 +425,10 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
       </section>
 
       {/* ─── Custom Studio Options (item 7) ─────────── */}
-      <section className="space-y-6 rounded-xl border border-linen bg-cream/30 p-5">
+      <section className="space-y-6 rounded-xl border border-border bg-muted/30 p-5">
         <div>
           <h2 className="font-heading text-lg text-foreground">Custom Studio Options</h2>
-          <p className="text-xs text-graphite/50 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Edit the dropdown options shown in the Custom Furniture Studio request form.
           </p>
         </div>
