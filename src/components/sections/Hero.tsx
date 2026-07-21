@@ -20,7 +20,7 @@ export function Hero({
   return (
     <section
       id="top"
-      className="relative flex h-screen min-h-[720px] w-full items-center justify-center overflow-hidden"
+      className="relative flex h-screen min-h-[600px] w-full items-center justify-center overflow-hidden sm:min-h-[720px]"
     >
       <motion.div
         initial={{ scale: 1.15 }}
@@ -54,7 +54,7 @@ export function Hero({
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.5 }}
-          className="mt-6 font-heading text-5xl leading-[1.15] text-ivory sm:text-6xl lg:text-7xl drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+          className="mt-6 font-heading text-4xl leading-[1.15] text-ivory sm:text-6xl lg:text-7xl drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
         >
           {headline.split("\n").map((line, i) => (
             <span key={i}>

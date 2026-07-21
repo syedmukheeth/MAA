@@ -48,20 +48,20 @@ export function Footer({
 
   return (
     <footer className="bg-charcoal text-ivory">
-      <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:gap-14 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
-          <div>
+      <div className="mx-auto max-w-7xl px-6 py-14 sm:py-16 lg:px-10 lg:py-20">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-[1.3fr_1fr_1fr_1fr] lg:gap-14">
+          <div className="col-span-2 sm:col-span-3 lg:col-span-1">
             <div className="flex items-center gap-3">
               <Image
                 src="/brand/logo.jpeg"
                 alt="MAA FURNITURE"
                 width={48}
                 height={48}
-                className="rounded-full"
+                className="size-11 rounded-full sm:size-12"
               />
-              <span className="font-heading text-xl">MAA FURNITURE</span>
+              <span className="font-heading text-lg sm:text-xl">MAA FURNITURE</span>
             </div>
-            <p className="mt-5 max-w-xs text-sm leading-relaxed text-ivory/60">
+            <p className="mt-5 max-w-sm text-sm leading-relaxed text-ivory/60">
               Handcrafted furniture designed to bring timeless beauty and
               lasting comfort into every home, built to be lived in for
               generations.
@@ -129,7 +129,7 @@ export function Footer({
           ))}
         </div>
 
-        <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-ivory/10 pt-8 text-xs text-ivory/50 lg:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-ivory/10 pt-8 text-center text-xs text-ivory/50 sm:mt-16 lg:flex-row lg:text-left">
           <p>&copy; {new Date().getFullYear()} MAA FURNITURE. All rights reserved.</p>
           <p>Crafted with care, by Sampeer Studio.</p>
         </div>

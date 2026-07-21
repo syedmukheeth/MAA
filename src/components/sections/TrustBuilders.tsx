@@ -45,9 +45,9 @@ export function TrustBuilders({
   ];
 
   return (
-    <section className="bg-charcoal px-6 py-28 lg:px-10">
+    <section className="bg-charcoal px-6 py-20 lg:px-10 lg:py-28">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-20 grid grid-cols-2 gap-8 border-b border-ivory/10 pb-16 lg:grid-cols-4">
+        <div className="mb-12 grid grid-cols-2 gap-8 border-b border-ivory/10 pb-10 sm:mb-16 sm:pb-14 lg:mb-20 lg:grid-cols-4 lg:pb-16">
           {stats.map((s, i) => (
             <motion.div
               key={s.label}
