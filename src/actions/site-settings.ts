@@ -22,11 +22,19 @@ export async function updateSiteSettings(
 
   const before = await prisma.siteSettings.findUnique({ where: { id: SETTINGS_ID } });
 
-  await prisma.siteSettings.upsert({
-    where: { id: SETTINGS_ID },
-    create: { id: SETTINGS_ID, ...parsed.data },
-    update: { ...parsed.data },
-  });
+  try {
+    await prisma.siteSettings.upsert({
+      where: { id: SETTINGS_ID },
+      create: { id: SETTINGS_ID, ...parsed.data },
+      update: { ...parsed.data },
+    });
+  } catch (e) {
+    console.error("updateSiteSettings failed", e);
+    return {
+      error:
+        "Could not save settings. If this keeps happening the database may be missing a recent migration.",
+    };
+  }
 
   const changed = before
     ? diff(before as unknown as Record<string, unknown>, parsed.data)
@@ -45,5 +53,10 @@ export async function updateSiteSettings(
 
   revalidatePath("/");
   revalidatePath("/admin/settings");
+  // The custom-studio form (woods/finishes/budgets/features) and the shop
+  // filter pills live on their own cached routes — revalidate them too, or
+  // admin edits appear "not saved" until the 5-min cache expires.
+  revalidatePath("/custom-studio");
+  revalidatePath("/products");
   return {};
 }
