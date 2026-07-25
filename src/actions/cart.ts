@@ -5,6 +5,20 @@ import { prisma } from "@/lib/db";
 import { requireAuth, getActiveUser } from "@/lib/auth/session";
 import { getDefaultVariant } from "@/lib/inventory";
 
+/**
+ * Server actions receive whatever the caller POSTs, so `quantity` can arrive as
+ * NaN, a fraction, or 1e9. NaN in particular slips past every `>` stock check
+ * and lands in the database.
+ */
+const MAX_LINE_QUANTITY = 99;
+
+function sanitizeQuantity(value: number) {
+  if (!Number.isFinite(value)) return null;
+  const qty = Math.floor(value);
+  if (qty < 1) return null;
+  return Math.min(qty, MAX_LINE_QUANTITY);
+}
+
 async function getOrCreateCart(userId: string) {
   const existing = await prisma.cart.findUnique({ where: { userId } });
   if (existing) return existing;
@@ -25,7 +39,10 @@ export async function addToCart(input: {
   if (!session) {
     return { requiresAuth: true, error: "Please sign in to add items to your cart" };
   }
-  const quantity = Math.max(1, Math.floor(input.quantity));
+  const quantity = sanitizeQuantity(input.quantity);
+  if (quantity === null) {
+    return { error: "Please choose a valid quantity" };
+  }
 
   if (!input.productId && !input.comboId) {
     return { error: "Nothing to add to cart" };
@@ -162,7 +179,7 @@ export async function addToCart(input: {
 
 export async function updateCartItemQuantity(
   cartItemId: string,
-  quantity: number
+  rawQuantity: number
 ): Promise<{ error?: string }> {
   const session = await requireAuth();
   const item = await prisma.cartItem.findUnique({
@@ -179,10 +196,15 @@ export async function updateCartItemQuantity(
     return { error: "Cart item not found" };
   }
 
-  if (quantity <= 0) {
+  if (Number.isFinite(rawQuantity) && rawQuantity <= 0) {
     await prisma.cartItem.delete({ where: { id: cartItemId } });
     revalidatePath("/", "layout");
     return {};
+  }
+
+  const quantity = sanitizeQuantity(rawQuantity);
+  if (quantity === null) {
+    return { error: "Please choose a valid quantity" };
   }
 
   if (item.variant && quantity > item.variant.stock) {

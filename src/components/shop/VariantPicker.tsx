@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AddToCartButton } from "@/components/shop/AddToCartButton";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatINR } from "@/lib/format";
 
 export type VariantOption = {
   id: string;
@@ -24,12 +25,6 @@ const ATTRIBUTES = [
 ] as const;
 
 type AttrKey = (typeof ATTRIBUTES)[number]["key"];
-
-function formatInr(value: number) {
-  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(
-    value
-  );
-}
 
 /**
  * Timber swatches shown next to each variant.
@@ -108,7 +103,10 @@ export function VariantPicker({
 
   return (
     <div>
-      <div className="overflow-hidden h-10 flex flex-col justify-center">
+      <div
+        aria-live="polite"
+        className="overflow-hidden h-10 flex flex-col justify-center"
+      >
         <AnimatePresence mode="popLayout">
           <motion.p
             key={price}
@@ -116,13 +114,13 @@ export function VariantPicker({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 15 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="flex items-baseline gap-2 text-2xl font-semibold text-charcoal"
+            className="flex items-baseline gap-2 text-2xl font-semibold text-charcoal tabular-nums"
           >
-            <span>&#8377;{formatInr(price)}</span>
+            <span>{formatINR(price)}</span>
             {hasOffer && (
               <>
                 <span className="text-base font-normal text-graphite/50 line-through">
-                  &#8377;{formatInr(mrp)}
+                  {formatINR(mrp)}
                 </span>
                 <span className="text-sm font-semibold text-green-600">
                   {offPct}% off
@@ -172,7 +170,8 @@ export function VariantPicker({
                       key={v.id}
                       type="button"
                       onClick={() => onSelect(v.id)}
-                      className={`inline-flex items-center gap-2 rounded-full border px-4.5 py-2 text-xs uppercase tracking-wider font-semibold transition-all duration-300 cursor-pointer ${
+                      aria-pressed={isSelected}
+                      className={`inline-flex items-center gap-2 rounded-full border px-4.5 py-2 text-xs uppercase tracking-wider font-semibold transition-[background-color,border-color,color,transform,box-shadow] duration-300 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze focus-visible:ring-offset-2 ${
                         isSelected
                           ? "border-[#B08D57] bg-[#B08D57] text-ivory scale-[1.02] shadow-sm"
                           : v.stock > 0
@@ -182,15 +181,19 @@ export function VariantPicker({
                     >
                       {woodColor && (
                         <span
+                          aria-hidden="true"
                           className="inline-block size-3.5 shrink-0 rounded-full border border-black/10 shadow-xs"
                           style={{ backgroundColor: woodColor }}
                         />
                       )}
                       <span>{label}</span>
+                      {v.stock === 0 && (
+                        <span className="sr-only">(out of stock)</span>
+                      )}
                       {v.priceDelta !== 0 && (
                         <span className={`ml-1 text-[10px] opacity-75 ${isSelected ? "text-ivory" : "text-bronze"}`}>
-                          ({v.priceDelta > 0 ? "+" : "−"}&#8377;
-                          {formatInr(Math.abs(v.priceDelta))})
+                          ({v.priceDelta > 0 ? "+" : "−"}
+                          {formatINR(Math.abs(v.priceDelta))})
                         </span>
                       )}
                     </button>
@@ -237,7 +240,8 @@ function VariantPillRow({
             key={v.id}
             type="button"
             onClick={() => onSelect(v.id)}
-            className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+            aria-pressed={v.id === selectedId}
+            className={`rounded-full border px-4 py-2 text-sm transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze focus-visible:ring-offset-2 ${
               v.id === selectedId
                 ? "border-bronze bg-bronze text-ivory"
                 : v.stock > 0
@@ -246,6 +250,7 @@ function VariantPillRow({
             }`}
           >
             {display(v)}
+            {v.stock === 0 && <span className="sr-only"> (out of stock)</span>}
           </button>
         ))}
       </div>

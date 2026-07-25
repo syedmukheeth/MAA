@@ -45,8 +45,10 @@ export function ConfirmDialog({
             disabled={pending}
             className="flex items-center justify-center gap-1.5"
           >
-            {pending && <Loader2 className="animate-spin" size={14} />}
-            {pending ? "Working..." : confirmLabel}
+            {pending && (
+              <Loader2 aria-hidden="true" className="animate-spin" size={14} />
+            )}
+            {pending ? "Working…" : confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

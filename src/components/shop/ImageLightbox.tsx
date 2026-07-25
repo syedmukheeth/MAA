@@ -17,14 +17,34 @@ export function ImageLightbox({
   onClose: () => void;
   alt?: string;
 }) {
-  const [active, setActive] = useState(startIndex);
+  if (!open || images.length === 0) return null;
 
-  // Sync active state when lightbox opens or startIndex changes
-  useEffect(() => {
-    if (open) {
-      setActive(startIndex);
-    }
-  }, [open, startIndex]);
+  // Mounting the view fresh — and keying it on startIndex — is what resets the
+  // selected slide. Copying startIndex into state inside an effect caused an
+  // extra render on every open and briefly showed the previous image.
+  return (
+    <LightboxView
+      key={startIndex}
+      images={images}
+      startIndex={startIndex}
+      onClose={onClose}
+      alt={alt}
+    />
+  );
+}
+
+function LightboxView({
+  images,
+  startIndex,
+  onClose,
+  alt,
+}: {
+  images: string[];
+  startIndex: number;
+  onClose: () => void;
+  alt: string;
+}) {
+  const [active, setActive] = useState(startIndex);
 
   const prev = useCallback(
     () => setActive((i) => (i - 1 + images.length) % images.length),
@@ -36,7 +56,6 @@ export function ImageLightbox({
   );
 
   useEffect(() => {
-    if (!open) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
       else if (e.key === "ArrowLeft") prev();
@@ -48,16 +67,14 @@ export function ImageLightbox({
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [open, onClose, prev, next]);
-
-  if (!open || images.length === 0) return null;
+  }, [onClose, prev, next]);
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-label={alt}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-charcoal/95 p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center overscroll-contain bg-charcoal/95 p-4"
       onClick={onClose}
     >
       <button
@@ -66,7 +83,7 @@ export function ImageLightbox({
         onClick={onClose}
         className="absolute right-4 top-4 rounded-full bg-ivory/10 p-2.5 text-ivory transition-colors hover:bg-ivory/20"
       >
-        <X size={20} />
+        <X aria-hidden="true" size={20} />
       </button>
 
       {images.length > 1 && (
@@ -79,7 +96,7 @@ export function ImageLightbox({
           }}
           className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-ivory/10 p-2.5 text-ivory transition-colors hover:bg-ivory/20 sm:left-6"
         >
-          <ChevronLeft size={22} />
+          <ChevronLeft aria-hidden="true" size={22} />
         </button>
       )}
 
@@ -107,7 +124,7 @@ export function ImageLightbox({
           }}
           className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-ivory/10 p-2.5 text-ivory transition-colors hover:bg-ivory/20 sm:right-6"
         >
-          <ChevronRight size={22} />
+          <ChevronRight aria-hidden="true" size={22} />
         </button>
       )}
 

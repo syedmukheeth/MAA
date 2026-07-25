@@ -127,9 +127,11 @@ export function ProductInspector({
             </>
           )}
 
-          <p className="mt-6 leading-relaxed text-graphite/80">
-            {product.description}
-          </p>
+          {product.description.trim() && (
+            <p className="mt-6 leading-relaxed text-graphite/80 whitespace-pre-line">
+              {product.description}
+            </p>
+          )}
 
           {product.materials.length > 0 && (
             <p className="mt-4 text-sm text-graphite/60">

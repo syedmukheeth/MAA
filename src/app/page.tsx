@@ -3,8 +3,6 @@ import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/sections/Hero";
 import { BrandStatement } from "@/components/sections/BrandStatement";
 import { Collections } from "@/components/sections/Collections";
-import { Craftsmanship } from "@/components/sections/Craftsmanship";
-import { Materials } from "@/components/sections/Materials";
 import { CustomStudioTeaser } from "@/components/sections/CustomStudioTeaser";
 import { BestSellers } from "@/components/sections/BestSellers";
 import { Testimonials } from "@/components/sections/Testimonials";
@@ -57,8 +55,6 @@ export default async function Home() {
         />
         <BrandStatement label={settings.brandLabel} headline={settings.brandHeadline} />
         <Collections categoryCounts={categoryCounts} />
-        <Craftsmanship />
-        <Materials />
         <CustomStudioTeaser />
         <BestSellers products={featuredProducts.map(p => ({
           id: p.id,
