@@ -43,7 +43,14 @@ export async function generateMetadata({
   // The root layout's title describes the brand, not this sofa. A page that
   // can't describe itself can't be shared or ranked.
   const title = `${product.name} | ${CATEGORY_LABELS[product.category]}`;
-  const description = product.description.slice(0, 155);
+  // Description is optional on a product. An empty meta description is worse
+  // than a generic one — search and link previews both fall back to junk.
+  const description = (
+    product.description.trim() ||
+    `${product.name} — handcrafted ${CATEGORY_LABELS[
+      product.category
+    ].toLowerCase()} furniture from ${SITE_NAME}.`
+  ).slice(0, 155);
 
   return {
     title,
@@ -117,7 +124,7 @@ export default async function ProductDetailPage({
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description,
+    description: product.description.trim() || undefined,
     image: product.images,
     sku: product.variants.find((v) => v.isDefault)?.sku ?? undefined,
     category: CATEGORY_LABELS[product.category],
