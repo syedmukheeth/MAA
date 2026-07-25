@@ -33,21 +33,25 @@ export default async function CheckoutPage() {
     settings
   );
 
-  // Prefer default saved address, otherwise fall back to last order
-  const defaultAddress = await prisma.address.findFirst({
-    where: { userId: session.sub, isDefault: true },
+  // The whole list, not just the default one — checkout offers a picker, and
+  // previously a user whose addresses were all non-default saw none of them.
+  const savedAddresses = await prisma.address.findMany({
+    where: { userId: session.sub },
+    orderBy: [{ isDefault: "desc" }, { updatedAt: "desc" }],
   });
 
   let defaults = undefined;
-  if (defaultAddress) {
+  const preselected = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0];
+
+  if (preselected) {
     defaults = {
-      shippingName: defaultAddress.name,
-      shippingPhone: defaultAddress.phone,
-      shippingLine1: defaultAddress.line1,
-      shippingLine2: defaultAddress.line2 ?? undefined,
-      shippingCity: defaultAddress.city,
-      shippingState: defaultAddress.state,
-      shippingPincode: defaultAddress.pincode,
+      shippingName: preselected.name,
+      shippingPhone: preselected.phone,
+      shippingLine1: preselected.line1,
+      shippingLine2: preselected.line2 ?? undefined,
+      shippingCity: preselected.city,
+      shippingState: preselected.state,
+      shippingPincode: preselected.pincode,
     };
   } else {
     const lastOrder = await prisma.order.findFirst({
@@ -66,6 +70,19 @@ export default async function CheckoutPage() {
       };
     }
   }
+
+  const savedAddressesData = savedAddresses.map((a) => ({
+    id: a.id,
+    label: a.label,
+    name: a.name,
+    phone: a.phone,
+    line1: a.line1,
+    line2: a.line2,
+    city: a.city,
+    state: a.state,
+    pincode: a.pincode,
+    isDefault: a.isDefault,
+  }));
 
   const totalsData = {
     subtotal: totals.subtotal.toString(),
@@ -114,6 +131,8 @@ export default async function CheckoutPage() {
       <CheckoutWizard
         cartItems={cartItemsData}
         defaults={defaults}
+        savedAddresses={savedAddressesData}
+        preselectedAddressId={preselected?.id ?? null}
         totals={totalsData}
         settings={settingsData}
       />
