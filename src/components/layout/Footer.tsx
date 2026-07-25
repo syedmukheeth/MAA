@@ -1,8 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { AtSign, Globe, MessageCircle } from "lucide-react";
+import { hasPublishedTestimonials } from "@/lib/testimonials";
 
-const COLUMNS = [
+type FooterLink = { label: string; href: string };
+
+const COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Collections",
     links: [
@@ -18,22 +21,20 @@ const COLUMNS = [
     links: [
       { label: "Custom Furniture", href: "/custom-studio" },
       { label: "Combo Offers", href: "/combos" },
-      { label: "Materials", href: "/#materials" },
       { label: "Room Inspirations", href: "/showroom" },
     ],
   },
   {
     title: "Company",
     links: [
-      { label: "Our Story", href: "/#craftsmanship" },
+      { label: "Our Story", href: "/#about" },
       { label: "Showroom", href: "/showroom" },
-      { label: "Reviews", href: "/#testimonials" },
       { label: "All Products", href: "/products" },
     ],
   },
 ];
 
-export function Footer({
+export async function Footer({
   instagramUrl,
   facebookUrl,
   whatsapp,
@@ -45,6 +46,22 @@ export function Footer({
   deliveryMessage?: string;
 }) {
   const whatsappDigits = whatsapp?.replace(/[^0-9]/g, "");
+
+  // "Reviews" jumps to #testimonials, which only exists when something is
+  // published — see hasPublishedTestimonials().
+  const showReviews = await hasPublishedTestimonials();
+  const columns = COLUMNS.map((col) =>
+    col.title === "Company" && showReviews
+      ? {
+          ...col,
+          links: [
+            ...col.links.slice(0, 2),
+            { label: "Reviews", href: "/#testimonials" },
+            ...col.links.slice(2),
+          ],
+        }
+      : col
+  );
 
   return (
     <footer className="bg-charcoal text-ivory">
@@ -108,7 +125,7 @@ export function Footer({
             </div>
           </div>
 
-          {COLUMNS.map((col) => (
+          {columns.map((col) => (
             <div key={col.title}>
               <h4 className="font-heading text-sm uppercase tracking-widest text-bronze">
                 {col.title}
