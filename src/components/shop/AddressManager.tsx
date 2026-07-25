@@ -29,12 +29,11 @@ type SavedAddress = {
   isDefault: boolean;
 };
 
-export function AddressManager({
-  addresses: initialAddresses,
-}: {
-  addresses: SavedAddress[];
-}) {
-  const [addresses, setAddresses] = useState<SavedAddress[]>(initialAddresses);
+export function AddressManager({ addresses }: { addresses: SavedAddress[] }) {
+  // Read straight from props. Every action in @/actions/addresses calls
+  // revalidatePath("/account"), so the server re-renders with the new list —
+  // but a useState copy seeded from the prop would ignore it, and the list
+  // stayed stale until a hard reload.
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);

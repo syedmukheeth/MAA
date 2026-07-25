@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -19,6 +19,12 @@ function ResetPasswordForm() {
   const token = searchParams.get("token");
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const successHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  // The form unmounts on success, so focus would otherwise fall back to <body>.
+  useEffect(() => {
+    if (success) successHeadingRef.current?.focus();
+  }, [success]);
 
   const {
     register,
@@ -62,7 +68,13 @@ function ResetPasswordForm() {
   if (success) {
     return (
       <div className="text-center">
-        <h1 className="font-heading text-2xl text-charcoal">Password Reset</h1>
+        <h1
+          ref={successHeadingRef}
+          tabIndex={-1}
+          className="font-heading text-2xl text-charcoal outline-none"
+        >
+          Password Reset
+        </h1>
         <p className="mt-4 text-sm text-graphite/70 leading-relaxed">
           Your password has been successfully reset. You can now log in with your new password.
         </p>
@@ -90,6 +102,7 @@ function ResetPasswordForm() {
           <Label htmlFor="password">New Password</Label>
           <PasswordInput
             id="password"
+            autoComplete="new-password"
             {...register("password", {
               required: "Password is required",
               minLength: {
@@ -98,8 +111,10 @@ function ResetPasswordForm() {
               },
             })}
           />
-          {errors.password && (
+          {errors.password ? (
             <p className="text-xs text-brand-red">{errors.password.message}</p>
+          ) : (
+            <p className="text-xs text-graphite/50">At least 8 characters.</p>
           )}
         </div>
 
@@ -107,8 +122,11 @@ function ResetPasswordForm() {
           <Label htmlFor="confirmPassword">Confirm Password</Label>
           <PasswordInput
             id="confirmPassword"
+            autoComplete="new-password"
             {...register("confirmPassword", {
               required: "Please confirm your password",
+              validate: (value, formValues) =>
+                value === formValues.password || "Passwords do not match",
             })}
           />
           {errors.confirmPassword && (
@@ -116,11 +134,16 @@ function ResetPasswordForm() {
           )}
         </div>
 
-        {serverError && (
-          <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-500 font-medium">
-            {serverError}
-          </div>
-        )}
+        <div aria-live="polite">
+          {serverError && (
+            <div
+              role="alert"
+              className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm font-medium text-red-500"
+            >
+              {serverError}
+            </div>
+          )}
+        </div>
 
         <Button
           type="submit"
@@ -129,8 +152,11 @@ function ResetPasswordForm() {
         >
           {isSubmitting ? (
             <>
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-ivory border-t-transparent" />
-              <span>Resetting password...</span>
+              <div
+                aria-hidden="true"
+                className="h-4 w-4 animate-spin rounded-full border-2 border-ivory border-t-transparent"
+              />
+              <span>Resetting Password…</span>
             </>
           ) : (
             "Reset Password"

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SafeImage } from "@/components/shop/SafeImage";
+import { formatINR } from "@/lib/format";
 
 export type ComboCardData = {
   id: string;
@@ -32,8 +33,12 @@ export function ComboCard({ combo }: { combo: ComboCardData }) {
         </span>
       </div>
       <h3 className="mt-4 font-heading text-lg text-charcoal">{combo.name}</h3>
-      <p className="mt-1 text-xs text-graphite/60">{combo.itemNames.join(" + ")}</p>
-      <p className="mt-2 text-sm text-charcoal">&#8377;{combo.bundlePrice}</p>
+      <p className="mt-1 line-clamp-2 text-xs text-graphite/60">
+        {combo.itemNames.join(" + ")}
+      </p>
+      <p className="mt-2 text-sm font-medium text-charcoal tabular-nums">
+        {formatINR(combo.bundlePrice)}
+      </p>
     </Link>
   );
 }

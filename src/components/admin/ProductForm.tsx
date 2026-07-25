@@ -203,11 +203,14 @@ export function ProductForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">
+          Description{" "}
+          <span className="font-normal text-graphite/50">(optional)</span>
+        </Label>
         <Textarea
           id="description"
-          required
           rows={4}
+          placeholder="Add product copy now, or leave blank and fill it in later…"
           value={values.description}
           onChange={(e) =>
             setValues({ ...values, description: e.target.value })
@@ -221,6 +224,7 @@ export function ProductForm({
           <Input
             id="price"
             type="number"
+            inputMode="decimal"
             min="0"
             step="0.01"
             required
@@ -233,6 +237,7 @@ export function ProductForm({
           <Input
             id="mrp"
             type="number"
+            inputMode="decimal"
             min="0"
             step="0.01"
             placeholder="Struck-through price"
@@ -253,12 +258,12 @@ export function ProductForm({
             )}
         </div>
         <div className="space-y-2">
-          <Label>Category</Label>
+          <Label id="category-label">Category</Label>
           <Select
             value={category}
             onValueChange={(v) => setCategory(v as typeof category)}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full" aria-labelledby="category-label">
               <SelectValue placeholder="Choose category" />
             </SelectTrigger>
             <SelectContent>
@@ -300,7 +305,7 @@ export function ProductForm({
             size="sm"
             onClick={addVariant}
           >
-            <Plus size={14} className="mr-1" /> Add variant
+            <Plus aria-hidden="true" size={14} className="mr-1" /> Add variant
           </Button>
         </div>
 
@@ -312,16 +317,22 @@ export function ProductForm({
             >
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <div className="space-y-1">
-                  <Label className="text-xs">Name</Label>
+                  <Label htmlFor={`variant-${index}-name`} className="text-xs">
+                    Name
+                  </Label>
                   <Input
+                    id={`variant-${index}-name`}
                     required
                     value={v.name}
                     onChange={(e) => setVariant(index, { name: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Wood</Label>
+                  <Label htmlFor={`variant-${index}-wood`} className="text-xs">
+                    Wood
+                  </Label>
                   <Input
+                    id={`variant-${index}-wood`}
                     placeholder="Teak"
                     value={v.woodType}
                     onChange={(e) =>
@@ -330,8 +341,11 @@ export function ProductForm({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Finish</Label>
+                  <Label htmlFor={`variant-${index}-finish`} className="text-xs">
+                    Finish
+                  </Label>
                   <Input
+                    id={`variant-${index}-finish`}
                     placeholder="Natural"
                     value={v.finish}
                     onChange={(e) =>
@@ -340,17 +354,24 @@ export function ProductForm({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Size</Label>
+                  <Label htmlFor={`variant-${index}-size`} className="text-xs">
+                    Size
+                  </Label>
                   <Input
+                    id={`variant-${index}-size`}
                     placeholder="3-seater"
                     value={v.size}
                     onChange={(e) => setVariant(index, { size: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Price delta (INR)</Label>
+                  <Label htmlFor={`variant-${index}-delta`} className="text-xs">
+                    Price delta (INR)
+                  </Label>
                   <Input
+                    id={`variant-${index}-delta`}
                     type="number"
+                    inputMode="decimal"
                     step="0.01"
                     value={v.priceDelta}
                     onChange={(e) =>
@@ -359,18 +380,25 @@ export function ProductForm({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">SKU</Label>
+                  <Label htmlFor={`variant-${index}-sku`} className="text-xs">
+                    SKU
+                  </Label>
                   <Input
+                    id={`variant-${index}-sku`}
+                    autoComplete="off"
+                    spellCheck={false}
                     value={v.sku}
                     onChange={(e) => setVariant(index, { sku: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">
+                  <Label htmlFor={`variant-${index}-stock`} className="text-xs">
                     {v.id ? "Stock (via Inventory)" : "Initial stock"}
                   </Label>
                   <Input
+                    id={`variant-${index}-stock`}
                     type="number"
+                    inputMode="numeric"
                     min="0"
                     disabled={Boolean(v.id)}
                     value={v.stock}
@@ -380,9 +408,16 @@ export function ProductForm({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs font-semibold">Low-stock alert at</Label>
+                  <Label
+                    htmlFor={`variant-${index}-threshold`}
+                    className="text-xs font-semibold"
+                  >
+                    Low-stock alert at
+                  </Label>
                   <Input
+                    id={`variant-${index}-threshold`}
                     type="number"
+                    inputMode="numeric"
                     min="0"
                     value={v.lowStockThreshold}
                     onChange={(e) =>
@@ -392,7 +427,9 @@ export function ProductForm({
                 </div>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Variant Image (optional)</Label>
+                <p className="text-xs font-semibold text-foreground">
+                  Variant Image (optional)
+                </p>
                 <ImageUploader
                   multiple={false}
                   value={v.image ? [v.image] : []}
@@ -404,9 +441,10 @@ export function ProductForm({
                 <button
                   type="button"
                   onClick={() => removeVariant(index)}
-                  className="mt-3 inline-flex items-center gap-1 text-xs text-destructive hover:underline"
+                  aria-label={`Remove variant ${v.name || index + 1}`}
+                  className="mt-3 inline-flex items-center gap-1 rounded text-xs text-destructive hover:underline touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
                 >
-                  <Trash2 size={12} /> Remove variant
+                  <Trash2 aria-hidden="true" size={12} /> Remove variant
                 </button>
               )}
             </div>
@@ -427,7 +465,7 @@ export function ProductForm({
       </div>
 
       <div className="space-y-2">
-        <Label>Product images</Label>
+        <p className="text-sm font-medium text-foreground">Product images</p>
         <ImageUploader
           multiple
           value={values.images}
@@ -457,16 +495,27 @@ export function ProductForm({
         </label>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      <div aria-live="assertive">
+        {error && (
+          <p
+            role="alert"
+            className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm font-medium text-destructive"
+          >
+            {error}
+          </p>
+        )}
+      </div>
 
       <Button
         type="submit"
         disabled={submitting}
         className="rounded-full bg-bronze text-ivory hover:bg-bronze/90 flex items-center justify-center gap-2"
       >
-        {submitting && <Loader2 className="animate-spin" size={16} />}
+        {submitting && (
+          <Loader2 aria-hidden="true" className="animate-spin" size={16} />
+        )}
         {submitting
-          ? "Saving..."
+          ? "Saving…"
           : isEdit
             ? "Save Changes"
             : "Create Product"}

@@ -28,12 +28,16 @@ export function Topbar({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Open menu"
-          className="text-foreground lg:hidden"
+          aria-label="Open navigation menu"
+          aria-expanded={open}
+          className="-m-2 rounded-lg p-2 text-foreground lg:hidden touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze"
         >
-          <Menu size={22} />
+          <Menu aria-hidden="true" size={22} />
         </button>
-        <SheetContent side="left" className="dark w-64 p-0 bg-background text-foreground flex flex-col h-full border-r border-border">
+        <SheetContent
+          side="left"
+          className="dark w-64 p-0 bg-background text-foreground flex flex-col h-full border-r border-border overscroll-contain"
+        >
           <SheetHeader className="border-b border-border/10 p-4">
             <SheetTitle className="text-foreground">MAA Admin</SheetTitle>
           </SheetHeader>
@@ -44,9 +48,9 @@ export function Topbar({
             <Link
               href="/"
               onClick={() => setOpen(false)}
-              className="flex items-center justify-center gap-2 w-full rounded-lg bg-bronze px-4 py-2 text-sm font-medium text-ivory hover:bg-bronze/90 transition-colors"
+              className="flex items-center justify-center gap-2 w-full rounded-lg bg-bronze px-4 py-2 text-sm font-medium text-ivory hover:bg-bronze/90 transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-              <Store size={16} />
+              <Store aria-hidden="true" size={16} />
               Visit Store
             </Link>
           </div>
@@ -62,10 +66,11 @@ export function Topbar({
       <div className="flex items-center gap-4">
         <Link
           href="/"
-          className="flex items-center gap-2 rounded-full border border-bronze/50 px-3 py-1.5 text-sm text-bronze transition-colors hover:bg-bronze hover:text-ivory"
+          className="flex items-center gap-2 rounded-full border border-bronze/50 px-3 py-1.5 text-sm text-bronze transition-colors hover:bg-bronze hover:text-ivory touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
-          <Store size={15} />
+          <Store aria-hidden="true" size={15} />
           <span className="hidden sm:inline">Visit Store</span>
+          <span className="sr-only sm:hidden">Visit Store</span>
         </Link>
         <div className="hidden md:block text-right">
           <p className="text-sm text-foreground max-w-[150px] truncate">{email}</p>
@@ -77,9 +82,9 @@ export function Topbar({
           <button
             type="submit"
             aria-label="Log out"
-            className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:text-foreground cursor-pointer flex items-center justify-center"
+            className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:text-foreground cursor-pointer flex items-center justify-center touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            <LogOut size={16} />
+            <LogOut aria-hidden="true" size={16} />
           </button>
         </form>
       </div>

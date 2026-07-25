@@ -39,7 +39,16 @@ function LoginForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" {...register("email")} />
+          <Input
+            id="email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            spellCheck={false}
+            autoCapitalize="none"
+            placeholder="you@email.com"
+            {...register("email")}
+          />
           {errors.email && (
             <p className="text-xs text-brand-red">{errors.email.message}</p>
           )}
@@ -54,7 +63,11 @@ function LoginForm() {
               Forgot password?
             </Link>
           </div>
-          <PasswordInput id="password" {...register("password")} />
+          <PasswordInput
+            id="password"
+            autoComplete="current-password"
+            {...register("password")}
+          />
           {errors.password && (
             <p className="text-xs text-brand-red">
               {errors.password.message}
@@ -62,11 +75,16 @@ function LoginForm() {
           )}
         </div>
 
-        {serverError && (
-          <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-500 font-medium">
-            {serverError}
-          </div>
-        )}
+        <div aria-live="polite">
+          {serverError && (
+            <div
+              role="alert"
+              className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm font-medium text-red-500"
+            >
+              {serverError}
+            </div>
+          )}
+        </div>
 
         <Button
           type="submit"
@@ -75,8 +93,11 @@ function LoginForm() {
         >
           {isSubmitting ? (
             <>
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-ivory border-t-transparent" />
-              <span>Logging in...</span>
+              <div
+                aria-hidden="true"
+                className="h-4 w-4 animate-spin rounded-full border-2 border-ivory border-t-transparent"
+              />
+              <span>Logging in…</span>
             </>
           ) : (
             "Log In"

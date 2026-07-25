@@ -282,6 +282,7 @@ export function ComboForm({
           <Input
             id="bundlePrice"
             type="number"
+            inputMode="decimal"
             min="0"
             step="0.01"
             required
@@ -290,7 +291,7 @@ export function ComboForm({
           />
         </div>
         <div className="space-y-2">
-          <Label>Combo image</Label>
+          <p className="text-sm font-medium text-foreground">Combo image</p>
           <ImageUploader
             value={values.image ? [values.image] : []}
             onChange={(urls) => setValues({ ...values, image: urls[0] ?? "" })}
@@ -301,7 +302,9 @@ export function ComboForm({
 
       <div className="space-y-3">
         <div>
-          <Label>Products in this combo</Label>
+          <p className="text-sm font-medium text-foreground">
+            Products in this combo
+          </p>
           <p className="text-xs text-muted-foreground">
             Tick the variants a customer may choose for each product. Leave all
             unticked for a fixed item (customer sees no options).
@@ -321,8 +324,12 @@ export function ComboForm({
                 />
                 <Input
                   type="number"
+                  inputMode="numeric"
                   min="1"
-                  className="w-20"
+                  className="w-20 tabular-nums"
+                  aria-label={`Quantity for combo item ${i + 1}${
+                    product ? ` (${product.name})` : ""
+                  }`}
                   value={item.quantity}
                   onChange={(e) =>
                     updateItem(i, { quantity: Number(e.target.value) || 1 })
@@ -332,9 +339,12 @@ export function ComboForm({
                   type="button"
                   onClick={() => removeItem(i)}
                   disabled={values.items.length <= 2}
-                  className="rounded-md p-2 text-graphite/60 hover:text-brand-red disabled:opacity-30"
+                  aria-label={`Remove combo item ${i + 1}${
+                    product ? ` (${product.name})` : ""
+                  }`}
+                  className="rounded-md p-2 text-graphite/60 transition-colors hover:text-brand-red disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 aria-hidden="true" size={16} />
                 </button>
               </div>
               {product && product.variants.length > 0 && (
@@ -366,9 +376,9 @@ export function ComboForm({
         <button
           type="button"
           onClick={addItem}
-          className="flex items-center gap-2 text-sm text-bronze"
+          className="flex items-center gap-2 rounded text-sm text-bronze hover:underline touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze"
         >
-          <Plus size={16} /> Add another product
+          <Plus aria-hidden="true" size={16} /> Add another product
         </button>
       </div>
 
@@ -382,15 +392,26 @@ export function ComboForm({
         Active on storefront
       </label>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      <div aria-live="assertive">
+        {error && (
+          <p
+            role="alert"
+            className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm font-medium text-destructive"
+          >
+            {error}
+          </p>
+        )}
+      </div>
 
       <Button
         type="submit"
         disabled={submitting}
         className="rounded-full bg-bronze text-ivory hover:bg-bronze/90 flex items-center justify-center gap-2"
       >
-        {submitting && <Loader2 className="animate-spin" size={16} />}
-        {submitting ? "Saving..." : isEdit ? "Save Changes" : "Create Combo"}
+        {submitting && (
+          <Loader2 aria-hidden="true" className="animate-spin" size={16} />
+        )}
+        {submitting ? "Saving…" : isEdit ? "Save Changes" : "Create Combo"}
       </Button>
     </form>
   );

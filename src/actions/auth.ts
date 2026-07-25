@@ -2,6 +2,7 @@
 
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { createHash, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { signSession, type Role } from "@/lib/auth/jwt";
@@ -162,6 +163,10 @@ import { redis, forgotPasswordRatelimit } from "@/lib/redis";
 import { getSiteUrl } from "@/lib/site-url";
 import { sendEmail } from "@/lib/email";
 
+function hashResetToken(token: string) {
+  return createHash("sha256").update(token).digest("hex");
+}
+
 export async function forgotPasswordAction(
   email: string
 ): Promise<{ success?: boolean; error?: string }> {
@@ -184,8 +189,12 @@ export async function forgotPasswordAction(
     return { success: true };
   }
 
-  const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  await redis.set(`password-reset:${token}`, email, { ex: 3600 }); // 1 hour expiry
+  // Math.random() is seeded from a predictable PRNG — a reset token minted from
+  // it can be reproduced from a handful of observed tokens, which is an account
+  // takeover. Only a CSPRNG is acceptable here. Redis holds the SHA-256 of the
+  // token, so a dump of the store cannot be replayed as a reset link.
+  const token = randomBytes(32).toString("base64url");
+  await redis.set(`password-reset:${hashResetToken(token)}`, email, { ex: 3600 });
 
   const resetUrl = `${getSiteUrl()}/reset-password?token=${token}`;
 
@@ -228,7 +237,8 @@ export async function resetPasswordAction(
     return { error: "Passwords do not match." };
   }
 
-  const email = await redis.get<string>(`password-reset:${token}`);
+  const tokenKey = `password-reset:${hashResetToken(token)}`;
+  const email = await redis.get<string>(tokenKey);
   if (!email) {
     return { error: "Invalid or expired reset token. Please request another one." };
   }
@@ -247,7 +257,7 @@ export async function resetPasswordAction(
     data: { passwordHash },
   });
 
-  await redis.del(`password-reset:${token}`);
+  await redis.del(tokenKey);
 
   return { success: true };
 }
