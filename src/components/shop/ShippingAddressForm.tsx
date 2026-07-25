@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type FocusEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +18,19 @@ import { Loader2 } from "lucide-react";
 import { formatINR } from "@/lib/format";
 import { AP_LOCATIONS, type APLocation } from "@/lib/ap-locations";
 
+/**
+ * The suggestion list closes only when focus leaves the whole field group.
+ * The previous `onBlur` on the input alone tore the list down before a keyboard
+ * user could Tab into it, so the suggestions were reachable by mouse only.
+ */
+function closeOnBlur(setOpen: (open: boolean) => void) {
+  return (event: FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      setOpen(false);
+    }
+  };
+}
+
 export function ShippingAddressForm({
   total,
   defaults,
@@ -33,6 +46,7 @@ export function ShippingAddressForm({
     register,
     handleSubmit,
     setValue,
+    getValues,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<ShippingAddressInput & { saveAddress?: boolean }>({
@@ -81,7 +95,12 @@ export function ShippingAddressForm({
 
   const onSubmit = async (data: ShippingAddressInput & { saveAddress?: boolean }) => {
     setServerError(null);
-    const result = await placeOrder(data);
+    // `saveAddress` is not part of shippingAddressSchema, so zodResolver strips
+    // it out of `data` — reading it from `data` silently never saved anything.
+    const result = await placeOrder({
+      ...data,
+      saveAddress: getValues("saveAddress") === true,
+    });
     if (result?.error) {
       setServerError(result.error);
       return;
@@ -93,7 +112,12 @@ export function ShippingAddressForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="shippingName">Full Name</Label>
-        <Input id="shippingName" {...register("shippingName")} />
+        <Input
+          id="shippingName"
+          autoComplete="name"
+          placeholder="e.g. Ramesh Kumar"
+          {...register("shippingName")}
+        />
         {errors.shippingName && (
           <p className="text-xs text-brand-red">{errors.shippingName.message}</p>
         )}
@@ -101,7 +125,15 @@ export function ShippingAddressForm({
 
       <div className="space-y-2">
         <Label htmlFor="shippingPhone">Contact Number</Label>
-        <Input id="shippingPhone" placeholder="10-digit number" {...register("shippingPhone")} />
+        <Input
+          id="shippingPhone"
+          type="tel"
+          inputMode="numeric"
+          autoComplete="tel-national"
+          spellCheck={false}
+          placeholder="10-digit number"
+          {...register("shippingPhone")}
+        />
         {errors.shippingPhone && (
           <p className="text-xs text-brand-red">{errors.shippingPhone.message}</p>
         )}
@@ -111,6 +143,7 @@ export function ShippingAddressForm({
         <Label htmlFor="shippingLine1">Address Line 1</Label>
         <Input
           id="shippingLine1"
+          autoComplete="address-line1"
           placeholder="House/Flat No, Street, Landmark"
           {...register("shippingLine1")}
         />
@@ -121,27 +154,31 @@ export function ShippingAddressForm({
 
       <div className="space-y-2">
         <Label htmlFor="shippingLine2">Address Line 2 (optional)</Label>
-        <Input id="shippingLine2" {...register("shippingLine2")} />
+        <Input
+          id="shippingLine2"
+          autoComplete="address-line2"
+          placeholder="Area, Colony (optional)"
+          {...register("shippingLine2")}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-        <div className="space-y-2 relative">
+        <div className="space-y-2 relative" onBlur={closeOnBlur(setShowCitySuggestions)}>
           <Label htmlFor="shippingCity">City</Label>
           <Input
             id="shippingCity"
             {...register("shippingCity")}
             onFocus={() => setShowCitySuggestions(true)}
-            onBlur={() => setTimeout(() => setShowCitySuggestions(false), 200)}
             autoComplete="off"
           />
           {showCitySuggestions && citySuggestions.length > 0 && (
-            <div className="absolute z-50 left-0 right-0 mt-1 rounded-lg border border-linen bg-white py-1 shadow-lg max-h-48 overflow-y-auto">
+            <div className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-lg border border-linen bg-white py-1 shadow-lg">
               {citySuggestions.map((loc) => (
                 <button
                   key={`${loc.city}-${loc.pincode}`}
                   type="button"
-                  onMouseDown={() => selectLocation(loc)}
-                  className="w-full px-4 py-2 text-left text-sm text-charcoal hover:bg-cream hover:text-bronze transition-colors cursor-pointer"
+                  onClick={() => selectLocation(loc)}
+                  className="w-full cursor-pointer px-4 py-2 text-left text-sm text-charcoal transition-colors hover:bg-cream hover:text-bronze focus-visible:bg-cream focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-bronze"
                 >
                   <span className="font-semibold">{loc.city}</span> ({loc.pincode})
                 </button>
@@ -154,28 +191,36 @@ export function ShippingAddressForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="shippingState">State</Label>
-          <Input id="shippingState" {...register("shippingState")} />
+          <Input
+            id="shippingState"
+            autoComplete="address-level1"
+            {...register("shippingState")}
+          />
           {errors.shippingState && (
             <p className="text-xs text-brand-red">{errors.shippingState.message}</p>
           )}
         </div>
-        <div className="space-y-2 relative">
+        <div
+          className="space-y-2 relative"
+          onBlur={closeOnBlur(setShowPincodeSuggestions)}
+        >
           <Label htmlFor="shippingPincode">Pincode</Label>
           <Input
             id="shippingPincode"
+            inputMode="numeric"
+            spellCheck={false}
             {...register("shippingPincode")}
             onFocus={() => setShowPincodeSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowPincodeSuggestions(false), 200)}
             autoComplete="off"
           />
           {showPincodeSuggestions && pincodeSuggestions.length > 0 && (
-            <div className="absolute z-50 left-0 right-0 mt-1 rounded-lg border border-linen bg-white py-1 shadow-lg max-h-48 overflow-y-auto">
+            <div className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-lg border border-linen bg-white py-1 shadow-lg">
               {pincodeSuggestions.map((loc) => (
                 <button
                   key={`${loc.city}-${loc.pincode}`}
                   type="button"
-                  onMouseDown={() => selectLocation(loc)}
-                  className="w-full px-4 py-2 text-left text-sm text-charcoal hover:bg-cream hover:text-bronze transition-colors cursor-pointer"
+                  onClick={() => selectLocation(loc)}
+                  className="w-full cursor-pointer px-4 py-2 text-left text-sm text-charcoal transition-colors hover:bg-cream hover:text-bronze focus-visible:bg-cream focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-bronze"
                 >
                   <span className="font-semibold">{loc.pincode}</span> &middot; {loc.city}
                 </button>
@@ -206,15 +251,21 @@ export function ShippingAddressForm({
         </Label>
       </div>
 
-      {serverError && <p className="text-sm text-brand-red">{serverError}</p>}
+      <div aria-live="polite">
+        {serverError && (
+          <p role="alert" className="text-sm font-medium text-brand-red">
+            {serverError}
+          </p>
+        )}
+      </div>
 
       <Button
         type="submit"
         disabled={isSubmitting}
         className="w-full rounded-full bg-bronze text-ivory hover:bg-bronze/90 flex items-center justify-center gap-2"
       >
-        {isSubmitting && <Loader2 className="animate-spin" size={16} />}
-        {isSubmitting ? "Placing order..." : `Place Order · ${formatINR(total)}`}
+        {isSubmitting && <Loader2 className="animate-spin" size={16} aria-hidden="true" />}
+        {isSubmitting ? "Placing Order…" : `Place Order · ${formatINR(total)}`}
       </Button>
     </form>
   );
