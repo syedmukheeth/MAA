@@ -269,7 +269,9 @@ export async function getProductsByIds(ids: string[]) {
   try {
     const products = await prisma.product.findMany({
       where: {
-        id: { in: ids },
+        // Wishlist ids come from localStorage, so the array is caller-controlled
+        // and otherwise unbounded.
+        id: { in: (Array.isArray(ids) ? ids : []).slice(0, 100) },
         isActive: true,
       },
       select: {
