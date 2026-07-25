@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
 import { deleteCombo, toggleComboActive } from "@/actions/combos";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { formatINR } from "@/lib/format";
 
 export type ComboRow = {
   id: string;
@@ -62,7 +63,7 @@ export function ComboTable({ combos }: { combos: ComboRow[] }) {
               <tr key={c.id}>
                 <td className="px-4 py-3 text-foreground">{c.name}</td>
                 <td className="px-4 py-3 text-muted-foreground">
-                  &#8377;{c.bundlePrice}
+                  {formatINR(c.bundlePrice)}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {c.itemCount} products

@@ -1,23 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image, { type ImageProps } from "next/image";
 
-export function SafeImage({ src, alt, ...props }: ImageProps) {
-  const [imgSrc, setImgSrc] = useState(src);
+const PLACEHOLDER = "/placeholder-furniture.svg";
 
-  useEffect(() => {
-    setImgSrc(src);
-  }, [src]);
+/**
+ * Falls back to a placeholder when the remote image 404s.
+ *
+ * The failed URL is remembered rather than the current one, so a new `src`
+ * automatically gets a fresh attempt — no effect needed to reset the state.
+ */
+export function SafeImage({ src, alt, ...props }: ImageProps) {
+  const [failedSrc, setFailedSrc] = useState<ImageProps["src"] | null>(null);
+
+  const broken = failedSrc !== null && failedSrc === src;
 
   return (
     <Image
       {...props}
-      src={imgSrc || "/placeholder-furniture.svg"}
+      src={broken || !src ? PLACEHOLDER : src}
       alt={alt}
-      onError={() => {
-        setImgSrc("/placeholder-furniture.svg");
-      }}
+      onError={() => setFailedSrc(src)}
     />
   );
 }

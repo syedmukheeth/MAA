@@ -15,39 +15,42 @@ export default function WishlistPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isLoaded) return;
-    
-    if (wishlist.length === 0) {
-      setProducts([]);
-      setLoading(false);
-      return;
-    }
+    // The empty case is derived below rather than written into state here —
+    // a synchronous setState in an effect body costs an extra render pass.
+    if (!isLoaded || wishlist.length === 0) return;
 
-    async function loadProducts() {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await getProductsByIds(wishlist);
+    let cancelled = false;
+    getProductsByIds(wishlist)
+      .then((result) => {
+        if (cancelled) return;
         if (result.error) {
           setError(result.error);
         } else if (result.products) {
+          setError(null);
           setProducts(result.products as ProductCardData[]);
         }
-      } catch (err) {
-        setError("Failed to load wishlist products.");
-      } finally {
-        setLoading(false);
-      }
-    }
+      })
+      .catch(() => {
+        if (!cancelled) setError("Failed to load wishlist products.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-    loadProducts();
+    return () => {
+      cancelled = true;
+    };
   }, [wishlist, isLoaded]);
 
-  if (!isLoaded || (loading && products.length === 0)) {
+  // An empty wishlist has nothing to fetch, so it is never "loading".
+  const visibleProducts = wishlist.length === 0 ? [] : products;
+  const isLoading = !isLoaded || (wishlist.length > 0 && loading);
+
+  if (isLoading && visibleProducts.length === 0) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
-        <Loader2 className="animate-spin text-bronze" size={32} />
-        <p className="text-sm text-graphite/60">Loading your wishlist...</p>
+        <Loader2 aria-hidden="true" className="animate-spin text-bronze" size={32} />
+        <p className="text-sm text-graphite/60">Loading your wishlist…</p>
       </div>
     );
   }
@@ -63,16 +66,21 @@ export default function WishlistPage() {
         </h1>
       </div>
 
-      {error && (
-        <div className="mt-8 rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-brand-red">
-          {error}
-        </div>
-      )}
+      <div aria-live="polite">
+        {error && (
+          <div
+            role="alert"
+            className="mt-8 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-brand-red"
+          >
+            {error}
+          </div>
+        )}
+      </div>
 
-      {products.length === 0 ? (
+      {visibleProducts.length === 0 ? (
         <div className="mt-12 flex flex-col items-center justify-center rounded-2xl bg-cream py-20 px-6 text-center border border-linen/30">
           <div className="rounded-full bg-ivory p-4 text-bronze shadow-xs">
-            <Heart size={32} />
+            <Heart aria-hidden="true" size={32} />
           </div>
           <h2 className="mt-6 font-heading text-xl text-charcoal">
             Your wishlist is empty
@@ -84,19 +92,22 @@ export default function WishlistPage() {
             render={<Link href="/products" />}
             className="mt-8 rounded-full bg-bronze text-ivory hover:bg-bronze/90 flex items-center gap-1.5"
           >
-            Start Shopping <ArrowRight size={16} />
+            Start Shopping <ArrowRight aria-hidden="true" size={16} />
           </Button>
         </div>
       ) : (
         <div className="mt-8">
-          {loading && (
-            <div className="mb-6 flex items-center gap-2 text-xs text-graphite/50">
-              <Loader2 className="animate-spin" size={14} />
-              <span>Updating list...</span>
+          {isLoading && (
+            <div
+              aria-live="polite"
+              className="mb-6 flex items-center gap-2 text-xs text-graphite/50"
+            >
+              <Loader2 aria-hidden="true" className="animate-spin" size={14} />
+              <span>Updating list…</span>
             </div>
           )}
           <div className="grid grid-cols-2 gap-4 sm:gap-8 lg:grid-cols-4">
-            {products.map((product) => (
+            {visibleProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

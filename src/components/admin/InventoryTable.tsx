@@ -47,9 +47,14 @@ export function InventoryTable({ rows }: { rows: InventoryRow[] }) {
 
   return (
     <div>
-      <div className="mb-4 max-w-xs">
+      <div className="mb-4 max-w-xs space-y-2">
+        <Label htmlFor="inventory-filter">Search inventory</Label>
         <Input
-          placeholder="Search product, variant, SKU..."
+          id="inventory-filter"
+          type="search"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="Product, variant, or SKU…"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
@@ -87,7 +92,7 @@ export function InventoryTable({ rows }: { rows: InventoryRow[] }) {
                   <td className="px-4 py-3 text-muted-foreground">
                     {r.sku ?? "—"}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 tabular-nums">
                     <span
                       className={
                         out
@@ -115,18 +120,20 @@ export function InventoryTable({ rows }: { rows: InventoryRow[] }) {
                       <button
                         type="button"
                         title="Receive stock"
+                        aria-label={`Receive stock for ${r.productName} — ${r.variantName}`}
                         onClick={() => setDialog({ mode: "receive", row: r })}
-                        className="rounded-md p-1.5 text-muted-foreground hover:text-foreground"
+                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze"
                       >
-                        <PackagePlus size={16} />
+                        <PackagePlus aria-hidden="true" size={16} />
                       </button>
                       <button
                         type="button"
                         title="Adjust stock"
+                        aria-label={`Adjust stock for ${r.productName} — ${r.variantName}`}
                         onClick={() => setDialog({ mode: "adjust", row: r })}
-                        className="rounded-md p-1.5 text-muted-foreground hover:text-foreground"
+                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze"
                       >
-                        <SlidersHorizontal size={16} />
+                        <SlidersHorizontal aria-hidden="true" size={16} />
                       </button>
                     </div>
                   </td>
@@ -202,6 +209,7 @@ function ReceiveDialog({
             <Input
               id="receive-qty"
               type="number"
+              inputMode="numeric"
               min="1"
               value={qty}
               onChange={(e) => setQty(e.target.value)}
@@ -216,14 +224,20 @@ function ReceiveDialog({
               onChange={(e) => setReason(e.target.value)}
             />
           </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          <div aria-live="polite">
+            {error && (
+              <p role="alert" className="text-sm text-destructive">
+                {error}
+              </p>
+            )}
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
           <Button onClick={submit} disabled={isPending || !qty}>
-            {isPending ? "Saving..." : "Receive"}
+            {isPending ? "Saving…" : "Receive"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -277,7 +291,8 @@ function AdjustDialog({
             <Input
               id="adjust-delta"
               type="number"
-              placeholder="-2"
+              inputMode="numeric"
+              placeholder="e.g. -2"
               value={delta}
               onChange={(e) => setDelta(e.target.value)}
             />
@@ -300,14 +315,20 @@ function AdjustDialog({
             />
             Mark as damaged stock
           </label>
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          <div aria-live="polite">
+            {error && (
+              <p role="alert" className="text-sm text-destructive">
+                {error}
+              </p>
+            )}
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
           <Button onClick={submit} disabled={isPending || !delta || !reason}>
-            {isPending ? "Saving..." : "Adjust"}
+            {isPending ? "Saving…" : "Adjust"}
           </Button>
         </DialogFooter>
       </DialogContent>
