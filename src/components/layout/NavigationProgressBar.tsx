@@ -6,11 +6,14 @@ import { usePathname, useSearchParams } from "next/navigation";
 function ProgressBarInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [loading, setLoading] = useState(false);
+  // Remember the URL the navigation started FROM instead of clearing a boolean
+  // in an effect: once the router reports a different URL the navigation has
+  // landed, so the bar hides on its own with no effect-driven setState.
+  const [navStartedFrom, setNavStartedFrom] = useState<string | null>(null);
 
-  useEffect(() => {
-    setLoading(false);
-  }, [pathname, searchParams]);
+  const query = searchParams.toString();
+  const currentUrl = query ? `${pathname}?${query}` : pathname;
+  const loading = navStartedFrom !== null && navStartedFrom === currentUrl;
 
   useEffect(() => {
     const handleAnchorClick = (e: MouseEvent) => {
@@ -27,9 +30,9 @@ function ProgressBarInner() {
           !href.startsWith("/#") &&
           targetAttr !== "_blank"
         ) {
-          const currentUrl = window.location.pathname + window.location.search;
-          if (href !== currentUrl) {
-            setLoading(true);
+          const fromUrl = window.location.pathname + window.location.search;
+          if (href !== fromUrl) {
+            setNavStartedFrom(fromUrl);
           }
         }
       }

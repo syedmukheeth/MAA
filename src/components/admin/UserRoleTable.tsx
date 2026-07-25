@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { changeUserRole, setUserActive } from "@/actions/users";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import type { Role } from "@/lib/auth/jwt";
 
 const ROLES: Role[] = ["OWNER", "ADMIN", "MANAGER", "CUSTOMER"];
@@ -31,6 +32,9 @@ export function UserRoleTable({
   const [rows, setRows] = useState(users);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  // Suspending locks a colleague out of the back office. One misclick on a
+  // status pill should not be able to do that.
+  const [pendingSuspend, setPendingSuspend] = useState<UserRow | null>(null);
 
   function onRoleChange(userId: string, role: Role) {
     setError(null);
@@ -56,9 +60,24 @@ export function UserRoleTable({
     });
   }
 
+  function requestToggleActive(user: UserRow) {
+    // Reactivating is harmless and reversible; suspending is not.
+    if (user.isActive) {
+      setPendingSuspend(user);
+      return;
+    }
+    onToggleActive(user.id, true);
+  }
+
   return (
     <div>
-      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+      <div aria-live="polite">
+        {error && (
+          <p role="alert" className="mb-4 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+      </div>
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="bg-muted text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -85,7 +104,7 @@ export function UserRoleTable({
                     onValueChange={(v) => onRoleChange(u.id, v as Role)}
                     disabled={isPending || u.id === currentUserId}
                   >
-                    <SelectTrigger className="w-36">
+                    <SelectTrigger className="w-36" aria-label={`Role for ${u.name}`}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -99,12 +118,16 @@ export function UserRoleTable({
                 </td>
                 <td className="px-4 py-3">
                   <button
+                    type="button"
                     disabled={isPending || u.id === currentUserId}
-                    onClick={() => onToggleActive(u.id, !u.isActive)}
-                    className={`rounded-full px-3 py-1 text-xs ${
+                    onClick={() => requestToggleActive(u)}
+                    aria-label={`${u.name} is ${
+                      u.isActive ? "active" : "suspended"
+                    } — ${u.isActive ? "suspend" : "reactivate"}`}
+                    className={`rounded-full px-3 py-1 text-xs transition-colors touch-manipulation disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                       u.isActive
-                        ? "bg-emerald-500/15 text-emerald-500"
-                        : "bg-muted text-muted-foreground"
+                        ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/25"
+                        : "bg-muted text-muted-foreground hover:bg-muted/70"
                     }`}
                   >
                     {u.isActive ? "Active" : "Suspended"}
@@ -115,6 +138,23 @@ export function UserRoleTable({
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        open={pendingSuspend !== null}
+        title="Suspend this user?"
+        description={
+          pendingSuspend
+            ? `${pendingSuspend.name} (${pendingSuspend.email}) will be signed out of the back office and blocked from logging in. You can reactivate them at any time.`
+            : ""
+        }
+        confirmLabel="Suspend"
+        pending={isPending}
+        onConfirm={() => {
+          if (pendingSuspend) onToggleActive(pendingSuspend.id, false);
+          setPendingSuspend(null);
+        }}
+        onCancel={() => setPendingSuspend(null)}
+      />
     </div>
   );
 }
