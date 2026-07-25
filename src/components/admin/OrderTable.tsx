@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
+import { formatINR } from "@/lib/format";
 
 export type OrderRow = {
   id: string;
@@ -38,7 +39,7 @@ export function OrderTable({ orders }: { orders: OrderRow[] }) {
                 {o.customerName}
               </td>
               <td className="px-4 py-3 text-muted-foreground">
-                &#8377;{o.total}
+                {formatINR(o.total)}
               </td>
               <td className="px-4 py-3">
                 <OrderStatusBadge status={o.status} />

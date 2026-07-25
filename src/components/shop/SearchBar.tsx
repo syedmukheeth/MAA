@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -17,7 +17,7 @@ type Suggestion = {
 };
 
 /**
- * Live search with a forgiving contains match — suggestions appear as the
+ * Live search with a forgiving contains match â€” suggestions appear as the
  * customer types (debounced), Enter applies the query to the listing page.
  */
 export function SearchBar({
@@ -40,15 +40,18 @@ export function SearchBar({
   const rootRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  const query = value.trim();
+  // Below the minimum length there is nothing to show. Deriving that instead
+  // of clearing state in the effect body avoids an extra render per keystroke.
+  const tooShort = query.length < 2;
+  const visibleSuggestions = tooShort ? [] : suggestions;
+  const isSearching = !tooShort && loading;
+
   useEffect(() => {
     const q = value.trim();
-    if (q.length < 2) {
-      setSuggestions([]);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
+    if (q.length < 2) return;
     const timer = setTimeout(async () => {
+      setLoading(true);
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
@@ -62,7 +65,7 @@ export function SearchBar({
         setSuggestions(data.results);
         setHighlighted(-1);
       } catch {
-        // aborted or offline — keep previous suggestions
+        // aborted or offline â€” keep previous suggestions
       } finally {
         setLoading(false);
       }
@@ -90,15 +93,15 @@ export function SearchBar({
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setHighlighted((h) => Math.min(h + 1, suggestions.length - 1));
+      setHighlighted((h) => Math.min(h + 1, visibleSuggestions.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setHighlighted((h) => Math.max(h - 1, -1));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (highlighted >= 0 && suggestions[highlighted]) {
+      if (highlighted >= 0 && visibleSuggestions[highlighted]) {
         setOpen(false);
-        router.push(suggestions[highlighted].href);
+        router.push(visibleSuggestions[highlighted].href);
       } else {
         applyQuery(value);
       }
@@ -147,9 +150,9 @@ export function SearchBar({
 
       {showDropdown && (
         <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-border bg-white shadow-lg">
-          {suggestions.length > 0 ? (
+          {visibleSuggestions.length > 0 ? (
             <ul>
-              {suggestions.map((s, i) => (
+              {visibleSuggestions.map((s, i) => (
                 <li key={s.id}>
                   <Link
                     href={s.href}
@@ -190,7 +193,7 @@ export function SearchBar({
             </ul>
           ) : (
             <p className="px-4 py-3 text-sm text-graphite/60">
-              {loading ? "Searching..." : `No matches for "${value.trim()}".`}
+              {isSearching ? "Searching…" : `No matches for "${value.trim()}".`}
             </p>
           )}
         </div>

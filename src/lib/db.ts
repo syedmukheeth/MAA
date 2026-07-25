@@ -6,6 +6,14 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+/**
+ * Supabase requires TLS, so SSL stays on by default — production behaviour is
+ * unchanged. But `pg` hard-fails ("server does not support SSL connections")
+ * against a plain local Postgres, which made local development impossible
+ * without editing this file. `DATABASE_SSL=false` opts out, for localhost only.
+ */
+const useSsl = process.env.DATABASE_SSL !== "false";
+
 function createPrismaClient() {
   // Transaction-mode pooler (port 6543) is the correct target for serverless.
   // We keep pool max at 2 so each serverless worker holds at most 2 connections
@@ -13,7 +21,7 @@ function createPrismaClient() {
   // old URL is still in use during a migration window.
   const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    ssl: useSsl ? { rejectUnauthorized: false } : false,
     max: 2,
   });
   const adapter = new PrismaPg(pool);

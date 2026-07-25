@@ -7,6 +7,7 @@ import { deleteProduct, setProductActive } from "@/actions/products";
 import { isInStock, isLowStock } from "@/lib/products";
 import { CATEGORY_LABELS } from "@/lib/validations/product";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { formatINR } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -139,7 +140,7 @@ export function ProductTable({ products }: { products: ProductRow[] }) {
                   {CATEGORY_LABELS[p.category]}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
-                  &#8377;{p.price}
+                  {formatINR(p.price)}
                 </td>
                 <td className="px-4 py-3">
                   <span

@@ -116,7 +116,7 @@ export function SidebarNav({
   const items = NAV_ITEMS.filter((item) => item.roles.includes(role));
 
   return (
-    <nav className="flex-1 space-y-1 px-3 py-4">
+    <nav aria-label="Admin" className="flex-1 space-y-1 px-3 py-4">
       {items.map((item) => {
         const active = isActive(pathname, item.href);
         return (
@@ -125,14 +125,14 @@ export function SidebarNav({
             href={item.href}
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-3 rounded-lg border-l-2 px-3 py-2 text-sm transition-colors ${
+            className={`flex items-center gap-3 rounded-lg border-l-2 px-3 py-2 text-sm transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze focus-visible:ring-inset ${
               active
                 ? "border-bronze bg-bronze/10 font-semibold text-gold"
                 : "border-transparent text-muted-foreground hover:bg-white/5 hover:text-foreground"
             }`}
           >
-            <item.icon size={18} />
-            {item.label}
+            <item.icon aria-hidden="true" size={18} className="shrink-0" />
+            <span className="min-w-0 truncate">{item.label}</span>
           </Link>
         );
       })}
@@ -154,9 +154,9 @@ export function Sidebar({ role }: { role: Role }) {
       <div className="p-4 border-t border-border/10">
         <Link
           href="/"
-          className="flex items-center justify-center gap-2 w-full rounded-lg bg-bronze px-4 py-2 text-sm font-medium text-ivory hover:bg-bronze/90 transition-colors"
+          className="flex items-center justify-center gap-2 w-full rounded-lg bg-bronze px-4 py-2 text-sm font-medium text-ivory hover:bg-bronze/90 transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar"
         >
-          <Store size={16} />
+          <Store aria-hidden="true" size={16} />
           Visit Store
         </Link>
       </div>

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { requireAuth, requireRole, getCurrentUser } from "@/lib/auth/session";
+import { requireAuth, requireRole, getActiveUser } from "@/lib/auth/session";
 import {
   shippingAddressSchema,
   type ShippingAddressInput,
@@ -30,6 +30,13 @@ const STATUS_FLOW: Record<string, string[]> = {
   DELIVERED: [],
   CANCELLED: [],
 };
+
+/**
+ * Marks the messages that are safe to show a customer. Everything else in the
+ * checkout transaction is a Prisma/runtime error whose text names tables and
+ * columns, so it gets replaced with a generic message on the way out.
+ */
+class CheckoutError extends Error {}
 
 /**
  * Order numbers must be unique, and `orderNumber` carries a UNIQUE constraint.
@@ -105,7 +112,7 @@ export async function placeOrder(
       for (const item of cart.items) {
         if (item.product) {
           if (!item.product.isActive) {
-            throw new Error(`${item.product.name} is no longer available`);
+            throw new CheckoutError(`${item.product.name} is no longer available`);
           }
           const variant =
             item.variant ?? (await getDefaultVariant(tx, item.product.id));
@@ -125,7 +132,7 @@ export async function placeOrder(
           const summaryParts: string[] = [];
           for (const comboItem of item.combo.items) {
             if (!comboItem.product.isActive) {
-              throw new Error(`${item.combo.name} is no longer available`);
+              throw new CheckoutError(`${item.combo.name} is no longer available`);
             }
             // Customer's chosen option deducts THAT variant, not the default.
             const selection = item.comboSelections.find(
@@ -162,7 +169,7 @@ export async function placeOrder(
           where: { id: variantId },
         });
         if (variant.stock < req.needed) {
-          throw new Error(`${req.name} is out of stock`);
+          throw new CheckoutError(`${req.name} is out of stock`);
         }
       }
 
@@ -279,9 +286,9 @@ export async function placeOrder(
 
     return { orderId };
   } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : "Could not place order",
-    };
+    if (err instanceof CheckoutError) return { error: err.message };
+    console.error("placeOrder failed:", err);
+    return { error: "Could not place your order. Please try again." };
   }
 }
 
@@ -362,7 +369,7 @@ export async function updateOrderStatus(
 }
 
 export async function cancelOwnOrder(orderId: string): Promise<{ error?: string }> {
-  const user = await getCurrentUser();
+  const user = await getActiveUser();
   if (!user) return { error: "Not signed in" };
 
   const order = await prisma.order.findUnique({

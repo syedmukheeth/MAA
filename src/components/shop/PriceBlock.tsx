@@ -1,5 +1,4 @@
-const formatInr = (value: number) =>
-  `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+import { formatINR } from "@/lib/format";
 
 /**
  * Selling price with struck-through MRP and discount badge, shown only when
@@ -31,11 +30,13 @@ export function PriceBlock({
 
   return (
     <span className={`inline-flex flex-wrap items-baseline gap-x-2 gap-y-0.5 ${className}`}>
-      <span className={`${priceClass} text-charcoal`}>{formatInr(priceNum)}</span>
+      <span className={`${priceClass} text-charcoal tabular-nums`}>
+        {formatINR(priceNum)}
+      </span>
       {hasOffer && (
         <>
-          <span className={`${subClass} text-graphite/50 line-through`}>
-            {formatInr(mrpNum)}
+          <span className={`${subClass} text-graphite/50 line-through tabular-nums`}>
+            {formatINR(mrpNum)}
           </span>
           <span className={`${subClass} font-semibold text-green-600`}>
             {offPct}% off

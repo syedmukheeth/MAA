@@ -17,7 +17,10 @@ export function Testimonials({ testimonials }: { testimonials: TestimonialData[]
   if (!testimonials || testimonials.length === 0) return null;
 
   return (
-    <section id="testimonials" className="bg-ivory px-6 py-28 lg:px-10">
+    <section
+      id="testimonials"
+      className="scroll-mt-20 bg-ivory px-6 py-28 lg:px-10"
+    >
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 max-w-2xl">
           <p className="text-xs uppercase tracking-[0.35em] text-bronze">
