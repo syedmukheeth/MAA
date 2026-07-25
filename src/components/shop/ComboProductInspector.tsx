@@ -26,36 +26,48 @@ export function ComboProductInspector({
   onClose: () => void;
   initialProductId: string;
 }) {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [activeImageIdx, setActiveImageIdx] = useState(0);
+  if (!open || products.length === 0) return null;
 
-  // Sync active product index when modal opens with a specific product
-  useEffect(() => {
-    if (open && initialProductId) {
-      const idx = products.findIndex((p) => p.id === initialProductId);
-      if (idx !== -1) {
-        setActiveIdx(idx);
-        setActiveImageIdx(0);
-      }
-    }
-  }, [open, initialProductId, products]);
+  // Mounting the view fresh — keyed on the product the caller asked for — is
+  // what selects the right starting product. Copying it into state inside an
+  // effect cost an extra render and briefly showed the previous product.
+  return (
+    <InspectorView
+      key={initialProductId}
+      products={products}
+      onClose={onClose}
+      initialProductId={initialProductId}
+    />
+  );
+}
+
+function InspectorView({
+  products,
+  onClose,
+  initialProductId,
+}: {
+  products: InspectorProduct[];
+  onClose: () => void;
+  initialProductId: string;
+}) {
+  const [activeIdx, setActiveIdx] = useState(() => {
+    const idx = products.findIndex((p) => p.id === initialProductId);
+    return idx === -1 ? 0 : idx;
+  });
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
 
   // Handle ESC key close
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
-    if (open) {
-      window.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden"; // lock scroll
-    }
+    window.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden"; // lock scroll
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = ""; // restore scroll
     };
-  }, [open, onClose]);
-
-  if (!open || products.length === 0) return null;
+  }, [onClose]);
 
   const product = products[activeIdx];
   const images = product?.images || [];
@@ -198,9 +210,11 @@ export function ComboProductInspector({
                     </p>
                   </div>
 
-                  <p className="text-sm leading-relaxed text-graphite/80 whitespace-pre-line">
-                    {product.description}
-                  </p>
+                  {product.description.trim() && (
+                    <p className="text-sm leading-relaxed text-graphite/80 whitespace-pre-line">
+                      {product.description}
+                    </p>
+                  )}
 
                   <div className="border-t border-border pt-4 space-y-3 text-sm">
                     {product.materials.length > 0 && (

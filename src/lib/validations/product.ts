@@ -38,7 +38,10 @@ export const productSchema = z.object({
     .min(2)
     .max(140)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens only"),
-  description: z.string().min(10),
+  // Optional: staff add products from the shop floor and fill copy in later.
+  // The DB column is NOT NULL, so an omitted description becomes "" rather
+  // than null — every reader must treat "" as "no description".
+  description: z.string().trim().max(5000).optional().default(""),
   price: z.coerce.number().positive("Price must be greater than 0"),
   mrp: z
     .union([z.literal(""), z.coerce.number().positive("MRP must be greater than 0")])
