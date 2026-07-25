@@ -10,6 +10,7 @@ import { updateProfile } from "@/actions/profile";
 
 type ProfileInput = {
   name: string;
+  currentPassword?: string;
   password?: string;
   confirmPassword?: string;
 };
@@ -27,6 +28,7 @@ export function ProfileForm({ initialName }: { initialName: string }) {
   } = useForm<ProfileInput>({
     defaultValues: {
       name: initialName,
+      currentPassword: "",
       password: "",
       confirmPassword: "",
     },
@@ -46,6 +48,7 @@ export function ProfileForm({ initialName }: { initialName: string }) {
 
     const result = await updateProfile({
       name: data.name,
+      currentPassword: data.currentPassword || undefined,
       password: data.password || undefined,
     });
 
@@ -53,6 +56,7 @@ export function ProfileForm({ initialName }: { initialName: string }) {
       setServerError(result.error);
     } else {
       setSuccess(true);
+      setValue("currentPassword", "");
       setValue("password", "");
       setValue("confirmPassword", "");
     }
@@ -98,19 +102,39 @@ export function ProfileForm({ initialName }: { initialName: string }) {
       </div>
 
       {watchPassword && watchPassword.length > 0 && (
-        <div className="space-y-2">
-          <Label htmlFor="profileConfirmPassword">Confirm New Password</Label>
-          <PasswordInput
-            id="profileConfirmPassword"
-            required={Boolean(watchPassword)}
-            {...register("confirmPassword", {
-              required: "Please confirm your new password",
-            })}
-          />
-          {errors.confirmPassword && (
-            <p className="text-xs text-brand-red">{errors.confirmPassword.message}</p>
-          )}
-        </div>
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="profileConfirmPassword">Confirm New Password</Label>
+            <PasswordInput
+              id="profileConfirmPassword"
+              required
+              {...register("confirmPassword", {
+                required: "Please confirm your new password",
+              })}
+            />
+            {errors.confirmPassword && (
+              <p className="text-xs text-brand-red">{errors.confirmPassword.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="profileCurrentPassword">Current Password</Label>
+            <PasswordInput
+              id="profileCurrentPassword"
+              autoComplete="current-password"
+              required
+              {...register("currentPassword", {
+                required: "Enter your current password to change it",
+              })}
+            />
+            <p className="text-xs text-graphite/60">
+              Required to confirm it&rsquo;s really you.
+            </p>
+            {errors.currentPassword && (
+              <p className="text-xs text-brand-red">{errors.currentPassword.message}</p>
+            )}
+          </div>
+        </>
       )}
 
       {serverError && (
