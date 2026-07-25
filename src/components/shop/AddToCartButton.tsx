@@ -9,6 +9,8 @@ import { addToCart } from "@/actions/cart";
 
 import { WishlistToggleButton } from "@/components/shop/WishlistToggleButton";
 
+const MAX_QUANTITY = 99;
+
 export function AddToCartButton({
   productId,
   variantId,
@@ -63,19 +65,25 @@ export function AddToCartButton({
   return (
     <div>
       <div className="flex items-center gap-4">
-        <div className="flex items-center rounded-full border border-border">
+        <div className="flex items-center rounded-full border border-border touch-manipulation focus-within:ring-2 focus-within:ring-bronze/40">
           <button
             type="button"
-            className="px-3 py-2 text-graphite/70"
+            aria-label="Decrease quantity"
+            disabled={quantity <= 1}
+            className="px-3 py-2 text-graphite/70 transition-colors hover:text-charcoal disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze"
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
           >
-            -
+            −
           </button>
-          <span className="w-8 text-center text-sm">{quantity}</span>
+          <span aria-live="polite" className="w-8 text-center text-sm tabular-nums">
+            {quantity}
+          </span>
           <button
             type="button"
-            className="px-3 py-2 text-graphite/70"
-            onClick={() => setQuantity((q) => q + 1)}
+            aria-label="Increase quantity"
+            disabled={quantity >= MAX_QUANTITY}
+            className="px-3 py-2 text-graphite/70 transition-colors hover:text-charcoal disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze"
+            onClick={() => setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))}
           >
             +
           </button>
@@ -89,25 +97,27 @@ export function AddToCartButton({
           }`}
         >
           {pending ? (
-            <Loader2 className="mr-2 animate-spin" size={16} />
+            <Loader2 className="mr-2 animate-spin" size={16} aria-hidden="true" />
           ) : added ? (
-            <Check className="mr-2" size={16} />
+            <Check className="mr-2" size={16} aria-hidden="true" />
           ) : (
-            <ShoppingCart className="mr-2" size={16} />
+            <ShoppingCart className="mr-2" size={16} aria-hidden="true" />
           )}
-          {pending ? "Adding to Cart..." : added ? "Added to Cart" : "Add to Cart"}
+          {pending ? "Adding to Cart…" : added ? "Added to Cart" : "Add to Cart"}
         </Button>
         {productId && <WishlistToggleButton productId={productId} />}
       </div>
-      {added && (
-        <p className="mt-2 text-sm text-graphite/70">
-          Item added.{" "}
-          <Link href="/cart" className="font-medium text-bronze hover:underline">
-            View cart →
-          </Link>
-        </p>
-      )}
-      {error && <p className="mt-2 text-sm text-brand-red">{error}</p>}
+      <div aria-live="polite">
+        {added && (
+          <p className="mt-2 text-sm text-graphite/70">
+            Item added.{" "}
+            <Link href="/cart" className="font-medium text-bronze hover:underline">
+              View cart →
+            </Link>
+          </p>
+        )}
+        {error && <p className="mt-2 text-sm text-brand-red">{error}</p>}
+      </div>
     </div>
   );
 }

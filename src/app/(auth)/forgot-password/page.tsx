@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,12 @@ type ForgotInput = {
 export default function ForgotPasswordPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const successHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  // The form unmounts on success, so focus would otherwise fall back to <body>.
+  useEffect(() => {
+    if (success) successHeadingRef.current?.focus();
+  }, [success]);
 
   const {
     register,
@@ -35,7 +41,13 @@ export default function ForgotPasswordPage() {
   if (success) {
     return (
       <div className="text-center">
-        <h1 className="font-heading text-2xl text-charcoal">Check your email</h1>
+        <h1
+          ref={successHeadingRef}
+          tabIndex={-1}
+          className="font-heading text-2xl text-charcoal outline-none"
+        >
+          Check Your Email
+        </h1>
         <p className="mt-4 text-sm text-graphite/70 leading-relaxed">
           We&apos;ve sent a password reset link to your email address if it is registered in our system.
         </p>
@@ -64,6 +76,11 @@ export default function ForgotPasswordPage() {
           <Input
             id="email"
             type="email"
+            inputMode="email"
+            autoComplete="email"
+            spellCheck={false}
+            autoCapitalize="none"
+            placeholder="you@email.com"
             required
             {...register("email", {
               required: "Email is required",
@@ -78,11 +95,16 @@ export default function ForgotPasswordPage() {
           )}
         </div>
 
-        {serverError && (
-          <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-500 font-medium">
-            {serverError}
-          </div>
-        )}
+        <div aria-live="polite">
+          {serverError && (
+            <div
+              role="alert"
+              className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm font-medium text-red-500"
+            >
+              {serverError}
+            </div>
+          )}
+        </div>
 
         <Button
           type="submit"
@@ -91,8 +113,11 @@ export default function ForgotPasswordPage() {
         >
           {isSubmitting ? (
             <>
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-ivory border-t-transparent" />
-              <span>Sending link...</span>
+              <div
+                aria-hidden="true"
+                className="h-4 w-4 animate-spin rounded-full border-2 border-ivory border-t-transparent"
+              />
+              <span>Sending Link…</span>
             </>
           ) : (
             "Send Reset Link"
