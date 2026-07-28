@@ -49,6 +49,10 @@ model SiteSettings {
 
   deliveryMessage String
 
+  /// Master switch for buying. False = catalogue-only: the storefront still
+  /// lists everything, but add-to-cart and checkout are refused server-side.
+  allowPurchases Boolean @default(true)
+
   allowCOD   Boolean @default(true)
   allowUPI   Boolean @default(true)
   upiId      String?
