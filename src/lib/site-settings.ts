@@ -2,6 +2,17 @@ import { prisma } from "@/lib/db";
 
 export const SETTINGS_ID = "singleton";
 
+/**
+ * Shown wherever buying is refused while `allowPurchases` is false. Server
+ * actions are callable directly, so hiding the button is not the control —
+ * the checks in addToCart and placeOrder are.
+ *
+ * ponytail: hardcoded copy. Move onto SiteSettings if the owner wants to word
+ * it per-season ("back after Diwali") rather than one fixed sentence.
+ */
+export const PURCHASES_DISABLED_MESSAGE =
+  "Sorry, items are not available for purchase right now. Call 8886995345 to order.";
+
 export const DEFAULT_SITE_SETTINGS = {
   // Money is carried as strings, not Decimal: this object crosses the
   // server/client boundary into section components, and Decimal isn't
@@ -36,6 +47,7 @@ export const DEFAULT_SITE_SETTINGS = {
 
   deliveryMessage: "Delivery in Andhra Pradesh Only",
 
+  allowPurchases: true,
   allowCOD: true,
   allowUPI: true,
   upiId: null as string | null,
@@ -78,6 +90,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       instagramUrl: row.instagramUrl,
       facebookUrl: row.facebookUrl,
       deliveryMessage: row.deliveryMessage,
+      allowPurchases: row.allowPurchases,
       allowCOD: row.allowCOD,
       allowUPI: row.allowUPI,
       upiId: row.upiId,

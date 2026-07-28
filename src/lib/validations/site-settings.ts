@@ -23,6 +23,7 @@ export const siteSettingsSchema = z.object({
 
   deliveryMessage: z.string().min(2),
 
+  allowPurchases: z.coerce.boolean().default(true),
   allowCOD: z.coerce.boolean().default(true),
   allowUPI: z.coerce.boolean().default(true),
   upiId: z.string().optional().nullable().transform((val) => val === "" ? null : val),
