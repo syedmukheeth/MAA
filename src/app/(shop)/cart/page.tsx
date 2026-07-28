@@ -3,7 +3,10 @@ import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/session";
 import { CartLineItem } from "@/components/shop/CartLineItem";
 import { OrderTotals } from "@/components/shop/OrderTotals";
-import { getSiteSettings } from "@/lib/site-settings";
+import {
+  getSiteSettings,
+  PURCHASES_DISABLED_MESSAGE,
+} from "@/lib/site-settings";
 import { computeCartTotals } from "@/lib/cart";
 import { money, toPaise } from "@/lib/money";
 
@@ -95,12 +98,18 @@ export default async function CartPage() {
               taxAmount={totals.taxAmount.toString()}
               total={totals.total.toString()}
             />
-            <Link
-              href="/checkout"
-              className="mt-6 block rounded-full bg-bronze px-8 py-3 text-center text-sm font-medium text-ivory transition-colors hover:bg-bronze/90"
-            >
-              Proceed to Checkout
-            </Link>
+            {settings.allowPurchases ? (
+              <Link
+                href="/checkout"
+                className="mt-6 block rounded-full bg-bronze px-8 py-3 text-center text-sm font-medium text-ivory transition-colors hover:bg-bronze/90"
+              >
+                Proceed to Checkout
+              </Link>
+            ) : (
+              <p className="mt-6 rounded-xl border border-linen bg-cream px-4 py-3 text-sm text-graphite/80">
+                {PURCHASES_DISABLED_MESSAGE}
+              </p>
+            )}
           </div>
         </div>
       )}

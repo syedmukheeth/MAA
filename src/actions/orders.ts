@@ -14,7 +14,10 @@ import {
 } from "@/lib/inventory";
 import { sendEmail } from "@/lib/email";
 import { orderConfirmationHtml, orderStatusUpdateHtml } from "@/lib/email-templates";
-import { getSiteSettings } from "@/lib/site-settings";
+import {
+  getSiteSettings,
+  PURCHASES_DISABLED_MESSAGE,
+} from "@/lib/site-settings";
 import { money, toPaise, type Money } from "@/lib/money";
 import { computeCartTotals } from "@/lib/cart";
 import { recordAudit } from "@/lib/audit";
@@ -58,6 +61,13 @@ export async function placeOrder(
   input: ShippingAddressInput & { saveAddress?: boolean; paymentMethod?: string }
 ): Promise<{ error?: string; orderId?: string }> {
   const session = await requireAuth();
+
+  // Checked here as well as in addToCart: a cart filled before buying was
+  // switched off must not still be checkout-able.
+  if (!(await getSiteSettings()).allowPurchases) {
+    return { error: PURCHASES_DISABLED_MESSAGE };
+  }
+
   const parsed = shippingAddressSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid address" };
