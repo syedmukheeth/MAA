@@ -183,6 +183,7 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
     gstRate: defaults.gstRate ?? "18",
     deliveryFee: defaults.deliveryFee ?? "0",
     freeDeliveryThreshold: defaults.freeDeliveryThreshold ?? "",
+    allowPurchases: defaults.allowPurchases ?? true,
     allowCOD: defaults.allowCOD ?? true,
     allowUPI: defaults.allowUPI ?? true,
     upiId: defaults.upiId ?? "",
@@ -419,10 +420,29 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
 
       <section className="space-y-4">
         <h2 className="font-heading text-lg text-foreground">Payment Settings</h2>
+
+        <label className="flex items-start gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            checked={values.allowPurchases}
+            onChange={(e) => set("allowPurchases", e.target.checked)}
+            className="mt-0.5 size-4 rounded border-border"
+          />
+          <span>
+            Allow customers to buy
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              Untick to run the site as a catalogue: products stay visible, but
+              add-to-cart and checkout are refused and shoppers are told to call
+              instead.
+            </span>
+          </span>
+        </label>
+
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
+              disabled={!values.allowPurchases}
               checked={values.allowCOD}
               onChange={(e) => set("allowCOD", e.target.checked)}
               className="size-4 rounded border-border"
@@ -432,6 +452,7 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
+              disabled={!values.allowPurchases}
               checked={values.allowUPI}
               onChange={(e) => set("allowUPI", e.target.checked)}
               className="size-4 rounded border-border"
