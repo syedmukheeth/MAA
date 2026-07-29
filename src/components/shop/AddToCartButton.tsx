@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ShoppingCart, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addToCart } from "@/actions/cart";
-import { PURCHASES_DISABLED_MESSAGE } from "@/lib/site-settings";
+import { PURCHASES_DISABLED_MESSAGE } from "@/lib/site-settings-constants";
 import { usePurchasingEnabled } from "@/components/shop/PurchasingProvider";
 
 import { WishlistToggleButton } from "@/components/shop/WishlistToggleButton";
