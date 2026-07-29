@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAuth, getActiveUser } from "@/lib/auth/session";
 import { getDefaultVariant } from "@/lib/inventory";
+import {
+  getSiteSettings,
+  PURCHASES_DISABLED_MESSAGE,
+} from "@/lib/site-settings";
 
 /**
  * Server actions receive whatever the caller POSTs, so `quantity` can arrive as
@@ -35,6 +39,11 @@ export async function addToCart(input: {
   // The catalogue is public, so an anonymous visitor reaching this is a normal
   // path — not an error. Signal it so the client can route to login and come
   // back, instead of inferring "signed out" from any thrown error.
+  const { allowPurchases } = await getSiteSettings();
+  if (!allowPurchases) {
+    return { error: PURCHASES_DISABLED_MESSAGE };
+  }
+
   const session = await getActiveUser();
   if (!session) {
     return { requiresAuth: true, error: "Please sign in to add items to your cart" };

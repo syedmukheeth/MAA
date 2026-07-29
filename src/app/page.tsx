@@ -2,7 +2,6 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/sections/Hero";
 import { BrandStatement } from "@/components/sections/BrandStatement";
-import { Collections } from "@/components/sections/Collections";
 import { CustomStudioTeaser } from "@/components/sections/CustomStudioTeaser";
 import { BestSellers } from "@/components/sections/BestSellers";
 import { Testimonials } from "@/components/sections/Testimonials";
@@ -16,7 +15,7 @@ import { prisma } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [settings, user, testimonials, featuredProducts, counts] = await Promise.all([
+  const [settings, user, testimonials, featuredProducts] = await Promise.all([
     getSiteSettings(),
     getCurrentUser(),
     prisma.testimonial.findMany({
@@ -27,21 +26,9 @@ export default async function Home() {
       where: { featured: true, isActive: true },
       take: 4,
     }),
-    prisma.product.groupBy({
-      by: ["category"],
-      where: { isActive: true },
-      _count: {
-        id: true,
-      },
-    }),
   ]);
 
   const cartItemCount = user ? await getCartItemCount(user.sub) : 0;
-
-  const categoryCounts = counts.reduce((acc, curr) => {
-    acc[curr.category] = curr._count.id;
-    return acc;
-  }, {} as Record<string, number>);
 
   return (
     <>
@@ -54,7 +41,6 @@ export default async function Home() {
           deliveryMessage={settings.deliveryMessage}
         />
         <BrandStatement label={settings.brandLabel} headline={settings.brandHeadline} />
-        <Collections categoryCounts={categoryCounts} />
         <CustomStudioTeaser />
         <BestSellers products={featuredProducts.map(p => ({
           id: p.id,

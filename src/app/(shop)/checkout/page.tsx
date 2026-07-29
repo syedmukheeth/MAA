@@ -19,6 +19,12 @@ export default async function CheckoutPage() {
     getSiteSettings(),
   ]);
 
+  // Catalogue-only mode: /cart explains why, so send them there rather than
+  // rendering a wizard whose final button is guaranteed to fail.
+  if (!settings.allowPurchases) {
+    redirect("/cart");
+  }
+
   if (!cart || cart.items.length === 0) {
     redirect("/cart");
   }
