@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ShoppingCart, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addToCart } from "@/actions/cart";
+import { PURCHASES_DISABLED_MESSAGE } from "@/lib/site-settings";
+import { usePurchasingEnabled } from "@/components/shop/PurchasingProvider";
 
 import { WishlistToggleButton } from "@/components/shop/WishlistToggleButton";
 
@@ -24,6 +26,7 @@ export function AddToCartButton({
   comboSelections?: { comboItemId: string; variantId: string }[];
   disabled?: boolean;
 }) {
+  const purchasingEnabled = usePurchasingEnabled();
   const router = useRouter();
   const pathname = usePathname();
   const [quantity, setQuantity] = useState(1);
@@ -60,6 +63,19 @@ export function AddToCartButton({
     } finally {
       setPending(false);
     }
+  }
+
+  // Catalogue-only mode: no quantity stepper, no cart button. Wishlist stays,
+  // since saving an item you cannot buy yet is the point.
+  if (!purchasingEnabled) {
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="rounded-xl border border-linen bg-cream px-4 py-3 text-sm text-graphite/80">
+          {PURCHASES_DISABLED_MESSAGE}
+        </p>
+        {productId && <WishlistToggleButton productId={productId} />}
+      </div>
+    );
   }
 
   return (
