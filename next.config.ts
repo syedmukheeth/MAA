@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // pg / @prisma/adapter-pg use Node built-ins (dns, fs, net, tls). Server
+  // Actions pull their whole module graph in for the client reference stub,
+  // so without this Turbopack tries to bundle pg for the browser and fails.
+  serverExternalPackages: ["pg", "@prisma/adapter-pg"],
   images: {
     remotePatterns: [
       // Uploaded product/combo images land here via the signed Cloudinary
