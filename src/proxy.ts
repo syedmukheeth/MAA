@@ -40,6 +40,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Storefront must stay crawlable and shareable — no auth gate.
+  const isPublicStorefrontPage =
+    pathname === "/" || pathname.startsWith("/products") || pathname.startsWith("/combos");
+  if (isPublicStorefrontPage) {
+    return NextResponse.next();
+  }
+
   // Everything still matched here is private.
   if (!session) {
     const loginUrl = new URL("/login", request.url);
