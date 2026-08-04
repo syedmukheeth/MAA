@@ -322,12 +322,22 @@ export async function updateOrderStatus(
 
   try {
     await prisma.$transaction(async (tx) => {
+      // Determine if a refund request should be initialized
+      const isOnlinePaid = order.paymentMethod !== "COD";
+      const initialRefundStatus = nextStatus === "CANCELLED" ? (isOnlinePaid ? "PENDING" : "PENDING") : undefined;
+
       // Guard against a concurrent transition (double-click / two staff)
       const updated = await tx.order.updateMany({
         where: { id: orderId, status: order.status },
         data: {
           status: nextStatus as never,
           cancelReason: nextStatus === "CANCELLED" ? (cancelReason || "Cancelled by store management") : undefined,
+          ...(nextStatus === "CANCELLED"
+            ? {
+                refundStatus: initialRefundStatus as never,
+                refundAmount: order.total,
+              }
+            : {}),
         },
       });
       if (updated.count === 0) {
@@ -397,7 +407,11 @@ export async function cancelOwnOrder(orderId: string): Promise<{ error?: string 
     await prisma.$transaction(async (tx) => {
       const updated = await tx.order.updateMany({
         where: { id: orderId, status: "PENDING" },
-        data: { status: "CANCELLED" },
+        data: {
+          status: "CANCELLED",
+          refundStatus: "PENDING",
+          refundAmount: order.total,
+        },
       });
       if (updated.count === 0) {
         throw new Error("Order can no longer be cancelled");
@@ -413,5 +427,54 @@ export async function cancelOwnOrder(orderId: string): Promise<{ error?: string 
   revalidatePath("/account/orders");
   revalidatePath(`/account/orders/${orderId}`);
   revalidatePath("/admin/orders");
+  return {};
+}
+
+export async function updateRefundStatus(
+  orderId: string,
+  input: {
+    status: "PENDING" | "PROCESSED" | "FAILED" | "NOT_APPLICABLE";
+    refundTxnId?: string;
+    notes?: string;
+    amount?: number;
+  }
+): Promise<{ error?: string }> {
+  const session = await requireRole([...MANAGE_ROLES]);
+
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) return { error: "Order not found" };
+
+  try {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        refundStatus: input.status,
+        refundTxnId: input.refundTxnId || order.refundTxnId,
+        refundNotes: input.notes || order.refundNotes,
+        refundAmount: input.amount !== undefined ? input.amount : (order.refundAmount ?? order.total),
+        refundedAt: input.status === "PROCESSED" ? new Date() : order.refundedAt,
+      },
+    });
+
+    await recordAudit({
+      actorId: session.sub,
+      action: "order.refund",
+      entity: "Order",
+      entityId: orderId,
+      summary: `Updated refund status for ${order.orderNumber} to ${input.status}`,
+      metadata: {
+        orderNumber: order.orderNumber,
+        refundStatus: input.status,
+        refundTxnId: input.refundTxnId,
+      },
+    });
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Could not update refund status" };
+  }
+
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/account/orders");
+  revalidatePath(`/account/orders/${orderId}`);
   return {};
 }

@@ -32,6 +32,7 @@ export type AuditAction =
   | "inventory.adjust"
   | "order.status_change"
   | "order.cancel"
+  | "order.refund"
   | "request.status_change"
   | "settings.update"
   | "user.role_change"

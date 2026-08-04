@@ -7,6 +7,8 @@ import { BackLink } from "@/components/admin/BackLink";
 import { formatINR } from "@/lib/money";
 import { OrderTimelineStepper } from "@/components/shop/OrderTimelineStepper";
 
+import { RefundStatusControl } from "@/components/admin/RefundStatusControl";
+
 export default async function AdminOrderDetailPage({
   params,
 }: {
@@ -22,16 +24,16 @@ export default async function AdminOrderDetailPage({
   if (!order) notFound();
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-3xl space-y-6">
       <BackLink href="/admin/orders" label="Back to Orders" />
-      <div className="mb-6 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <h1 className="font-heading text-2xl text-foreground">
           {order.orderNumber}
         </h1>
         <OrderStatusBadge status={order.status} />
       </div>
 
-      <div className="mb-6">
+      <div>
         <OrderTimelineStepper
           status={order.status}
           cancelReason={order.cancelReason}
@@ -39,7 +41,7 @@ export default async function AdminOrderDetailPage({
       </div>
 
       <div className="rounded-xl border border-border p-6">
-        <h2 className="font-heading text-lg text-foreground">Shipping</h2>
+        <h2 className="font-heading text-lg text-foreground">Shipping & Customer</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           {order.shippingName} &middot; {order.shippingPhone}
         </p>
@@ -52,11 +54,11 @@ export default async function AdminOrderDetailPage({
           Customer: {order.user.name} ({order.user.email})
         </p>
         <p className="text-sm text-muted-foreground">
-          Payment: {order.paymentMethod}
+          Payment Method: {order.paymentMethod}
         </p>
       </div>
 
-      <div className="mt-6 rounded-xl border border-border p-6">
+      <div className="rounded-xl border border-border p-6">
         <h2 className="font-heading text-lg text-foreground">Items</h2>
         <div className="mt-4 space-y-3">
           {order.items.map((item) => (
@@ -86,9 +88,24 @@ export default async function AdminOrderDetailPage({
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-border p-6">
+      {(order.status === "CANCELLED" || order.refundStatus !== "NOT_APPLICABLE") && (
+        <div className="rounded-xl border border-border bg-card p-6">
+          <h2 className="mb-4 font-heading text-lg text-foreground">
+            Refund Management
+          </h2>
+          <RefundStatusControl
+            orderId={order.id}
+            refundStatus={order.refundStatus}
+            refundAmount={order.refundAmount ? order.refundAmount.toString() : order.total.toString()}
+            refundTxnId={order.refundTxnId}
+            refundNotes={order.refundNotes}
+          />
+        </div>
+      )}
+
+      <div className="rounded-xl border border-border p-6">
         <h2 className="mb-4 font-heading text-lg text-foreground">
-          Update Status
+          Update Order Status
         </h2>
         <OrderStatusControl orderId={order.id} status={order.status} />
       </div>
