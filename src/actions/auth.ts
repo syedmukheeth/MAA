@@ -22,23 +22,40 @@ async function clientIp() {
 }
 
 /**
- * Rate limiting must never be the reason nobody can sign in.
+ * In-memory sliding-window fallback store.
  *
- * If Upstash is unreachable or out of quota, `.limit()` rejects — and an
- * unguarded await here would take down login for every user, owner included.
- * Auth fails OPEN: brute-force is still bounded by bcrypt cost 12, whereas a
- * closed failure is a total outage caused by the rate limiter.
- *
- * (The custom-request endpoint deliberately fails CLOSED instead — there the
- * downside is an unbounded email flood, not a lockout.)
+ * If Upstash Redis is unreachable or out of quota, `.limit()` rejects.
+ * To prevent authentication from failing open into unbounded brute-force,
+ * this fallback enforces local rate limits per Node instance during outages.
  */
+const fallbackStore = new Map<string, { count: number; resetAt: number }>();
+const FALLBACK_WINDOW_MS = 60 * 1000;
+const FALLBACK_MAX_ATTEMPTS = 10;
+
+function checkInMemoryFallback(key: string): boolean {
+  const now = Date.now();
+  const record = fallbackStore.get(key);
+
+  if (!record || now > record.resetAt) {
+    fallbackStore.set(key, { count: 1, resetAt: now + FALLBACK_WINDOW_MS });
+    return true;
+  }
+
+  if (record.count >= FALLBACK_MAX_ATTEMPTS) {
+    return false;
+  }
+
+  record.count += 1;
+  return true;
+}
+
 async function limitOrAllow(limiter: Ratelimit, key: string): Promise<boolean> {
   try {
     const { success } = await limiter.limit(key);
     return success;
   } catch (err) {
-    console.error("Rate limiter unavailable, failing open:", err);
-    return true;
+    console.warn(`Rate limiter unavailable for key "${key}", using in-memory fallback:`, err);
+    return checkInMemoryFallback(key);
   }
 }
 
