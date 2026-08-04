@@ -17,6 +17,13 @@ export type StockMovementInput = {
   byUserId?: string;
 };
 
+export class InsufficientStockError extends Error {
+  constructor(message = "Insufficient stock") {
+    super(message);
+    this.name = "InsufficientStockError";
+  }
+}
+
 /**
  * The ONLY way stock changes. Writes the ledger row and updates
  * Variant.stock atomically, then keeps Product.stockQuantity in sync
@@ -43,7 +50,9 @@ export async function applyStockMovement(
     select: { stock: true, productId: true, name: true },
   });
   if (variant.stock < 0) {
-    throw new Error("Insufficient stock");
+    throw new InsufficientStockError(
+      `${variant.name || "Selected item"} is out of stock`
+    );
   }
 
   await tx.stockMovement.create({
