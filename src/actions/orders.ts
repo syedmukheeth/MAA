@@ -24,6 +24,7 @@ import { computeCartTotals } from "@/lib/cart";
 import { recordAudit } from "@/lib/audit";
 import { STAFF_ROLES } from "@/lib/auth/roles";
 import type { OrderStatus } from "@/generated/prisma/client";
+import { randomBytes } from "node:crypto";
 
 const STATUS_FLOW: Record<string, string[]> = {
   PENDING: ["CONFIRMED", "CANCELLED"],
