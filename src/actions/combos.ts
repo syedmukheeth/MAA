@@ -6,7 +6,7 @@ import { requireRole } from "@/lib/auth/session";
 import { comboSchema, type ComboInput } from "@/lib/validations/combo";
 import { recordAudit } from "@/lib/audit";
 
-const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
+import { STAFF_ROLES } from "@/lib/auth/roles";
 
 /** Every optionVariantId must be a variant of that item's product. */
 async function validateItemOptions(

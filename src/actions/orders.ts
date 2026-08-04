@@ -22,9 +22,8 @@ import {
 import { money, toPaise, type Money } from "@/lib/money";
 import { computeCartTotals } from "@/lib/cart";
 import { recordAudit } from "@/lib/audit";
-import { randomBytes } from "node:crypto";
-
-const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
+import { STAFF_ROLES } from "@/lib/auth/roles";
+import type { OrderStatus } from "@/generated/prisma/client";
 
 const STATUS_FLOW: Record<string, string[]> = {
   PENDING: ["CONFIRMED", "CANCELLED"],
@@ -275,25 +274,29 @@ export async function placeOrder(
     revalidatePath("/admin/orders");
     revalidatePath("/admin/inventory");
 
-    const placedOrder = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: { items: true },
-    });
-    if (placedOrder) {
-      await sendEmail({
-        to: session.email,
-        subject: `Order ${placedOrder.orderNumber} confirmed`,
-        html: orderConfirmationHtml({
-          orderNumber: placedOrder.orderNumber,
-          total: placedOrder.total.toString(),
-          items: placedOrder.items.map((i) => ({
-            name: i.name,
-            quantity: i.quantity,
-            lineTotal: i.lineTotal.toString(),
-          })),
-        }),
-      });
-    }
+    prisma.order
+      .findUnique({
+        where: { id: orderId },
+        include: { items: true },
+      })
+      .then((placedOrder) => {
+        if (placedOrder) {
+          sendEmail({
+            to: session.email,
+            subject: `Order ${placedOrder.orderNumber} confirmed`,
+            html: orderConfirmationHtml({
+              orderNumber: placedOrder.orderNumber,
+              total: placedOrder.total.toString(),
+              items: placedOrder.items.map((i) => ({
+                name: i.name,
+                quantity: i.quantity,
+                lineTotal: i.lineTotal.toString(),
+              })),
+            }),
+          });
+        }
+      })
+      .catch((e) => console.error("Order confirmation email failed:", e));
 
     return { orderId };
   } catch (err) {
@@ -307,10 +310,10 @@ export async function placeOrder(
 
 export async function updateOrderStatus(
   orderId: string,
-  nextStatus: string,
+  nextStatus: OrderStatus,
   cancelReason?: string
 ): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...STAFF_ROLES]);
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
@@ -333,11 +336,11 @@ export async function updateOrderStatus(
       const updated = await tx.order.updateMany({
         where: { id: orderId, status: order.status },
         data: {
-          status: nextStatus as never,
+          status: nextStatus,
           cancelReason: nextStatus === "CANCELLED" ? (cancelReason || "Cancelled by store management") : undefined,
           ...(nextStatus === "CANCELLED"
             ? {
-                refundStatus: initialRefundStatus as never,
+                refundStatus: initialRefundStatus,
                 refundAmount: order.total,
               }
             : {}),
@@ -442,7 +445,7 @@ export async function updateRefundStatus(
     amount?: number;
   }
 ): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...STAFF_ROLES]);
 
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) return { error: "Order not found" };

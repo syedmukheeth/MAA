@@ -12,10 +12,16 @@ export async function sendEmail({
   to: string;
   subject: string;
   html: string;
-}): Promise<void> {
+}): Promise<boolean> {
   try {
-    await resend.emails.send({ from: FROM, to, subject, html });
+    const res = await resend.emails.send({ from: FROM, to, subject, html });
+    if (res.error) {
+      console.error(`EMAIL SEND FAILED [to=${to}, subject="${subject}"]:`, res.error);
+      return false;
+    }
+    return true;
   } catch (err) {
-    console.error("Failed to send email:", err);
+    console.error(`EMAIL SEND ERROR [to=${to}, subject="${subject}"]:`, err);
+    return false;
   }
 }
