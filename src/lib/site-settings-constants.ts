@@ -10,4 +10,4 @@
  * it in without dragging `pg` into the browser bundle.
  */
 export const PURCHASES_DISABLED_MESSAGE =
-  "Sorry, items are not available for purchase right now. Call 8886995345 to order.";
+  "Sorry, items are not available for purchase right now.";

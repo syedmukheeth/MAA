@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { verifySession, type Role, type SessionPayload } from "./jwt";
+import { verifySession, SESSION_COOKIE, type Role, type SessionPayload } from "./jwt";
 
-export const SESSION_COOKIE = "maa_session";
+export { SESSION_COOKIE };
 
 export async function getCurrentUser(): Promise<SessionPayload | null> {
   const store = await cookies();

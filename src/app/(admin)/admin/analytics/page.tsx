@@ -17,7 +17,9 @@ function StatCard({ label, value }: { label: string; value: string }) {
       <p className="text-xs uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
-      <p className="mt-2 font-heading text-2xl text-foreground">{value}</p>
+      <p className="mt-2 font-heading text-lg sm:text-xl lg:text-2xl font-semibold text-foreground truncate" title={value}>
+        {value}
+      </p>
     </div>
   );
 }
