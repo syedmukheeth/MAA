@@ -11,6 +11,7 @@ import {
   applyStockMovement,
   getDefaultVariant,
   restockOrderItems,
+  InsufficientStockError,
 } from "@/lib/inventory";
 import { sendEmail } from "@/lib/email";
 import { orderConfirmationHtml, orderStatusUpdateHtml } from "@/lib/email-templates";
@@ -296,7 +297,9 @@ export async function placeOrder(
 
     return { orderId };
   } catch (err) {
-    if (err instanceof CheckoutError) return { error: err.message };
+    if (err instanceof CheckoutError || err instanceof InsufficientStockError) {
+      return { error: err.message };
+    }
     console.error("placeOrder failed:", err);
     return { error: "Could not place your order. Please try again." };
   }
