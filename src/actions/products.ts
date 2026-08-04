@@ -8,7 +8,7 @@ import { productSchema, type ProductInput } from "@/lib/validations/product";
 import { applyStockMovement, recomputeProductStock } from "@/lib/inventory";
 import { recordAudit } from "@/lib/audit";
 
-const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
+import { STAFF_ROLES } from "@/lib/auth/roles";
 
 /** Find a slug that isn't taken yet, appending -2, -3, ... on conflict. */
 async function resolveFreeSlug(
@@ -33,7 +33,7 @@ async function resolveFreeSlug(
 export async function createProduct(
   input: ProductInput
 ): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...STAFF_ROLES]);
   const parsed = productSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -94,7 +94,7 @@ export async function updateProduct(
   id: string,
   input: ProductInput
 ): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...STAFF_ROLES]);
   const parsed = productSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };

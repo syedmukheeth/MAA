@@ -17,7 +17,7 @@ const ROLE_RANK: Record<Role, number> = {
   CUSTOMER: 0,
 };
 
-const MANAGE_ROLES = ["OWNER", "ADMIN"] as const;
+import { USER_MANAGE_ROLES } from "@/lib/auth/roles";
 
 function isRole(value: unknown): value is Role {
   return typeof value === "string" && value in ROLE_RANK;
@@ -35,7 +35,7 @@ export async function changeUserRole(
   userId: string,
   nextRole: Role
 ): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...USER_MANAGE_ROLES]);
 
   // Server actions accept whatever a caller POSTs; the TS type is erased.
   if (!isRole(nextRole)) return { error: "Unknown role" };
@@ -87,7 +87,7 @@ export async function setUserActive(
   userId: string,
   isActive: boolean
 ): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...USER_MANAGE_ROLES]);
 
   const target = await prisma.user.findUnique({ where: { id: userId } });
   if (!target) return { error: "User not found" };
