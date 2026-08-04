@@ -30,7 +30,7 @@ async function validateItemOptions(
 }
 
 export async function createCombo(input: ComboInput): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...STAFF_ROLES]);
   const parsed = comboSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -81,7 +81,7 @@ export async function updateCombo(
   id: string,
   input: ComboInput
 ): Promise<{ error?: string }> {
-  await requireRole([...MANAGE_ROLES]);
+  await requireRole([...STAFF_ROLES]);
   const parsed = comboSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -135,7 +135,7 @@ export async function updateCombo(
 }
 
 export async function deleteCombo(id: string): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...STAFF_ROLES]);
   const doomed = await prisma.combo.findUnique({
     where: { id },
     select: { name: true, slug: true, bundlePrice: true },
@@ -160,7 +160,7 @@ export async function toggleComboActive(
   id: string,
   isActive: boolean
 ): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...STAFF_ROLES]);
   const combo = await prisma.combo.update({ where: { id }, data: { isActive } });
   await recordAudit({
     actorId: session.sub,

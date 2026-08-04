@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { updateOrderStatus } from "@/actions/orders";
+import type { OrderStatus } from "@/generated/prisma/client";
 
 const NEXT_STATUS: Record<string, string[]> = {
   PENDING: ["CONFIRMED", "CANCELLED"],
@@ -37,7 +38,7 @@ export function OrderStatusControl({
 
   const options = NEXT_STATUS[current] ?? [];
 
-  function onAdvance(next: string) {
+  function onAdvance(next: OrderStatus) {
     if (next === "CANCELLED") {
       setShowCancelPrompt(true);
       return;
