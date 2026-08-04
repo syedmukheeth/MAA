@@ -144,7 +144,7 @@ export function OrderStatusControl({
             <button
               key={opt}
               disabled={isPending}
-              onClick={() => onAdvance(opt)}
+              onClick={() => onAdvance(opt as OrderStatus)}
               className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
                 opt === "CANCELLED"
                   ? "border-destructive/40 text-destructive hover:bg-destructive/5 hover:border-destructive"
