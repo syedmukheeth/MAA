@@ -69,6 +69,8 @@ export function orderStatusUpdateHtml(order: OrderLike, newStatus: string) {
   );
 }
 
+import { getSiteUrl } from "@/lib/site-url";
+
 type CustomRequestLike = {
   name: string;
   phone: string;
@@ -77,13 +79,14 @@ type CustomRequestLike = {
 };
 
 export function customRequestNotificationHtml(request: CustomRequestLike) {
+  const adminUrl = `${getSiteUrl()}/admin/requests`;
   return emailLayout(
     `
       <h1 style="font-size:22px;margin:0 0 8px;">New custom furniture request</h1>
       <p style="color:#5c5349;"><strong>${esc(request.name)}</strong> &middot; ${esc(request.phone)}</p>
       ${request.budgetRange ? `<p style="color:#5c5349;">Budget: ${esc(request.budgetRange)}</p>` : ""}
       ${request.description ? `<p style="color:#5c5349;">${esc(request.description)}</p>` : ""}
-      <p style="margin-top:16px;"><a href="https://maafurniture.com/admin/requests" style="color:#a5732f;">View in admin dashboard</a></p>
+      <p style="margin-top:16px;"><a href="${adminUrl}" style="color:#a5732f;">View in admin dashboard</a></p>
     `,
     `New request from ${request.name}`
   );

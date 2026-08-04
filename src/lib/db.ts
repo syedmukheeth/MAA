@@ -19,9 +19,10 @@ function createPrismaClient() {
   // We keep pool max at 2 so each serverless worker holds at most 2 connections
   // and we never exceed Supabase's 15-connection session-mode limit even if the
   // old URL is still in use during a migration window.
+  const isProd = process.env.NODE_ENV === "production";
   const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: useSsl ? { rejectUnauthorized: false } : false,
+    ssl: useSsl ? { rejectUnauthorized: isProd } : false,
     max: 2,
   });
   const adapter = new PrismaPg(pool);
