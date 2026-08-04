@@ -30,10 +30,7 @@ async function getOrCreateCart(userId: string) {
 }
 
 function revalidateCartPaths() {
-  revalidatePath("/cart");
-  revalidatePath("/checkout");
-  revalidatePath("/products");
-  revalidatePath("/");
+  revalidatePath("/(shop)", "layout");
 }
 
 export async function addToCart(input: {
