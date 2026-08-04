@@ -78,6 +78,51 @@ export default async function AccountOrderDetailPage({
         <p className="mt-2">Payment: {order.paymentMethod}</p>
       </div>
 
+      {order.status === "CANCELLED" && order.refundStatus && order.refundStatus !== "NOT_APPLICABLE" && (
+        <div className="mt-6 rounded-xl border border-bronze/30 bg-bronze/5 p-6 text-sm">
+          <h3 className="font-heading text-base font-semibold text-charcoal">Refund Details</h3>
+          <div className="mt-2 space-y-1 text-graphite/80">
+            <p>
+              <span className="font-medium">Status:</span>{" "}
+              <span className="font-semibold uppercase tracking-wider text-bronze">
+                {order.refundStatus === "PROCESSED"
+                  ? "Refund Completed"
+                  : order.refundStatus === "FAILED"
+                  ? "Refund Issue"
+                  : "Refund Processing"}
+              </span>
+            </p>
+            {order.refundAmount && (
+              <p>
+                <span className="font-medium">Refund Amount:</span>{" "}
+                {formatINR(order.refundAmount.toString())}
+              </p>
+            )}
+            {order.refundTxnId && (
+              <p>
+                <span className="font-medium">Transaction ID / Reference:</span>{" "}
+                <code className="rounded bg-background px-1.5 py-0.5 text-xs font-mono text-charcoal">
+                  {order.refundTxnId}
+                </code>
+              </p>
+            )}
+            {order.refundedAt && (
+              <p>
+                <span className="font-medium">Processed Date:</span>{" "}
+                {new Date(order.refundedAt).toLocaleDateString("en-IN", {
+                  dateStyle: "medium",
+                })}
+              </p>
+            )}
+            {order.refundNotes && (
+              <p className="mt-1 text-xs italic text-graphite/60">
+                Note: {order.refundNotes}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {order.status === "PENDING" && (
         <div className="mt-6">
           <CancelOrderButton orderId={order.id} />
