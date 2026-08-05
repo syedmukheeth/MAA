@@ -1,11 +1,7 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { Phone, Mail, MessageCircle, MapPin } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 function InstagramIcon({ size = 18 }: { size?: number }) {
   return (
@@ -34,46 +30,63 @@ export function FooterContactIcons({
   instagramUrl?: string | null;
   whatsappDigits: string;
 }) {
+  const [phoneMenuOpen, setPhoneMenuOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setPhoneMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div className="flex flex-wrap items-center gap-3 pt-2">
-      {/* Phone Icon with Popover for 2 Phone Numbers */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            aria-label="Call MAA Furniture"
-            title="Call Us (Select Number)"
-            className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-all hover:border-bronze hover:text-bronze hover:bg-bronze/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze"
-          >
-            <Phone size={18} />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent
-          side="top"
-          align="start"
-          className="dark w-52 border border-bronze/40 bg-charcoal p-2.5 text-ivory shadow-xl rounded-xl"
+      {/* Phone Icon with Self-Contained Dropdown for 2 Phone Numbers */}
+      <div ref={containerRef} className="relative">
+        <button
+          type="button"
+          onClick={() => setPhoneMenuOpen((prev) => !prev)}
+          aria-label="Call MAA Furniture"
+          aria-expanded={phoneMenuOpen}
+          title="Call Us (Select Number)"
+          className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-all hover:border-bronze hover:text-bronze hover:bg-bronze/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze cursor-pointer"
         >
-          <p className="text-[10px] font-bold uppercase tracking-wider text-bronze px-2.5 py-1">
-            Call MAA Furniture
-          </p>
-          <div className="mt-1 space-y-1">
-            <a
-              href="tel:8886995345"
-              className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-ivory hover:bg-bronze/20 hover:text-bronze transition-colors"
-            >
-              <Phone size={14} className="text-bronze shrink-0" />
-              <span>8886995345</span>
-            </a>
-            <a
-              href="tel:9912330151"
-              className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-ivory hover:bg-bronze/20 hover:text-bronze transition-colors"
-            >
-              <Phone size={14} className="text-bronze shrink-0" />
-              <span>9912330151</span>
-            </a>
+          <Phone size={18} />
+        </button>
+
+        {phoneMenuOpen && (
+          <div className="absolute bottom-full left-0 mb-2.5 w-52 rounded-xl border border-bronze/40 bg-charcoal p-2.5 text-ivory shadow-2xl z-50">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-bronze px-2.5 py-1">
+              Call MAA Furniture
+            </p>
+            <div className="mt-1 space-y-1">
+              <a
+                href="tel:8886995345"
+                onClick={() => setPhoneMenuOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-ivory hover:bg-bronze/20 hover:text-bronze transition-colors"
+              >
+                <Phone size={14} className="text-bronze shrink-0" />
+                <span>8886995345</span>
+              </a>
+              <a
+                href="tel:9912330151"
+                onClick={() => setPhoneMenuOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-ivory hover:bg-bronze/20 hover:text-bronze transition-colors"
+              >
+                <Phone size={14} className="text-bronze shrink-0" />
+                <span>9912330151</span>
+              </a>
+            </div>
           </div>
-        </PopoverContent>
-      </Popover>
+        )}
+      </div>
 
       {/* WhatsApp Icon */}
       <a
