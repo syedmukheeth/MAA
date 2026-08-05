@@ -11,6 +11,7 @@ import {
   applyStockMovement,
   getDefaultVariant,
   restockOrderItems,
+  InsufficientStockError,
 } from "@/lib/inventory";
 import { sendEmail } from "@/lib/email";
 import { orderConfirmationHtml, orderStatusUpdateHtml } from "@/lib/email-templates";
@@ -21,9 +22,9 @@ import {
 import { money, toPaise, type Money } from "@/lib/money";
 import { computeCartTotals } from "@/lib/cart";
 import { recordAudit } from "@/lib/audit";
+import { STAFF_ROLES } from "@/lib/auth/roles";
+import type { OrderStatus } from "@/generated/prisma/client";
 import { randomBytes } from "node:crypto";
-
-const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
 
 const STATUS_FLOW: Record<string, string[]> = {
   PENDING: ["CONFIRMED", "CANCELLED"],
@@ -274,29 +275,35 @@ export async function placeOrder(
     revalidatePath("/admin/orders");
     revalidatePath("/admin/inventory");
 
-    const placedOrder = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: { items: true },
-    });
-    if (placedOrder) {
-      await sendEmail({
-        to: session.email,
-        subject: `Order ${placedOrder.orderNumber} confirmed`,
-        html: orderConfirmationHtml({
-          orderNumber: placedOrder.orderNumber,
-          total: placedOrder.total.toString(),
-          items: placedOrder.items.map((i) => ({
-            name: i.name,
-            quantity: i.quantity,
-            lineTotal: i.lineTotal.toString(),
-          })),
-        }),
-      });
-    }
+    prisma.order
+      .findUnique({
+        where: { id: orderId },
+        include: { items: true },
+      })
+      .then((placedOrder) => {
+        if (placedOrder) {
+          sendEmail({
+            to: session.email,
+            subject: `Order ${placedOrder.orderNumber} confirmed`,
+            html: orderConfirmationHtml({
+              orderNumber: placedOrder.orderNumber,
+              total: placedOrder.total.toString(),
+              items: placedOrder.items.map((i) => ({
+                name: i.name,
+                quantity: i.quantity,
+                lineTotal: i.lineTotal.toString(),
+              })),
+            }),
+          });
+        }
+      })
+      .catch((e) => console.error("Order confirmation email failed:", e));
 
     return { orderId };
   } catch (err) {
-    if (err instanceof CheckoutError) return { error: err.message };
+    if (err instanceof CheckoutError || err instanceof InsufficientStockError) {
+      return { error: err.message };
+    }
     console.error("placeOrder failed:", err);
     return { error: "Could not place your order. Please try again." };
   }
@@ -304,10 +311,10 @@ export async function placeOrder(
 
 export async function updateOrderStatus(
   orderId: string,
-  nextStatus: string,
+  nextStatus: OrderStatus,
   cancelReason?: string
 ): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...STAFF_ROLES]);
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
@@ -322,12 +329,22 @@ export async function updateOrderStatus(
 
   try {
     await prisma.$transaction(async (tx) => {
+      // Determine if a refund request should be initialized
+      const isOnlinePaid = order.paymentMethod !== "COD";
+      const initialRefundStatus = nextStatus === "CANCELLED" ? (isOnlinePaid ? "PENDING" : "PENDING") : undefined;
+
       // Guard against a concurrent transition (double-click / two staff)
       const updated = await tx.order.updateMany({
         where: { id: orderId, status: order.status },
         data: {
-          status: nextStatus as never,
+          status: nextStatus,
           cancelReason: nextStatus === "CANCELLED" ? (cancelReason || "Cancelled by store management") : undefined,
+          ...(nextStatus === "CANCELLED"
+            ? {
+                refundStatus: initialRefundStatus,
+                refundAmount: order.total,
+              }
+            : {}),
         },
       });
       if (updated.count === 0) {
@@ -397,7 +414,11 @@ export async function cancelOwnOrder(orderId: string): Promise<{ error?: string 
     await prisma.$transaction(async (tx) => {
       const updated = await tx.order.updateMany({
         where: { id: orderId, status: "PENDING" },
-        data: { status: "CANCELLED" },
+        data: {
+          status: "CANCELLED",
+          refundStatus: "PENDING",
+          refundAmount: order.total,
+        },
       });
       if (updated.count === 0) {
         throw new Error("Order can no longer be cancelled");
@@ -413,5 +434,54 @@ export async function cancelOwnOrder(orderId: string): Promise<{ error?: string 
   revalidatePath("/account/orders");
   revalidatePath(`/account/orders/${orderId}`);
   revalidatePath("/admin/orders");
+  return {};
+}
+
+export async function updateRefundStatus(
+  orderId: string,
+  input: {
+    status: "PENDING" | "PROCESSED" | "FAILED" | "NOT_APPLICABLE";
+    refundTxnId?: string;
+    notes?: string;
+    amount?: number;
+  }
+): Promise<{ error?: string }> {
+  const session = await requireRole([...STAFF_ROLES]);
+
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) return { error: "Order not found" };
+
+  try {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        refundStatus: input.status,
+        refundTxnId: input.refundTxnId || order.refundTxnId,
+        refundNotes: input.notes || order.refundNotes,
+        refundAmount: input.amount !== undefined ? input.amount : (order.refundAmount ?? order.total),
+        refundedAt: input.status === "PROCESSED" ? new Date() : order.refundedAt,
+      },
+    });
+
+    await recordAudit({
+      actorId: session.sub,
+      action: "order.refund",
+      entity: "Order",
+      entityId: orderId,
+      summary: `Updated refund status for ${order.orderNumber} to ${input.status}`,
+      metadata: {
+        orderNumber: order.orderNumber,
+        refundStatus: input.status,
+        refundTxnId: input.refundTxnId,
+      },
+    });
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Could not update refund status" };
+  }
+
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/account/orders");
+  revalidatePath(`/account/orders/${orderId}`);
   return {};
 }

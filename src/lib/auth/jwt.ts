@@ -1,5 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 
+export const SESSION_COOKIE = "maa_session";
+
 export type Role = "OWNER" | "ADMIN" | "MANAGER" | "CUSTOMER";
 
 export type SessionPayload = {

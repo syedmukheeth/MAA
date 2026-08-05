@@ -29,6 +29,10 @@ async function getOrCreateCart(userId: string) {
   return prisma.cart.create({ data: { userId } });
 }
 
+function revalidateCartPaths() {
+  revalidatePath("/(shop)", "layout");
+}
+
 export async function addToCart(input: {
   productId?: string;
   variantId?: string;
@@ -182,7 +186,7 @@ export async function addToCart(input: {
     }
   }
 
-  revalidatePath("/", "layout");
+  revalidateCartPaths();
   return {};
 }
 
@@ -207,7 +211,7 @@ export async function updateCartItemQuantity(
 
   if (Number.isFinite(rawQuantity) && rawQuantity <= 0) {
     await prisma.cartItem.delete({ where: { id: cartItemId } });
-    revalidatePath("/", "layout");
+    revalidateCartPaths();
     return {};
   }
 
@@ -243,7 +247,7 @@ export async function updateCartItemQuantity(
     where: { id: cartItemId },
     data: { quantity },
   });
-  revalidatePath("/", "layout");
+  revalidateCartPaths();
   return {};
 }
 
@@ -257,7 +261,7 @@ export async function removeFromCart(cartItemId: string): Promise<{ error?: stri
     return { error: "Cart item not found" };
   }
   await prisma.cartItem.delete({ where: { id: cartItemId } });
-  revalidatePath("/", "layout");
+  revalidateCartPaths();
   return {};
 }
 
@@ -267,5 +271,5 @@ export async function clearCart(): Promise<void> {
   if (cart) {
     await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
   }
-  revalidatePath("/", "layout");
+  revalidateCartPaths();
 }

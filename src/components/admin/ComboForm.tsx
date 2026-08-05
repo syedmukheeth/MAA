@@ -201,26 +201,31 @@ export function ComboForm({
     setSubmitting(true);
     setError(null);
 
-    const input = {
-      name: values.name,
-      slug: values.slug,
-      description: values.description,
-      bundlePrice: values.bundlePrice,
-      image: values.image,
-      isActive: values.isActive,
-      items: values.items,
-    };
+    try {
+      const input = {
+        name: values.name,
+        slug: values.slug,
+        description: values.description,
+        bundlePrice: values.bundlePrice,
+        image: values.image,
+        isActive: values.isActive,
+        items: values.items,
+      };
 
-    const result = isEdit
-      ? await updateCombo(defaults.id!, input)
-      : await createCombo(input);
+      const result = isEdit
+        ? await updateCombo(defaults.id!, input)
+        : await createCombo(input);
 
-    if (result?.error) {
-      setError(result.error);
+      if (result?.error) {
+        setError(result.error);
+        setSubmitting(false);
+        return;
+      }
+      router.push("/admin/combos");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred");
       setSubmitting(false);
-      return;
     }
-    router.push("/admin/combos");
   }
 
   return (

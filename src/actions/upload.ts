@@ -5,20 +5,20 @@ import { generateUploadSignature } from "@/lib/cloudinary";
 import { requireRole } from "@/lib/auth/session";
 import { uploadRatelimit } from "@/lib/redis";
 
-const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
+import { STAFF_ROLES, ADMIN_ROLES } from "@/lib/auth/roles";
 
 export async function getProductImageUploadSignature() {
-  await requireRole([...MANAGE_ROLES]);
+  await requireRole([...STAFF_ROLES]);
   return generateUploadSignature("maa-furniture/products");
 }
 
 export async function getComboImageUploadSignature() {
-  await requireRole([...MANAGE_ROLES]);
+  await requireRole([...STAFF_ROLES]);
   return generateUploadSignature("maa-furniture/combos");
 }
 
 export async function getTestimonialImageUploadSignature() {
-  await requireRole(["OWNER", "ADMIN"]);
+  await requireRole([...ADMIN_ROLES]);
   return generateUploadSignature("maa-furniture/testimonials");
 }
 
