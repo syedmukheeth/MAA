@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MAA FURNITURE — E-Commerce Platform & Management System
 
-## Getting Started
+> **Live Storefront**: [https://maafurniture.shop](https://maafurniture.shop)  
+> **Contact Email**: [maafurniture.shop@gmail.com](mailto:maafurniture.shop@gmail.com) / [support@maafurniture.shop](mailto:support@maafurniture.shop)
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🛋️ About MAA FURNITURE
+
+MAA FURNITURE is a modern, high-performance e-commerce platform built for custom handcrafted furniture, living room sets, dining tables, outdoor furniture, and bespoke studio requests. Serving Andhra Pradesh with rich product displays, dynamic combo bundles, and custom request studios.
+
+---
+
+## ✨ Features
+
+- **🛍️ Storefront & Catalogue**: Interactive product filtering by category, wood type, finishes, and dimensions.
+- **📦 Smart Combo Bundles**: Configurable multi-item bundle offers with option selections per item.
+- **🎨 Custom Studio**: Submit custom furniture requests with inspiration URLs, dimensions, and specifications.
+- **🔒 Enterprise Security**: 
+  - Token-versioned JWT session security with instant multi-device session revocation on password/role change.
+  - Role-based authorization (`OWNER`, `ADMIN`, `MANAGER`, `CUSTOMER`).
+  - IP and per-account rate limiting (Upstash Redis sliding window with fallback).
+  - CSRF origin verification on API endpoints.
+  - Input validation via Zod schemas and XSS HTML sanitization.
+- **⚡ Inventory Ledger & Concurrency**: Atomic conditional stock decrements (`stock >= needed`) preventing stock race conditions.
+- **📊 Back-Office Management**: Admin dashboard for inventory tracking, order management, refund processing, audit logs, and analytics.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Framework**: [Next.js 16 (App Router + Turbopack)](https://nextjs.org/)
+- **Database & ORM**: PostgreSQL via Supabase Pooler & [Prisma ORM](https://www.prisma.io/)
+- **Caching & Rate Limiting**: [Upstash Redis](https://upstash.com/)
+- **Authentication**: Custom JWT with `jose` & `bcryptjs`
+- **Email Service**: [Resend](https://resend.com/) with custom verified domain `maafurniture.shop`
+- **Media Uploads**: [Cloudinary](https://cloudinary.com/) (signed uploads)
+- **Styling**: Tailwind CSS & Lucide Icons
+- **Testing**: [Vitest](https://vitest.dev/)
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+
+- Node.js 18+ and `npm`
+- PostgreSQL Database URL (Supabase recommended)
+- Upstash Redis instance
+- Resend API key & Cloudinary credentials
+
+### 2. Environment Setup
+
+Create a `.env` file in the root directory:
+
+```env
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
+DATABASE_SSL="true"
+JWT_SECRET="your-64-char-random-secret"
+
+NEXT_PUBLIC_SITE_URL="https://maafurniture.shop"
+
+UPSTASH_REDIS_REST_URL="https://..."
+UPSTASH_REDIS_REST_TOKEN="..."
+
+RESEND_API_KEY="re_..."
+EMAIL_FROM="MAA FURNITURE <support@maafurniture.shop>"
+
+CLOUDINARY_CLOUD_NAME="..."
+CLOUDINARY_API_KEY="..."
+CLOUDINARY_API_SECRET="..."
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Installation & Database Sync
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Install dependencies
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Push database schema
+npx prisma db push
 
-## Learn More
+# Seed initial owner & test data
+npx prisma db seed
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Running Locally
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Start development server
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🧪 Testing & Verification
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Run unit & validation test suite
+npx vitest run
+
+# Run production build check
+npm run build
+```
+
+---
+
+## 📄 License
+
+© MAA FURNITURE. All rights reserved.
