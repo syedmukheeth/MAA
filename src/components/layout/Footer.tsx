@@ -1,27 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Phone, Mail, MessageCircle } from "lucide-react";
 import { hasPublishedTestimonials } from "@/lib/testimonials";
-
-function InstagramIcon({ size = 18 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-    </svg>
-  );
-}
+import { FooterContactIcons } from "@/components/layout/FooterContactIcons";
 
 type FooterLink = { label: string; href: string };
 
@@ -128,70 +108,20 @@ export async function Footer({
             </ul>
           </div>
 
-          {/* Column 4: Get In Touch */}
+          {/* Column 4: Connect & Location */}
           <div className="space-y-4">
             <h4 className="font-heading text-xs font-bold uppercase tracking-widest text-bronze">
               Get In Touch
             </h4>
 
-            {/* Clean Phone Numbers with Comma */}
-            <div className="flex items-center gap-2.5 text-xs text-ivory/80 pt-1">
-              <Phone size={15} className="text-bronze shrink-0" />
-              <div className="flex flex-wrap items-center gap-1.5 font-medium">
-                <a href="tel:8886995345" className="hover:text-bronze transition-colors">
-                  8886995345
-                </a>
-                <span className="text-ivory/40">,</span>
-                <a href="tel:9912330151" className="hover:text-bronze transition-colors">
-                  9912330151
-                </a>
-              </div>
-            </div>
+            <p className="text-xs text-ivory/60">
+              Click any icon below to call, chat, email, or locate our Kurnool showroom.
+            </p>
 
-            {/* Email Contact Line */}
-            <div className="flex items-center gap-2.5 text-xs text-ivory/80">
-              <Mail size={15} className="text-bronze shrink-0" />
-              <a
-                href="mailto:maafurniture.shop@gmail.com"
-                className="hover:text-bronze transition-colors truncate"
-              >
-                maafurniture.shop@gmail.com
-              </a>
-            </div>
-
-            {/* Social & Direct Contact Icons */}
-            <div className="flex items-center gap-3 pt-3">
-              <a
-                href={instagramUrl || "https://instagram.com"}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
-                title="Follow us on Instagram"
-              >
-                <InstagramIcon size={18} />
-              </a>
-
-              <a
-                href={`https://wa.me/${whatsappDigits}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="WhatsApp"
-                className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
-                title="Chat with us on WhatsApp"
-              >
-                <MessageCircle size={18} />
-              </a>
-
-              <a
-                href="mailto:maafurniture.shop@gmail.com"
-                aria-label="Email Us"
-                className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
-                title="Send us an Email"
-              >
-                <Mail size={18} />
-              </a>
-            </div>
+            <FooterContactIcons
+              instagramUrl={instagramUrl}
+              whatsappDigits={whatsappDigits}
+            />
           </div>
 
         </div>
