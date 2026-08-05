@@ -1,9 +1,12 @@
 import { Navbar } from "@/components/layout/Navbar";
+import { StaffBar } from "@/components/layout/StaffBar";
 import { Footer } from "@/components/layout/Footer";
 import { getSiteSettings } from "@/lib/site-settings";
 import { getActiveUser } from "@/lib/auth/session";
 import { getCartItemCount } from "@/lib/cart";
 import { PurchasingProvider } from "@/components/shop/PurchasingProvider";
+import { prisma } from "@/lib/db";
+import { getLowStockVariants } from "@/lib/analytics";
 
 /**
  * KNOWN CONSTRAINT — read before trusting `revalidate` in this route group.
@@ -39,10 +42,28 @@ export default async function ShopLayout({
     getActiveUser(),
   ]);
 
-  const cartItemCount = user ? await getCartItemCount(user.sub) : 0;
+  const isStaff = user != null && user.role !== "CUSTOMER";
+
+  const [cartItemCount, pendingOrdersCount, lowStockData] = await Promise.all([
+    user ? getCartItemCount(user.sub) : Promise.resolve(0),
+    isStaff ? prisma.order.count({ where: { status: "PENDING" } }) : Promise.resolve(0),
+    isStaff ? getLowStockVariants(6) : Promise.resolve({ lowStock: [], outOfStockCount: 0 }),
+  ]);
+
+  const lowStockCount = isStaff
+    ? lowStockData.lowStock.length + lowStockData.outOfStockCount
+    : 0;
 
   return (
     <>
+      {isStaff && (
+        <StaffBar
+          role={user.role}
+          email={user.email}
+          pendingOrdersCount={pendingOrdersCount}
+          lowStockCount={lowStockCount}
+        />
+      )}
       <Navbar user={user ? { role: user.role } : null} cartItemCount={cartItemCount} />
       <main className="flex-1 pt-20">
         <PurchasingProvider enabled={settings.allowPurchases}>

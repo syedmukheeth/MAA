@@ -96,14 +96,47 @@ export default async function AdminOverviewPage() {
     },
   ];
 
+  const isOwner = user?.role === "OWNER";
+  const isManager = user?.role === "MANAGER";
+
   return (
     <div>
-      <h1 className="font-heading text-2xl text-foreground">
-        Welcome back{user ? `, ${user.email}` : ""}
-      </h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Today&apos;s snapshot of the store.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-6">
+        <div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
+                isOwner
+                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                  : isManager
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                    : "bg-blue-500/20 text-blue-300 border border-blue-500/40"
+              }`}
+            >
+              {isOwner ? "👑 Owner Control Center" : isManager ? "🛡️ Operations Manager" : "Admin Panel"}
+            </span>
+          </div>
+          <h1 className="mt-3 font-heading text-2xl text-foreground">
+            Welcome back{user ? `, ${user.email}` : ""}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isOwner
+              ? "Executive overview: Store performance, revenue analytics & system management."
+              : isManager
+                ? "Operational overview: Stock replenishment, pending orders & custom request pipeline."
+                : "Today's snapshot of the store."}
+          </p>
+        </div>
+
+        {isOwner && (
+          <Link
+            href="/admin/analytics"
+            className="rounded-full bg-amber-500/20 border border-amber-500/40 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/30 transition-colors"
+          >
+            📊 Financial Insights →
+          </Link>
+        )}
+      </div>
 
       <div className="mt-8 grid grid-cols-2 gap-5 lg:grid-cols-3">
         {cards.map((card) => (

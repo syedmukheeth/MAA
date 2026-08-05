@@ -176,7 +176,14 @@ export async function loginAction(
     }
 
     await createSessionCookie(user);
-    redirect(safeNextPath(parsed.data.next));
+
+    const isStaffUser = user.role !== "CUSTOMER";
+    const requestedNext = safeNextPath(parsed.data.next);
+    const destination = isStaffUser
+      ? (requestedNext.startsWith("/admin") ? requestedNext : "/admin")
+      : requestedNext;
+
+    redirect(destination);
   } catch (err: unknown) {
     if (
       typeof err === "object" &&

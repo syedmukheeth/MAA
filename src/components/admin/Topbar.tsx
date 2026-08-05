@@ -72,11 +72,19 @@ export function Topbar({
           <span className="hidden sm:inline">Visit Store</span>
           <span className="sr-only sm:hidden">Visit Store</span>
         </Link>
-        <div className="hidden md:block text-right">
-          <p className="text-sm text-foreground max-w-[150px] truncate">{email}</p>
-          <p className="text-xs capitalize text-muted-foreground">
-            {role.toLowerCase()}
-          </p>
+        <div className="hidden md:flex flex-col items-end">
+          <p className="text-sm font-medium text-foreground max-w-[180px] truncate">{email}</p>
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+              role === "OWNER"
+                ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                : role === "MANAGER"
+                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                  : "bg-blue-500/20 text-blue-300 border border-blue-500/40"
+            }`}
+          >
+            {role === "OWNER" ? "👑 Owner" : role === "MANAGER" ? "🛡️ Manager" : role}
+          </span>
         </div>
         <form action={logoutAction}>
           <button
