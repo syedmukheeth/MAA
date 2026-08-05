@@ -147,7 +147,7 @@ export async function registerAction(
     });
 
     await createSessionCookie(user);
-    redirect("/account");
+    redirect("/");
   } catch (err: unknown) {
     if (
       typeof err === "object" &&
