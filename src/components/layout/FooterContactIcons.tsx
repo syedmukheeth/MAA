@@ -124,11 +124,11 @@ export function FooterContactIcons({
 
       {/* Location / Map Pin Icon */}
       <a
-        href="https://www.google.com/maps/search/?api=1&query=MAA+FURNITURE+Kurnool+Andhra+Pradesh"
+        href="https://maps.app.goo.gl/S6U6o7R79U3My4m46"
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Open Google Maps Location"
-        title="Open MAA Furniture Showroom in Google Maps (Kurnool)"
+        aria-label="Open MAA Furniture Google Maps Location"
+        title="Open MAA Furniture Showroom Location in Google Maps"
         className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
       >
         <MapPin size={18} />

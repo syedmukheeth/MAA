@@ -165,22 +165,22 @@ export function CustomStudio({
   }
 
   return (
-    <section id="custom-studio" className="bg-charcoal px-6 py-28 lg:px-10">
+    <section id="custom-studio" className="bg-gradient-to-b from-[#F9F6F0] via-[#F3EEE5] to-[#EAE4D8] border-b border-bronze/20 px-6 py-24 lg:px-10">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-16 lg:grid-cols-2">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-bronze">
+          <p className="text-xs uppercase tracking-[0.35em] font-bold text-bronze">
             Custom Furniture Studio
           </p>
-          <h2 className="mt-5 font-heading text-3xl text-ivory sm:text-4xl">
+          <h2 className="mt-5 font-heading text-3xl font-bold text-charcoal sm:text-4xl">
             Design Your Dream Furniture
           </h2>
-          <p className="mt-5 max-w-md leading-relaxed text-ivory/70">
+          <p className="mt-5 max-w-md leading-relaxed text-graphite/80 font-medium">
             Send us a photo, a Pinterest board, or just a description.
             Our design team turns it into furniture built exactly for your
             space.
           </p>
 
-          <div className="relative mt-10 aspect-[4/3] overflow-hidden rounded-2xl">
+          <div className="relative mt-10 aspect-[4/3] overflow-hidden rounded-2xl border border-bronze/20 shadow-md">
             <Image
               src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1600&auto=format&fit=crop"
               alt="Custom furniture design consultation"
@@ -195,7 +195,7 @@ export function CustomStudio({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.7 }}
-          className="rounded-2xl bg-ivory p-8 lg:p-10"
+          className="rounded-2xl bg-white shadow-xl border border-bronze/20 p-8 lg:p-10"
         >
           {submitted ? (
             <div className="flex h-full min-h-80 flex-col items-center justify-center text-center">
