@@ -18,9 +18,14 @@ export function Hero({
   deliveryMessage: string;
 }) {
   return (
+    // -mt-20 cancels the `pt-20` the (shop) layout applies to <main>. That
+    // padding exists so ordinary pages clear the fixed header, but the hero is
+    // full-bleed and the header is transparent over it — without this the hero
+    // starts 80px down and the header's ivory text/icons sit on the ivory page
+    // background, invisible until scroll flips the header to its solid state.
     <section
       id="top"
-      className="relative flex h-screen min-h-[600px] w-full items-center justify-center overflow-hidden sm:min-h-[720px]"
+      className="relative -mt-20 flex h-screen min-h-[600px] w-full items-center justify-center overflow-hidden sm:min-h-[720px]"
     >
       <motion.div
         initial={{ scale: 1.15 }}
