@@ -100,7 +100,7 @@
   /* ── Semantic layer ───────────────────────────────────────────────────── */
   --background: var(--ivory);
   --foreground: var(--charcoal);
-  --card: oklch(1 0 0);
+  --card: oklch(0.962 0.012 85);
   --card-foreground: var(--charcoal);
   --popover: oklch(1 0 0);
   --popover-foreground: var(--charcoal);

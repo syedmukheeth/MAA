@@ -58,7 +58,7 @@ export function OrderTimelineStepper({
             !isCancelled && index === activeIndex && !isCompleted;
           const isLast = index === STEPS.length - 1;
 
-          let dotClass = "bg-card border-border text-transparent";
+          let dotClass = "bg-background border-border text-transparent";
           let textColor = "text-muted-foreground/60";
           let labelColor = "text-muted-foreground";
           // Connector line colored green once this step is passed.
