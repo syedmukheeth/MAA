@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/db";
 
 export { PURCHASES_DISABLED_MESSAGE } from "@/lib/site-settings-constants";
@@ -66,7 +67,7 @@ function cleanJson(val: string | null | undefined): string | null {
   }
 }
 
-export async function getSiteSettings(): Promise<SiteSettings> {
+export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
   try {
     const row = await prisma.siteSettings.findUnique({
       where: { id: SETTINGS_ID },
@@ -107,4 +108,4 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   } catch {
     return DEFAULT_SITE_SETTINGS;
   }
-}
+});

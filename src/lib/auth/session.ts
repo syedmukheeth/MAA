@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -5,24 +6,19 @@ import { verifySession, SESSION_COOKIE, type Role, type SessionPayload } from ".
 
 export { SESSION_COOKIE };
 
-export async function getCurrentUser(): Promise<SessionPayload | null> {
+export const getCurrentUser = cache(async (): Promise<SessionPayload | null> => {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   return verifySession(token);
-}
+});
 
 /**
  * Verifies the JWT and re-checks the user row so suspensions, role
  * changes, and password changes take effect immediately instead of at
  * token expiry.
- *
- * The `tokenVersion` check is the key addition: when a user changes their
- * password or has their role changed, `tokenVersion` is incremented in the
- * database. Any JWT minted before that increment carries a stale `tv` and
- * is rejected here — effectively invalidating all existing sessions.
  */
-export async function getActiveUser(): Promise<SessionPayload | null> {
+export const getActiveUser = cache(async (): Promise<SessionPayload | null> => {
   const user = await getCurrentUser();
   if (!user) return null;
   const dbUser = await prisma.user.findUnique({
@@ -33,7 +29,7 @@ export async function getActiveUser(): Promise<SessionPayload | null> {
   // Reject tokens minted before the latest password/role change
   if (dbUser.tokenVersion > user.tv) return null;
   return { ...user, role: dbUser.role as Role };
-}
+});
 
 /**
  * Guards for pages and staff-only actions.
