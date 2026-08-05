@@ -105,35 +105,59 @@ async function createSessionCookie(user: {
 export async function registerAction(
   input: RegisterInput
 ): Promise<{ error?: string }> {
-  const parsed = registerSchema.safeParse(input);
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  try {
+    const parsed = registerSchema.safeParse(input);
+    if (!parsed.success) {
+      return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    }
+
+    const rawEmail = parsed.data.email.trim();
+    const normalizedEmail = rawEmail.toLowerCase();
+
+    const allowed = await limitOrAllow(
+      registerRatelimit,
+      `register:${await clientIp()}`
+    );
+    if (!allowed) {
+      return { error: "Too many attempts. Please try again later." };
+    }
+
+    const existing = await prisma.user.findFirst({
+      where: {
+        OR: [{ email: normalizedEmail }, { email: rawEmail }],
+      },
+    });
+    if (existing) {
+      return { error: "An account with this email already exists" };
+    }
+
+    const passwordHash = await hashPassword(parsed.data.password);
+    const user = await prisma.user.create({
+      data: {
+        name: parsed.data.name.trim(),
+        email: normalizedEmail,
+        passwordHash,
+        role: "CUSTOMER",
+      },
+    });
+
+    await createSessionCookie(user);
+    redirect("/account");
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "digest" in err &&
+      typeof (err as { digest?: string }).digest === "string" &&
+      (err as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+    ) {
+      throw err;
+    }
+    console.error("Registration action failed:", err);
+    return {
+      error: "Registration failed. Please check your information and try again.",
+    };
   }
-
-  const allowed = await limitOrAllow(registerRatelimit, `register:${await clientIp()}`);
-  if (!allowed) {
-    return { error: "Too many attempts. Please try again later." };
-  }
-
-  const existing = await prisma.user.findUnique({
-    where: { email: parsed.data.email },
-  });
-  if (existing) {
-    return { error: "An account with this email already exists" };
-  }
-
-  const passwordHash = await hashPassword(parsed.data.password);
-  const user = await prisma.user.create({
-    data: {
-      name: parsed.data.name,
-      email: parsed.data.email,
-      passwordHash,
-      role: "CUSTOMER",
-    },
-  });
-
-  await createSessionCookie(user);
-  redirect(HOME_ROUTE);
 }
 
 export async function loginAction(
