@@ -1,6 +1,12 @@
 # MAA FURNITURE Project Rules
 
+## Git Identity & Author Details
+- Default Git Author Name: `06Faisal`
+- Default Git Author Email: `ahmedfaisalshaik6@gmail.com`
+- GitHub Account: `06Faisal`
+
 ## Communication & Email Invariants
-- Default Transactional & Sender Email: `MAA FURNITURE <maafurniture.shop@gmail.com>`
-- Support & Customer Contact Email: `maafurniture.shop@gmail.com`
-- All transactional emails (password reset, order confirmation, user communication) must use `maafurniture.shop@gmail.com` as the sender address.
+- Production Storefront URL: `https://maafurniture.shop`
+- Customer Contact & Support Email: `maafurniture.shop@gmail.com`
+- Verified Transactional Email Sender: `MAA FURNITURE <support@maafurniture.shop>`
+- All user-facing transactional emails must align with these configured domains.
