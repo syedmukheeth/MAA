@@ -3,7 +3,8 @@ import { verifySession, SESSION_COOKIE } from "@/lib/auth/jwt";
 
 /**
  * Only private areas are matched. The storefront — `/`, `/products/*`,
- * `/combos/*` — is deliberately absent: it must be crawlable and shareable.
+ * `/combos/*`, `/custom-studio`, `/showroom` — is deliberately absent: it must
+ * be crawlable and shareable.
  * Gating it means Google indexes nothing and WhatsApp/Instagram link previews
  * die, which for this business is the primary channel.
  */
@@ -19,8 +20,13 @@ export const config = {
      * - uploads (uploaded files)
      * - 403 (access denied page)
      * - forgot-password, reset-password (password reset flow)
+     * - robots.txt, sitemap.xml, opengraph-image (crawler + link-preview
+     *   metadata; these were being matched and 307'd to /login, which is the
+     *   exact failure the note above says must not happen — Googlebot could
+     *   not read robots.txt or the sitemap, and WhatsApp/Instagram got a
+     *   redirect instead of the OG image)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|brand|uploads|403|forgot-password|reset-password).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|brand|uploads|403|forgot-password|reset-password|robots.txt|sitemap.xml|opengraph-image).*)",
   ],
 };
 
@@ -39,9 +45,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Storefront must stay crawlable and shareable — no auth gate.
+  // Storefront must stay crawlable and shareable — no auth gate. This list is
+  // the same set app/sitemap.ts advertises to crawlers; anything listed there
+  // and gated here is a URL Google is told to index and then bounced off.
+  const PUBLIC_PREFIXES = ["/products", "/combos", "/custom-studio", "/showroom"];
   const isPublicStorefrontPage =
-    pathname === "/" || pathname.startsWith("/products") || pathname.startsWith("/combos");
+    pathname === "/" || PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   if (isPublicStorefrontPage) {
     return NextResponse.next();
   }
