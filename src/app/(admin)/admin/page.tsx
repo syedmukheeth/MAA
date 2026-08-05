@@ -126,9 +126,10 @@ export default async function AdminOverviewPage() {
               />
             </div>
             <p
-              className={`mt-4 font-heading text-3xl font-bold tracking-tight ${
+              className={`mt-4 font-heading text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate ${
                 card.alert ? "text-amber-500" : "text-white"
               }`}
+              title={card.value}
             >
               {card.value}
             </p>

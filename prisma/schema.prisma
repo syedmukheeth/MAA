@@ -14,6 +14,13 @@ enum Role {
   CUSTOMER
 }
 
+enum RefundStatus {
+  NOT_APPLICABLE
+  PENDING
+  PROCESSED
+  FAILED
+}
+
 model SiteSettings {
   id String @id @default("singleton")
 
@@ -327,6 +334,11 @@ model Order {
 
   paymentMethod   String      @default("COD")
   cancelReason    String?
+  refundStatus    RefundStatus @default(NOT_APPLICABLE)
+  refundAmount    Decimal?     @db.Decimal(10, 2)
+  refundTxnId     String?
+  refundNotes     String?
+  refundedAt      DateTime?
   shippingName    String
   shippingPhone   String
   shippingLine1   String

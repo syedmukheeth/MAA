@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { verifySession } from "@/lib/auth/jwt";
-import { SESSION_COOKIE } from "@/lib/auth/session";
+import { verifySession, SESSION_COOKIE } from "@/lib/auth/jwt";
 
 /**
  * Only private areas are matched. The storefront — `/`, `/products/*`,
