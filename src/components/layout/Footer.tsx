@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { AtSign, Globe, MessageCircle, Phone, ArrowRight, Sparkles } from "lucide-react";
+import { Phone, Mail, Instagram, MessageCircle } from "lucide-react";
 import { hasPublishedTestimonials } from "@/lib/testimonials";
 
 type FooterLink = { label: string; href: string };
@@ -14,7 +14,7 @@ const COLLECTIONS_LINKS: FooterLink[] = [
 ];
 
 const STUDIO_COMPANY_LINKS: FooterLink[] = [
-  { label: "Custom Furniture", href: "/custom-studio" },
+  { label: "Custom Furniture Studio", href: "/custom-studio" },
   { label: "Combo Offers", href: "/combos" },
   { label: "Showroom & Inspirations", href: "/showroom" },
   { label: "Our Story", href: "/#about" },
@@ -23,7 +23,6 @@ const STUDIO_COMPANY_LINKS: FooterLink[] = [
 
 export async function Footer({
   instagramUrl,
-  facebookUrl,
   whatsapp,
   deliveryMessage,
 }: {
@@ -32,7 +31,7 @@ export async function Footer({
   whatsapp?: string;
   deliveryMessage?: string;
 }) {
-  const whatsappDigits = whatsapp?.replace(/[^0-9]/g, "");
+  const whatsappDigits = whatsapp?.replace(/[^0-9]/g, "") || "918886995345";
   const showReviews = await hasPublishedTestimonials();
 
   const studioLinks = showReviews
@@ -46,9 +45,9 @@ export async function Footer({
   return (
     <footer className="bg-charcoal text-ivory border-t border-bronze/20">
       <div className="mx-auto max-w-7xl px-6 py-14 sm:py-16 lg:px-10 lg:py-20">
-        <div className="grid grid-cols-1 gap-y-12 gap-x-8 md:grid-cols-2 lg:grid-cols-4 lg:gap-10">
+        <div className="grid grid-cols-1 gap-y-12 gap-x-8 md:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1.1fr] lg:gap-10">
           
-          {/* Column 1: Brand & Contact Info */}
+          {/* Column 1: Brand Overview */}
           <div className="space-y-5">
             <div className="flex items-center gap-3">
               <Image
@@ -69,53 +68,6 @@ export async function Footer({
               generations.
               {deliveryMessage ? ` ${deliveryMessage}.` : ""}
             </p>
-
-            <div className="space-y-2 pt-1 text-xs">
-              <a
-                href="tel:8886995345"
-                className="flex items-center gap-2 text-ivory/80 hover:text-bronze transition-colors"
-              >
-                <Phone size={14} className="text-bronze shrink-0" />
-                <span>Primary: <strong className="font-semibold text-ivory">8886995345</strong></span>
-              </a>
-              <a
-                href="tel:9912330151"
-                className="flex items-center gap-2 text-ivory/80 hover:text-bronze transition-colors"
-              >
-                <Phone size={14} className="text-bronze shrink-0" />
-                <span>Secondary: <strong className="font-semibold text-ivory">9912330151</strong></span>
-              </a>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <a
-                href={instagramUrl || "#"}
-                target={instagramUrl ? "_blank" : undefined}
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
-              >
-                <AtSign size={16} />
-              </a>
-              <a
-                href={facebookUrl || "#"}
-                target={facebookUrl ? "_blank" : undefined}
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-                className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
-              >
-                <Globe size={16} />
-              </a>
-              <a
-                href={whatsappDigits ? `https://wa.me/${whatsappDigits}` : "#"}
-                target={whatsappDigits ? "_blank" : undefined}
-                rel="noopener noreferrer"
-                aria-label="WhatsApp"
-                className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
-              >
-                <MessageCircle size={16} />
-              </a>
-            </div>
           </div>
 
           {/* Column 2: Collections */}
@@ -156,27 +108,72 @@ export async function Footer({
             </ul>
           </div>
 
-          {/* Column 4: Quick Custom Furniture Card */}
-          <div className="rounded-2xl border border-bronze/30 bg-gradient-to-b from-white/5 to-white/0 p-6 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-bronze text-xs font-bold uppercase tracking-wider">
-                <Sparkles size={14} />
-                <span>Custom Furniture</span>
-              </div>
-              <h5 className="mt-2 font-heading text-base font-medium text-ivory">
-                Have a unique vision for your home?
-              </h5>
-              <p className="mt-2 text-xs leading-relaxed text-ivory/60">
-                Craft bespoke furniture tailored to your exact dimensions, wood preferences, and finishes.
-              </p>
+          {/* Column 4: Contact & Connect */}
+          <div className="space-y-4">
+            <h4 className="font-heading text-xs font-bold uppercase tracking-widest text-bronze">
+              Get In Touch
+            </h4>
+
+            {/* Direct Contact Buttons with Logos */}
+            <div className="space-y-2.5">
+              <a
+                href="tel:8886995345"
+                className="flex items-center gap-3 rounded-xl border border-ivory/15 bg-white/5 px-3.5 py-2.5 text-xs font-medium text-ivory transition-all hover:border-bronze hover:bg-bronze/10 hover:text-bronze"
+              >
+                <Phone size={15} className="text-bronze shrink-0" />
+                <span>Primary: <strong>8886995345</strong></span>
+              </a>
+
+              <a
+                href="tel:9912330151"
+                className="flex items-center gap-3 rounded-xl border border-ivory/15 bg-white/5 px-3.5 py-2.5 text-xs font-medium text-ivory transition-all hover:border-bronze hover:bg-bronze/10 hover:text-bronze"
+              >
+                <Phone size={15} className="text-bronze shrink-0" />
+                <span>Secondary: <strong>9912330151</strong></span>
+              </a>
+
+              <a
+                href="mailto:maafurniture.shop@gmail.com"
+                className="flex items-center gap-3 rounded-xl border border-ivory/15 bg-white/5 px-3.5 py-2.5 text-xs font-medium text-ivory transition-all hover:border-bronze hover:bg-bronze/10 hover:text-bronze"
+              >
+                <Mail size={15} className="text-bronze shrink-0" />
+                <span className="truncate">maafurniture.shop@gmail.com</span>
+              </a>
             </div>
-            <Link
-              href="/custom-studio"
-              className="mt-6 flex items-center justify-between rounded-full bg-bronze px-4 py-2.5 text-xs font-semibold text-ivory hover:bg-bronze/90 transition-colors shadow-sm"
-            >
-              <span>Design Your Piece</span>
-              <ArrowRight size={14} />
-            </Link>
+
+            {/* Social & Messaging Icon Links */}
+            <div className="flex gap-3 pt-2">
+              <a
+                href={instagramUrl || "https://instagram.com"}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
+                title="Follow us on Instagram"
+              >
+                <Instagram size={18} />
+              </a>
+
+              <a
+                href={`https://wa.me/${whatsappDigits}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="WhatsApp"
+                className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
+                title="Chat with us on WhatsApp"
+              >
+                <MessageCircle size={18} />
+              </a>
+
+              <a
+                href="mailto:maafurniture.shop@gmail.com"
+                aria-label="Email Us"
+                className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
+                title="Send us an Email"
+              >
+                <Mail size={18} />
+              </a>
+            </div>
           </div>
 
         </div>
