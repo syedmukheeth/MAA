@@ -128,41 +128,39 @@ export async function Footer({
             </ul>
           </div>
 
-          {/* Column 4: Contact & Connect */}
+          {/* Column 4: Get In Touch */}
           <div className="space-y-4">
             <h4 className="font-heading text-xs font-bold uppercase tracking-widest text-bronze">
               Get In Touch
             </h4>
 
-            {/* Direct Contact Buttons with Logos */}
-            <div className="space-y-2.5">
-              <a
-                href="tel:8886995345"
-                className="flex items-center gap-3 rounded-xl border border-ivory/15 bg-white/5 px-3.5 py-2.5 text-xs font-medium text-ivory transition-all hover:border-bronze hover:bg-bronze/10 hover:text-bronze"
-              >
-                <Phone size={15} className="text-bronze shrink-0" />
-                <span>Primary: <strong>8886995345</strong></span>
-              </a>
+            {/* Clean Phone Numbers with Comma */}
+            <div className="flex items-center gap-2.5 text-xs text-ivory/80 pt-1">
+              <Phone size={15} className="text-bronze shrink-0" />
+              <div className="flex flex-wrap items-center gap-1.5 font-medium">
+                <a href="tel:8886995345" className="hover:text-bronze transition-colors">
+                  8886995345
+                </a>
+                <span className="text-ivory/40">,</span>
+                <a href="tel:9912330151" className="hover:text-bronze transition-colors">
+                  9912330151
+                </a>
+              </div>
+            </div>
 
-              <a
-                href="tel:9912330151"
-                className="flex items-center gap-3 rounded-xl border border-ivory/15 bg-white/5 px-3.5 py-2.5 text-xs font-medium text-ivory transition-all hover:border-bronze hover:bg-bronze/10 hover:text-bronze"
-              >
-                <Phone size={15} className="text-bronze shrink-0" />
-                <span>Secondary: <strong>9912330151</strong></span>
-              </a>
-
+            {/* Email Contact Line */}
+            <div className="flex items-center gap-2.5 text-xs text-ivory/80">
+              <Mail size={15} className="text-bronze shrink-0" />
               <a
                 href="mailto:maafurniture.shop@gmail.com"
-                className="flex items-center gap-3 rounded-xl border border-ivory/15 bg-white/5 px-3.5 py-2.5 text-xs font-medium text-ivory transition-all hover:border-bronze hover:bg-bronze/10 hover:text-bronze"
+                className="hover:text-bronze transition-colors truncate"
               >
-                <Mail size={15} className="text-bronze shrink-0" />
-                <span className="truncate">maafurniture.shop@gmail.com</span>
+                maafurniture.shop@gmail.com
               </a>
             </div>
 
-            {/* Social & Messaging Icon Links */}
-            <div className="flex gap-3 pt-2">
+            {/* Social & Direct Contact Icons */}
+            <div className="flex items-center gap-3 pt-3">
               <a
                 href={instagramUrl || "https://instagram.com"}
                 target="_blank"
