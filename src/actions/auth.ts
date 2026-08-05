@@ -139,43 +139,57 @@ export async function registerAction(
 export async function loginAction(
   input: LoginInput
 ): Promise<{ error?: string }> {
-  const parsed = loginSchema.safeParse(input);
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  try {
+    const parsed = loginSchema.safeParse(input);
+    if (!parsed.success) {
+      return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    }
+
+    const rawInput = parsed.data.email.trim();
+    const lowerInput = rawInput.toLowerCase();
+    const ip = await clientIp();
+
+    const [byEmail, byIp] = await Promise.all([
+      limitOrAllow(loginRatelimit, `login:${lowerInput}`),
+      limitOrAllow(loginIpRatelimit, `login-ip:${ip}`),
+    ]);
+    if (!byEmail || !byIp) {
+      return { error: "Too many attempts. Please try again in a minute." };
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: lowerInput },
+          { name: { equals: rawInput, mode: "insensitive" } },
+          { email: `${lowerInput}@maafurnitures.com` },
+        ],
+      },
+    });
+    if (!user || !user.isActive) {
+      return { error: "Invalid email or password" };
+    }
+
+    const valid = await verifyPassword(parsed.data.password, user.passwordHash);
+    if (!valid) {
+      return { error: "Invalid email or password" };
+    }
+
+    await createSessionCookie(user);
+    redirect(safeNextPath(parsed.data.next));
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "digest" in err &&
+      typeof (err as { digest?: string }).digest === "string" &&
+      (err as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+    ) {
+      throw err;
+    }
+    console.error("Login action failed:", err);
+    return { error: "Login failed. Please check your credentials and try again." };
   }
-
-  const rawInput = parsed.data.email.trim();
-  const lowerInput = rawInput.toLowerCase();
-  const ip = await clientIp();
-
-  const [byEmail, byIp] = await Promise.all([
-    limitOrAllow(loginRatelimit, `login:${lowerInput}`),
-    limitOrAllow(loginIpRatelimit, `login-ip:${ip}`),
-  ]);
-  if (!byEmail || !byIp) {
-    return { error: "Too many attempts. Please try again in a minute." };
-  }
-
-  const user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { email: lowerInput },
-        { name: { equals: rawInput, mode: "insensitive" } },
-        { email: `${lowerInput}@maafurnitures.com` },
-      ],
-    },
-  });
-  if (!user || !user.isActive) {
-    return { error: "Invalid email or password" };
-  }
-
-  const valid = await verifyPassword(parsed.data.password, user.passwordHash);
-  if (!valid) {
-    return { error: "Invalid email or password" };
-  }
-
-  await createSessionCookie(user);
-  redirect(safeNextPath(parsed.data.next));
 }
 
 export async function logoutAction(): Promise<void> {

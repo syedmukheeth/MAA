@@ -1,10 +1,12 @@
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 
-export const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+const url = process.env.UPSTASH_REDIS_REST_URL;
+const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+export const redis = (url && token)
+  ? new Redis({ url, token })
+  : new Redis({ url: "https://localhost", token: "none" });
 
 /** Per-account: slows credential stuffing against one known email. */
 export const loginRatelimit = new Ratelimit({
