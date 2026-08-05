@@ -13,21 +13,25 @@ export async function getCurrentUser(): Promise<SessionPayload | null> {
 }
 
 /**
- * Verifies the JWT and re-checks the user row so suspensions and role
- * changes take effect immediately instead of at token expiry.
+ * Verifies the JWT and re-checks the user row so suspensions, role
+ * changes, and password changes take effect immediately instead of at
+ * token expiry.
  *
- * Exported because the storefront is public: actions reachable by anonymous
- * visitors (add-to-cart) need to branch on "not signed in" rather than be
- * redirected mid-action.
+ * The `tokenVersion` check is the key addition: when a user changes their
+ * password or has their role changed, `tokenVersion` is incremented in the
+ * database. Any JWT minted before that increment carries a stale `tv` and
+ * is rejected here — effectively invalidating all existing sessions.
  */
 export async function getActiveUser(): Promise<SessionPayload | null> {
   const user = await getCurrentUser();
   if (!user) return null;
   const dbUser = await prisma.user.findUnique({
     where: { id: user.sub },
-    select: { isActive: true, role: true },
+    select: { isActive: true, role: true, tokenVersion: true },
   });
   if (!dbUser || !dbUser.isActive) return null;
+  // Reject tokens minted before the latest password/role change
+  if (dbUser.tokenVersion > user.tv) return null;
   return { ...user, role: dbUser.role as Role };
 }
 

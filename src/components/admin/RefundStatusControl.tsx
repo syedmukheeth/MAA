@@ -70,12 +70,12 @@ export function RefundStatusControl({
             id="refund-status"
             value={status}
             onChange={(e) => setStatus(e.target.value as Props["refundStatus"])}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm outline-none focus:ring-1 focus:ring-ring"
+            className="flex h-9 w-full rounded-md border border-input bg-card text-foreground px-3 py-1 text-sm shadow-sm outline-none focus:ring-1 focus:ring-ring [&_option]:bg-popover [&_option]:text-popover-foreground"
           >
-            <option value="PENDING">Pending Refund</option>
-            <option value="PROCESSED">Processed / Completed</option>
-            <option value="FAILED">Refund Failed</option>
-            <option value="NOT_APPLICABLE">Not Applicable</option>
+            <option value="PENDING" className="bg-popover text-popover-foreground">Pending Refund</option>
+            <option value="PROCESSED" className="bg-popover text-popover-foreground">Processed / Completed</option>
+            <option value="FAILED" className="bg-popover text-popover-foreground">Refund Failed</option>
+            <option value="NOT_APPLICABLE" className="bg-popover text-popover-foreground">Not Applicable</option>
           </select>
         </div>
 

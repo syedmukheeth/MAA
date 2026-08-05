@@ -280,9 +280,9 @@ export async function placeOrder(
         where: { id: orderId },
         include: { items: true },
       })
-      .then((placedOrder) => {
+      .then(async (placedOrder) => {
         if (placedOrder) {
-          sendEmail({
+          const sent = await sendEmail({
             to: session.email,
             subject: `Order ${placedOrder.orderNumber} confirmed`,
             html: orderConfirmationHtml({
@@ -295,9 +295,30 @@ export async function placeOrder(
               })),
             }),
           });
+
+          if (!sent) {
+            await recordAudit({
+              actorId: session.sub,
+              action: "order.email_failed",
+              entity: "Order",
+              entityId: placedOrder.id,
+              summary: `Failed to send confirmation email for order ${placedOrder.orderNumber}`,
+              metadata: { orderNumber: placedOrder.orderNumber },
+            });
+          }
         }
       })
-      .catch((e) => console.error("Order confirmation email failed:", e));
+      .catch(async (e) => {
+        console.error("Order confirmation email failed:", e);
+        await recordAudit({
+          actorId: session.sub,
+          action: "order.email_failed",
+          entity: "Order",
+          entityId: orderId,
+          summary: `Order confirmation email throw error: ${e instanceof Error ? e.message : String(e)}`,
+          metadata: { orderId },
+        });
+      });
 
     return { orderId };
   } catch (err) {
@@ -451,6 +472,16 @@ export async function updateRefundStatus(
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) return { error: "Order not found" };
 
+  if (input.amount !== undefined) {
+    if (isNaN(input.amount) || input.amount < 0 || !isFinite(input.amount)) {
+      return { error: "Invalid refund amount" };
+    }
+    // Round to 2 decimal places to ensure clean currency representation
+    input.amount = Math.round(input.amount * 100) / 100;
+    if (input.amount > Number(order.total)) {
+      return { error: "Refund amount cannot exceed order total" };
+    }
+  }
   try {
     await prisma.order.update({
       where: { id: orderId },

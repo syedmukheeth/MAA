@@ -42,7 +42,12 @@ export async function updateProfile(input: {
 
   await prisma.user.update({
     where: { id: session.sub },
-    data,
+    data: {
+      ...data,
+      // If the password changed, bump tokenVersion so every other session
+      // (stolen cookies, forgotten tabs) is forced to re-authenticate.
+      ...(data.passwordHash ? { tokenVersion: { increment: 1 } } : {}),
+    },
   });
 
   revalidatePath("/account");

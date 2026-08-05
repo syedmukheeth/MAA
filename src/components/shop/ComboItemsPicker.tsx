@@ -112,13 +112,14 @@ export function ComboItemsPicker({
                         [item.comboItemId]: e.target.value,
                       }))
                     }
-                    className="mt-1 block w-full rounded-lg border border-border bg-white px-3 py-1.5 text-sm text-charcoal outline-none focus:border-bronze"
+                    className="mt-1 block w-full rounded-lg border border-border bg-white px-3 py-1.5 text-sm text-charcoal outline-none focus:border-bronze [&_option]:bg-white [&_option]:text-charcoal"
                   >
                     {item.options.map((o) => (
                       <option
                         key={o.variantId}
                         value={o.variantId}
                         disabled={!o.inStock}
+                        className="bg-white text-charcoal"
                       >
                         {o.label}
                         {!o.inStock ? " (out of stock)" : ""}

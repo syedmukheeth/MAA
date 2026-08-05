@@ -5,8 +5,7 @@ import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/session";
 import { applyStockMovement } from "@/lib/inventory";
 import { recordAudit } from "@/lib/audit";
-
-const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
+import { STAFF_ROLES } from "@/lib/auth/roles";
 
 function revalidateInventoryPaths() {
   revalidatePath("/admin/inventory");
@@ -19,7 +18,7 @@ export async function receiveStock(input: {
   qty: number;
   reason?: string;
 }): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...STAFF_ROLES]);
   const qty = Math.trunc(input.qty);
   if (!Number.isFinite(qty) || qty <= 0) {
     return { error: "Quantity must be a positive number" };
@@ -63,7 +62,7 @@ export async function adjustStock(input: {
   reason: string;
   damaged?: boolean;
 }): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...STAFF_ROLES]);
   const delta = Math.trunc(input.delta);
   if (!Number.isFinite(delta) || delta === 0) {
     return { error: "Adjustment cannot be zero" };

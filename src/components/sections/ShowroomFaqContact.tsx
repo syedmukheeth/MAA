@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Clock, MessageCircle, Send, Phone } from "lucide-react";
+import { MapPin, Clock, MessageCircle, Send, Phone, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -80,6 +80,13 @@ export function ShowroomFaqContact({
               >
                 <Phone className="mt-0.5 text-bronze shrink-0" size={20} />
                 <p className="text-sm text-graphite/80 hover:text-bronze transition-colors">{phone}</p>
+              </a>
+              <a
+                href="mailto:maafurniture.shop@gmail.com"
+                className="flex items-start gap-3 hover:text-bronze transition-colors"
+              >
+                <Mail className="mt-0.5 text-bronze shrink-0" size={20} />
+                <p className="text-sm text-graphite/80 hover:text-bronze transition-colors">maafurniture.shop@gmail.com</p>
               </a>
             </div>
 

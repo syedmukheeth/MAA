@@ -52,3 +52,19 @@ export const forgotPasswordRatelimit = new Ratelimit({
   limiter: Ratelimit.slidingWindow(3, "3600 s"), // 3 reset requests per hour per email
   prefix: "ratelimit:forgot-password",
 });
+
+/** Throttle actual reset attempts per IP so a leaked token can't be replayed
+ *  or brute-forced indefinitely. */
+export const resetPasswordRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "900 s"), // 5 attempts per 15 minutes per IP
+  prefix: "ratelimit:reset-password",
+});
+
+/** The search endpoint is public and hits the database. Unbounded, a bot can
+ *  hammer it and create real load on PostgreSQL. */
+export const searchRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(60, "60 s"), // 60 requests per minute per IP
+  prefix: "ratelimit:search",
+});

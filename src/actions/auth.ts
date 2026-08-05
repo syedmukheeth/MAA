@@ -54,7 +54,7 @@ async function limitOrAllow(limiter: Ratelimit, key: string): Promise<boolean> {
     const { success } = await limiter.limit(key);
     return success;
   } catch (err) {
-    console.warn(`Rate limiter unavailable for key "${key}", using in-memory fallback:`, err);
+    console.warn(`Rate limiter unavailable for key, using in-memory fallback:`, err);
     return checkInMemoryFallback(key);
   }
 }
@@ -84,11 +84,13 @@ async function createSessionCookie(user: {
   id: string;
   email: string;
   role: Role;
+  tokenVersion?: number;
 }) {
   const token = await signSession({
     sub: user.id,
     email: user.email,
     role: user.role,
+    tv: user.tokenVersion ?? 0,
   });
   const store = await cookies();
   store.set(SESSION_COOKIE, token, {
@@ -176,7 +178,7 @@ export async function logoutAction(): Promise<void> {
   redirect("/login");
 }
 
-import { redis, forgotPasswordRatelimit } from "@/lib/redis";
+import { redis, forgotPasswordRatelimit, resetPasswordRatelimit } from "@/lib/redis";
 import { getSiteUrl } from "@/lib/site-url";
 import { sendEmail } from "@/lib/email";
 
@@ -201,8 +203,11 @@ export async function forgotPasswordAction(
     where: { email },
   });
 
-  // Security: Do not reveal if user email exists or not
-  if (!user || !user.isActive) {
+  if (!user) {
+    // Return success even if user not found to prevent user enumeration
+    return { success: true };
+  }
+  if (!user.isActive) {
     return { success: true };
   }
 
@@ -246,6 +251,13 @@ export async function resetPasswordAction(
     return { error: "Invalid or expired reset token." };
   }
 
+  // Rate limit reset attempts per IP to prevent brute-force
+  const ip = await clientIp();
+  const allowed = await limitOrAllow(resetPasswordRatelimit, `reset-password:${ip}`);
+  if (!allowed) {
+    return { error: "Too many attempts. Please try again later." };
+  }
+
   if (!input.password || input.password.length < 8) {
     return { error: "Password must be at least 8 characters long." };
   }
@@ -269,9 +281,14 @@ export async function resetPasswordAction(
 
   const passwordHash = await hashPassword(input.password);
 
+  // Increment tokenVersion to invalidate all existing sessions — the attacker's
+  // stolen cookie becomes worthless the moment the real user resets.
   await prisma.user.update({
     where: { email },
-    data: { passwordHash },
+    data: {
+      passwordHash,
+      tokenVersion: { increment: 1 },
+    },
   });
 
   await redis.del(tokenKey);

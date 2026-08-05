@@ -33,13 +33,33 @@ export const siteSettingsSchema = z.object({
   deliveryFee: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, "Delivery fee must be 0 or more"),
   freeDeliveryThreshold: z.string().transform((val) => val === "" ? null : val).nullable().optional().refine((val) => !val || (!isNaN(parseFloat(val)) && parseFloat(val) >= 0), "Threshold must be 0 or more"),
 
-  // Admin-configurable lists
-  shopSections: z.string().optional().nullable().transform((val) => val === "" ? null : val),
-  shopCustomSections: z.string().optional().nullable().transform((val) => val === "" ? null : val),
-  studioWoods: z.string().optional().nullable().transform((val) => val === "" ? null : val),
-  studioFinishes: z.string().optional().nullable().transform((val) => val === "" ? null : val),
-  studioBudgets: z.string().optional().nullable().transform((val) => val === "" ? null : val),
-  studioFeatures: z.string().optional().nullable().transform((val) => val === "" ? null : val),
+  // Admin-configurable lists (JSON strings)
+  shopSections: safeJsonString(),
+  shopCustomSections: safeJsonString(),
+  studioWoods: safeJsonString(),
+  studioFinishes: safeJsonString(),
+  studioBudgets: safeJsonString(),
+  studioFeatures: safeJsonString(),
 });
+
+function safeJsonString() {
+  return z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => (val === "" ? null : val))
+    .refine(
+      (val) => {
+        if (!val) return true;
+        try {
+          JSON.parse(val);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: "Must be a valid JSON array/object string" }
+    );
+}
 
 export type SiteSettingsInput = z.infer<typeof siteSettingsSchema>;

@@ -44,15 +44,45 @@ export async function applyStockMovement(
     throw new Error(`${input.type} movements must remove stock`);
   }
 
-  const variant = await tx.variant.update({
-    where: { id: input.variantId },
-    data: { stock: { increment: qty } },
-    select: { stock: true, productId: true, name: true },
-  });
-  if (variant.stock < 0) {
-    throw new InsufficientStockError(
-      `${variant.name || "Selected item"} is out of stock`
-    );
+  let variantProductId: string;
+  let variantName: string;
+
+  if (qty < 0) {
+    const absQty = Math.abs(qty);
+    const updated = await tx.variant.updateMany({
+      where: {
+        id: input.variantId,
+        stock: { gte: absQty },
+      },
+      data: {
+        stock: { decrement: absQty },
+      },
+    });
+
+    if (updated.count === 0) {
+      const existing = await tx.variant.findUnique({
+        where: { id: input.variantId },
+        select: { name: true },
+      });
+      throw new InsufficientStockError(
+        `${existing?.name || "Selected item"} is out of stock`
+      );
+    }
+
+    const fetched = await tx.variant.findUniqueOrThrow({
+      where: { id: input.variantId },
+      select: { productId: true, name: true },
+    });
+    variantProductId = fetched.productId;
+    variantName = fetched.name;
+  } else {
+    const updated = await tx.variant.update({
+      where: { id: input.variantId },
+      data: { stock: { increment: qty } },
+      select: { productId: true, name: true },
+    });
+    variantProductId = updated.productId;
+    variantName = updated.name;
   }
 
   await tx.stockMovement.create({
@@ -66,7 +96,7 @@ export async function applyStockMovement(
     },
   });
 
-  await recomputeProductStock(tx, variant.productId);
+  await recomputeProductStock(tx, variantProductId);
 }
 
 /** Recompute Product.stockQuantity as the sum of its variants' stock. */

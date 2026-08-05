@@ -70,13 +70,13 @@ export function ShopToolbar({
             onChange={(e) =>
               setParam("sort", e.target.value === "newest" ? null : e.target.value)
             }
-            className="h-9 rounded-full border border-border bg-white/70 px-3 text-sm text-charcoal outline-none focus:border-bronze"
+            className="h-9 rounded-full border border-border bg-white/70 px-3 text-sm text-charcoal outline-none focus:border-bronze [&_option]:bg-white [&_option]:text-charcoal"
           >
             {showBestSeller && (
-              <option value="best_sellers">⭐ Best Sellers</option>
+              <option value="best_sellers" className="bg-white text-charcoal">⭐ Best Sellers</option>
             )}
             {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
+              <option key={o.value} value={o.value} className="bg-white text-charcoal">
                 {o.label}
               </option>
             ))}

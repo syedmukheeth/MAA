@@ -8,15 +8,14 @@ import {
   REQUEST_STATUSES,
   REQUEST_STATUS_FLOW,
 } from "@/lib/validations/custom-request";
-
-const MANAGE_ROLES = ["OWNER", "ADMIN", "MANAGER"] as const;
+import { STAFF_ROLES } from "@/lib/auth/roles";
 
 export async function updateRequestStatus(
   id: string,
   status: (typeof REQUEST_STATUSES)[number],
   note?: string
 ): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...STAFF_ROLES]);
 
   const request = await prisma.customFurnitureRequest.findUnique({
     where: { id },

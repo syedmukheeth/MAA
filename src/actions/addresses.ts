@@ -17,6 +17,9 @@ export async function saveAddress(
   try {
     await prisma.$transaction(async (tx) => {
       const count = await tx.address.count({ where: { userId: session.sub } });
+      if (count >= 10) {
+        throw new Error("Maximum limit of 10 addresses reached. Please delete an old address to add a new one.");
+      }
       const isDefault = count === 0 ? true : parsed.data.isDefault;
 
       if (isDefault) {

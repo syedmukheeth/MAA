@@ -67,7 +67,7 @@ export async function changeUserRole(
 
   await prisma.user.update({
     where: { id: userId },
-    data: { role: nextRole },
+    data: { role: nextRole, tokenVersion: { increment: 1 } },
   });
 
   await recordAudit({

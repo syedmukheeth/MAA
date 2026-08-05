@@ -10,7 +10,7 @@ const adapter = new PrismaPg({
 });
 const prisma = new PrismaClient({ adapter });
 
-const TEST_PASSWORD = "Test@1234";
+const TEST_PASSWORD = process.env.SEED_TEST_PASSWORD ?? "Test@1234";
 
 const unsplash = (id: string) =>
   `https://images.unsplash.com/${id}?w=1200&q=80`;

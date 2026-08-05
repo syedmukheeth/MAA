@@ -140,6 +140,16 @@ export async function deleteCombo(id: string): Promise<{ error?: string }> {
     where: { id },
     select: { name: true, slug: true, bundlePrice: true },
   });
+
+  const usedInCart = await prisma.cartItem.findFirst({
+    where: { comboId: id },
+  });
+  if (usedInCart) {
+    return {
+      error: "This combo offer is currently in customer shopping carts and cannot be deleted. Deactivate it instead.",
+    };
+  }
+
   await prisma.combo.delete({ where: { id } });
   await recordAudit({
     actorId: session.sub,
