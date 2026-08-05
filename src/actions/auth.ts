@@ -190,7 +190,7 @@ export async function loginAction(
       where: {
         OR: [
           { email: lowerInput },
-          { name: { equals: rawInput, mode: "insensitive" } },
+          { name: rawInput },
           { email: `${lowerInput}@maafurnitures.com` },
         ],
       },
