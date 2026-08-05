@@ -13,7 +13,7 @@ import {
 export async function updateSiteSettings(
   input: SiteSettingsInput
 ): Promise<{ error?: string }> {
-  const session = await requireRole(["OWNER", "ADMIN"]);
+  const session = await requireRole(["OWNER", "ADMIN", "MANAGER"]);
 
   const parsed = siteSettingsSchema.safeParse(input);
   if (!parsed.success) {

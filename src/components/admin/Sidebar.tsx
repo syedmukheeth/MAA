@@ -83,7 +83,7 @@ export const NAV_ITEMS: {
     href: "/admin/settings",
     label: "Website Settings",
     icon: Settings,
-    roles: ["OWNER", "ADMIN"],
+    roles: ["OWNER", "ADMIN", "MANAGER"],
   },
   {
     href: "/admin/permissions",

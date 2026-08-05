@@ -8,7 +8,7 @@ import {
   Clock,
 } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getActiveUser } from "@/lib/auth/session";
 import { getLowStockVariants } from "@/lib/analytics";
 import { formatINR } from "@/lib/money";
 
@@ -18,7 +18,7 @@ const REVENUE_STATUSES = ["CONFIRMED", "PACKED", "SHIPPED", "DELIVERED"] as cons
 const inr = (value: number) => formatINR(value);
 
 export default async function AdminOverviewPage() {
-  const user = await getCurrentUser();
+  const user = await getActiveUser();
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
   const thirtyDaysAgo = new Date();

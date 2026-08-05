@@ -144,20 +144,26 @@ export async function loginAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  // Limit on BOTH email and IP. Email alone lets an attacker lock any user —
-  // including the owner — out of their own account by spamming failures at it.
-  // IP alone lets a password spray walk the whole user table unimpeded.
+  const rawInput = parsed.data.email.trim();
+  const lowerInput = rawInput.toLowerCase();
   const ip = await clientIp();
+
   const [byEmail, byIp] = await Promise.all([
-    limitOrAllow(loginRatelimit, `login:${parsed.data.email}`),
+    limitOrAllow(loginRatelimit, `login:${lowerInput}`),
     limitOrAllow(loginIpRatelimit, `login-ip:${ip}`),
   ]);
   if (!byEmail || !byIp) {
     return { error: "Too many attempts. Please try again in a minute." };
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: parsed.data.email },
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { email: lowerInput },
+        { name: { equals: rawInput, mode: "insensitive" } },
+        { email: `${lowerInput}@maafurnitures.com` },
+      ],
+    },
   });
   if (!user || !user.isActive) {
     return { error: "Invalid email or password" };

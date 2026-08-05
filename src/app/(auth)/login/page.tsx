@@ -38,15 +38,15 @@ function LoginForm() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Email or Username</Label>
           <Input
             id="email"
-            type="email"
+            type="text"
             inputMode="email"
-            autoComplete="email"
+            autoComplete="username"
             spellCheck={false}
             autoCapitalize="none"
-            placeholder="you@email.com"
+            placeholder="you@email.com or username"
             {...register("email")}
           />
           {errors.email && (

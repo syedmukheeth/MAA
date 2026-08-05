@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { UploadCloud, Check, Loader2 } from "lucide-react";
@@ -61,6 +62,7 @@ export function CustomStudio({
   studioBudgets?: string | null;
   studioFeatures?: string | null;
 }) {
+  const router = useRouter();
   const WOODS = parseJsonList(studioWoods ?? null, DEFAULT_WOODS);
   const FINISHES = parseJsonList(studioFinishes ?? null, DEFAULT_FINISHES);
   const BUDGETS = parseJsonList(studioBudgets ?? null, DEFAULT_BUDGETS);
@@ -147,6 +149,10 @@ export function CustomStudio({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
+        if (res.status === 401 || data?.requiresAuth) {
+          router.push("/login?next=/custom-studio");
+          return;
+        }
         setError(data?.error ?? "Something went wrong, please try again.");
         return;
       }

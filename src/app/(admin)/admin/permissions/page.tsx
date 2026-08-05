@@ -16,7 +16,7 @@ const CAPABILITIES: {
   { label: "Custom requests: manage pipeline", roles: { OWNER: true, ADMIN: true, MANAGER: true, CUSTOMER: false } },
   { label: "Analytics & revenue", roles: { OWNER: true, ADMIN: true, MANAGER: false, CUSTOMER: false } },
   { label: "User & role management", roles: { OWNER: true, ADMIN: true, MANAGER: false, CUSTOMER: false } },
-  { label: "Website settings", roles: { OWNER: true, ADMIN: true, MANAGER: false, CUSTOMER: false } },
+  { label: "Website settings", roles: { OWNER: true, ADMIN: true, MANAGER: true, CUSTOMER: false } },
   { label: "Modify Owner accounts", roles: { OWNER: true, ADMIN: false, MANAGER: false, CUSTOMER: false } },
   { label: "Grant the Owner role", roles: { OWNER: true, ADMIN: false, MANAGER: false, CUSTOMER: false } },
   { label: "Change your own role", roles: { OWNER: false, ADMIN: false, MANAGER: false, CUSTOMER: false } },
@@ -30,7 +30,7 @@ const ROLE_NOTES: { role: string; note: string }[] = [
   },
   {
     role: "Manager",
-    note: "Sits between customer and owner. Handles day-to-day operations — products, inventory, orders, combos, and custom requests — but no analytics, user management, or site settings.",
+    note: "Sits between customer and owner. Handles day-to-day operations — products, inventory, orders, combos, custom requests, and website settings.",
   },
   {
     role: "Admin",

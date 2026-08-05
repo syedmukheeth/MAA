@@ -17,7 +17,9 @@ describe("Auth Validation Schemas", () => {
   });
 
   it("validates login inputs", () => {
-    expect(loginSchema.safeParse({ email: "invalid-email", password: "123" }).success).toBe(false);
+    expect(loginSchema.safeParse({ email: "", password: "123" }).success).toBe(false);
+    expect(loginSchema.safeParse({ email: "maa-owner", password: "MAAOwner@13" }).success).toBe(true);
+    expect(loginSchema.safeParse({ email: "maa-manager", password: "MAAManager@01" }).success).toBe(true);
     expect(loginSchema.safeParse({ email: "test@example.com", password: "Password123" }).success).toBe(true);
   });
 });

@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getActiveUser } from "@/lib/auth/session";
 import { customRequestSchema } from "@/lib/validations/custom-request";
 import { customRequestRatelimit } from "@/lib/redis";
 import { sendEmail } from "@/lib/email";
@@ -75,12 +75,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const user = await getCurrentUser();
+  const user = await getActiveUser();
+  if (!user) {
+    return NextResponse.json(
+      { error: "Please log in to submit a custom furniture request.", requiresAuth: true },
+      { status: 401 }
+    );
+  }
 
   const created = await prisma.customFurnitureRequest.create({
     data: {
       ...parsed.data,
-      submittedById: user?.sub,
+      submittedById: user.sub,
     },
   });
 

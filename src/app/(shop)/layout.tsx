@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { getSiteSettings } from "@/lib/site-settings";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getActiveUser } from "@/lib/auth/session";
 import { getCartItemCount } from "@/lib/cart";
 import { PurchasingProvider } from "@/components/shop/PurchasingProvider";
 
@@ -36,7 +36,7 @@ export default async function ShopLayout({
 }) {
   const [settings, user] = await Promise.all([
     getSiteSettings(),
-    getCurrentUser(),
+    getActiveUser(),
   ]);
 
   const cartItemCount = user ? await getCartItemCount(user.sub) : 0;
