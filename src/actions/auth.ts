@@ -176,7 +176,6 @@ export async function loginAction(
 
     const rawInput = parsed.data.email.trim();
     const lowerInput = rawInput.toLowerCase();
-    const stripped = lowerInput.replace(/[^a-z0-9@.]/g, "");
     const ip = await clientIp();
 
     const [byEmail, byIp] = await Promise.all([
@@ -187,24 +186,12 @@ export async function loginAction(
       return { error: "Too many attempts. Please try again in a minute." };
     }
 
-    const candidates: string[] = [lowerInput, rawInput];
-    if (stripped.includes("owner")) {
-      candidates.push("maa-owner", "maa-owner@maafurnitures.com", "maaowner@maafurnitures.com");
-    }
-    if (stripped.includes("manager")) {
-      candidates.push("maa-manager", "maa-manager@maafurnitures.com", "maamanager@maafurnitures.com");
-    }
-    if (!lowerInput.includes("@")) {
-      candidates.push(`${lowerInput}@maafurnitures.com`);
-      candidates.push(`${lowerInput.replace(/-/g, "")}@maafurnitures.com`);
-    }
-
     const user = await prisma.user.findFirst({
       where: {
         OR: [
-          { email: { in: candidates, mode: "insensitive" } },
-          { name: { in: candidates, mode: "insensitive" } },
+          { email: lowerInput },
           { name: { equals: rawInput, mode: "insensitive" } },
+          { email: `${lowerInput}@maafurnitures.com` },
         ],
       },
     });
