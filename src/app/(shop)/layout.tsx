@@ -4,6 +4,9 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCartItemCount } from "@/lib/cart";
 import { PurchasingProvider } from "@/components/shop/PurchasingProvider";
+import { MobileTabBar } from "@/components/layout/MobileTabBar";
+import { WhatsAppFab } from "@/components/layout/WhatsAppFab";
+import { parseEnabledCategories } from "@/lib/shop-sections";
 
 /**
  * KNOWN CONSTRAINT — read before trusting `revalidate` in this route group.
@@ -43,8 +46,20 @@ export default async function ShopLayout({
 
   return (
     <>
-      <Navbar user={user ? { role: user.role } : null} cartItemCount={cartItemCount} />
-      <main className="flex-1 pt-20">
+      <Navbar
+        user={user ? { role: user.role } : null}
+        cartItemCount={cartItemCount}
+        categories={parseEnabledCategories(settings.shopSections)}
+        featuredImageUrl={settings.heroImageUrl}
+        phone={settings.showroomPhone}
+        whatsapp={settings.showroomWhatsapp}
+        instagramUrl={settings.instagramUrl}
+        facebookUrl={settings.facebookUrl}
+      />
+      {/* pt-header clears the fixed navbar. The mobile tab bar's height is
+          reserved by the footer itself, since the footer is what it would
+          otherwise cover. */}
+      <main className="flex-1 pt-header">
         <PurchasingProvider enabled={settings.allowPurchases}>
           {children}
         </PurchasingProvider>
@@ -53,8 +68,13 @@ export default async function ShopLayout({
         instagramUrl={settings.instagramUrl}
         facebookUrl={settings.facebookUrl}
         whatsapp={settings.showroomWhatsapp}
+        phone={settings.showroomPhone}
+        address={settings.showroomAddress}
+        hours={settings.showroomHours}
         deliveryMessage={settings.deliveryMessage}
       />
+      <MobileTabBar cartItemCount={cartItemCount} />
+      <WhatsAppFab whatsapp={settings.showroomWhatsapp} />
     </>
   );
 }

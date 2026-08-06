@@ -33,7 +33,7 @@ const ROOMS = [
 
 export function RoomInspirations() {
   return (
-    <section id="room-inspirations" className="bg-cream px-6 py-28 lg:px-10">
+    <section id="room-inspirations" className="scroll-mt-header bg-cream px-6 py-28 lg:px-10">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 max-w-2xl">
           <p className="text-xs uppercase tracking-[0.35em] text-bronze">

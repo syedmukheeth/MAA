@@ -8,6 +8,7 @@ import { ProductListItem } from "@/components/shop/ProductListItem";
 import { ShopToolbar, type SortValue } from "@/components/shop/ShopToolbar";
 import { EmptyResults } from "@/components/shop/EmptyResults";
 import { ROOM_CATEGORIES, CATEGORY_LABELS } from "@/lib/validations/product";
+import { parseEnabledCategories } from "@/lib/shop-sections";
 import type { Prisma } from "@/generated/prisma/client";
 
 /** ISR instead of force-dynamic: this is a public, cacheable catalogue page. */
@@ -78,19 +79,9 @@ export default async function ProductsPage({
     sort && sort in SORT_MAP ? (sort as SortValue) : "newest";
   const listView = view === "list";
 
-  // Determine which categories to show in the filter pills
-  let enabledCategories: (typeof ROOM_CATEGORIES)[number][] = [...ROOM_CATEGORIES];
-  if (settings.shopSections) {
-    try {
-      const parsed = JSON.parse(settings.shopSections) as string[];
-      const valid = parsed.filter((k): k is (typeof ROOM_CATEGORIES)[number] =>
-        ROOM_CATEGORIES.includes(k as (typeof ROOM_CATEGORIES)[number])
-      );
-      if (valid.length > 0) enabledCategories = valid;
-    } catch {
-      // Malformed JSON — fall back to all categories
-    }
-  }
+  // Which categories to show in the filter pills. Same helper the header
+  // mega-menu uses, so the two can't drift.
+  const enabledCategories = parseEnabledCategories(settings.shopSections);
 
   // Admin-defined custom sections — rendered as extra pills that search by name.
   let customSections: string[] = [];

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Clock, MessageCircle, Send, Phone } from "lucide-react";
+import { MapPin, Clock, Send, Phone } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/social";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,7 +49,7 @@ export function ShowroomFaqContact({
   const whatsappDigits = whatsapp.replace(/[^0-9]/g, "");
 
   return (
-    <section id="showroom" className="bg-ivory px-6 py-28 lg:px-10">
+    <section id="showroom" className="scroll-mt-header bg-ivory px-6 py-28 lg:px-10">
       <div className="mx-auto max-w-7xl">
         {/* Showroom */}
         <div className="grid grid-cols-1 gap-12 rounded-2xl bg-cream p-8 lg:grid-cols-2 lg:p-14">
@@ -98,7 +99,7 @@ export function ShowroomFaqContact({
                 }
                 className="rounded-full bg-charcoal text-ivory hover:bg-charcoal/90"
               >
-                <MessageCircle className="mr-2" size={16} />
+                <WhatsAppIcon className="mr-2" size={16} />
                 WhatsApp Us
               </Button>
             </div>
@@ -139,7 +140,7 @@ export function ShowroomFaqContact({
             </Accordion>
           </div>
 
-          <div id="contact">
+          <div id="contact" className="scroll-mt-header">
             <p className="text-xs uppercase tracking-[0.35em] text-bronze">
               Contact
             </p>

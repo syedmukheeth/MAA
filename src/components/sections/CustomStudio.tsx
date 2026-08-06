@@ -159,7 +159,7 @@ export function CustomStudio({
   }
 
   return (
-    <section id="custom-studio" className="bg-charcoal px-6 py-28 lg:px-10">
+    <section id="custom-studio" className="scroll-mt-header bg-charcoal px-6 py-28 lg:px-10">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-16 lg:grid-cols-2">
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-bronze">

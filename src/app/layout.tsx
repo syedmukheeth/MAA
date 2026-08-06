@@ -1,24 +1,33 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Fraunces } from "next/font/google";
+import { Geist_Mono, Instrument_Serif, Jost } from "next/font/google";
 import "./globals.css";
 import { MotionProvider } from "@/components/MotionProvider";
 import { getSiteUrl, SITE_NAME } from "@/lib/site-url";
 import { NavigationProgressBar } from "@/components/layout/NavigationProgressBar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Body / UI. A geometric humanist sans — the wide, round bowls read as a
+// furniture catalogue where a grotesk like Geist read as a SaaS dashboard.
+const jost = Jost({
+  variable: "--font-jost",
   subsets: ["latin"],
+  display: "swap",
 });
 
+// Display. High-contrast editorial serif at a single weight — Instrument Serif
+// has no bold, which is the point: size and spacing carry the hierarchy instead
+// of weight, the way print does.
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+// Kept: order ids, SKUs and audit rows need tabular digits.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  axes: ["opsz", "SOFT", "WONK"],
 });
 
 export const metadata: Metadata = {
@@ -54,7 +63,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${jost.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <NavigationProgressBar />

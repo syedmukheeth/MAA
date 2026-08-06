@@ -19,7 +19,7 @@ export function Testimonials({ testimonials }: { testimonials: TestimonialData[]
   return (
     <section
       id="testimonials"
-      className="scroll-mt-20 bg-ivory px-6 py-28 lg:px-10"
+      className="scroll-mt-header bg-ivory px-6 py-28 lg:px-10"
     >
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 max-w-2xl">

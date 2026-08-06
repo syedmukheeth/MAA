@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { BrandMark } from "@/components/layout/BrandMark";
 
 export default function AuthLayout({
   children,
@@ -7,20 +7,11 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-ivory px-6 py-16">
-      <Link href="/" className="mb-10 flex items-center gap-3">
-        <Image
-          src="/brand/logo.jpeg"
-          alt="MAA FURNITURE"
-          width={44}
-          height={44}
-          className="rounded-full"
-        />
-        <span className="font-heading text-lg text-charcoal">
-          MAA FURNITURE
-        </span>
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-ivory px-6 py-16">
+      <Link href="/" className="group mb-10">
+        <BrandMark size="md" />
       </Link>
-      <div className="w-full max-w-md rounded-2xl bg-cream p-8 sm:p-10">
+      <div className="w-full max-w-md rounded-2xl border border-hairline bg-cream p-8 shadow-lift sm:p-10">
         {children}
       </div>
     </div>

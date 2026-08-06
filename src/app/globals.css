@@ -7,11 +7,17 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  /* Alias names are load-bearing: `font-sans` and `font-heading` appear in
+     ~100 and ~76 files respectively. Swapping a typeface changes only the
+     right-hand side here and the imports in layout.tsx. */
+  --font-sans: var(--font-jost);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-fraunces);
+  --font-heading: var(--font-instrument-serif);
   --color-ivory: var(--ivory);
   --color-cream: var(--cream);
+  --color-espresso: var(--espresso);
+  --color-bronze-lit: var(--bronze-lit);
+  --color-hairline: var(--hairline);
   --color-oak: var(--oak);
   --color-walnut: var(--walnut);
   --color-charcoal: var(--charcoal);
@@ -57,6 +63,26 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Fluid display scale — the hero and section headlines size themselves off
+     the viewport instead of stepping between three breakpoint classes. */
+  --text-display-1: clamp(2.75rem, 6vw, 5.25rem);
+  --text-display-2: clamp(2rem, 4vw, 3.5rem);
+  --text-display-3: clamp(1.5rem, 2.6vw, 2.25rem);
+  --tracking-display: -0.02em;
+  --tracking-eyebrow: 0.28em;
+
+  /* Warm-tinted elevation. Shadows on this palette must be brown-black, not
+     pure black — a neutral rgba shadow over ivory reads grey and cheap. */
+  --shadow-lift: 0 1px 2px oklch(0.24 0.02 55 / 0.06),
+    0 8px 24px -8px oklch(0.24 0.02 55 / 0.12);
+  --shadow-float: 0 24px 60px -20px oklch(0.24 0.02 55 / 0.28);
+
+  --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Height of the fixed storefront header. Six files used to hardcode 5rem
+     (pt-20 / -mt-20 / scroll-mt-20); they now all read this. */
+  --spacing-header: 5rem;
 }
 
 :root {
@@ -70,6 +96,24 @@
   --charcoal: oklch(0.24 0.008 55);
   --graphite: oklch(0.32 0.006 55);
 
+  /* Deeper and warmer than charcoal. The footer and the hero scrim are large
+     flat fields — at charcoal they read as generic dark grey; the extra chroma
+     is what makes them read as stained timber. Ivory on this is 16.8:1. */
+  --espresso: oklch(0.17 0.014 45);
+
+  /* Bronze hover. `bronze/90` washes toward the ivory behind it instead of
+     brightening, so hovers looked like a fade-out.
+     0.56, not 0.62: this is a button surface carrying ivory label text, and at
+     0.62 that pair is 3.54:1 — the hover state would have failed AA while the
+     resting state passed. 0.56 holds 4.53:1 and still reads brighter than
+     --bronze's 0.52. */
+  --bronze-lit: oklch(0.56 0.1 58);
+
+  /* 1px rules. Deliberately lighter than --border: --border outlines inputs
+     and cards, this divides content. Same value as --linen would be too warm
+     against white cards. */
+  --hairline: oklch(0.86 0.014 75);
+
   /* Accent SURFACE (buttons, and accent text on light backgrounds).
      0.52, not 0.6: at 0.6 this scored 3.83:1 against ivory both ways, which
      failed AA on the Add-to-Cart button and is the "bronze too faint on mobile"
@@ -77,8 +121,10 @@
   --bronze: oklch(0.52 0.09 55);
 
   /* Accent TEXT for dark surfaces. Bronze on the dark admin canvas is only
-     3.48:1; this is 11.63:1. It previously existed as a hardcoded #E6C280 in 13
-     places precisely because no such token was defined. */
+     3.48:1 (3.38:1 on --espresso, which is why the footer's column headings use
+     this instead); this is 11.63:1 on charcoal and 11.27:1 on espresso. It
+     previously existed as a hardcoded #E6C280 in 13 places precisely because no
+     such token was defined. */
   --gold: oklch(0.83 0.095 81);
 
   --brand-red: oklch(0.55 0.19 15);
@@ -168,6 +214,7 @@
   --accent-foreground: var(--gold);
 
   --destructive: oklch(0.704 0.191 22.216);
+  --hairline: oklch(1 0 0 / 12%);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: var(--gold);
@@ -198,6 +245,44 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ── Film grain ──────────────────────────────────────────────────────────────
+   Applied to the one or two large flat colour fields on the page (hero scrim,
+   footer). A 4% fractal-noise tile is the difference between a dark block that
+   looks printed and one that looks like an unstyled div. Inline SVG rather than
+   a PNG so it costs no request and scales at any DPR.
+   -------------------------------------------------------------------------- */
+.surface-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Hover underline that grows from the leading edge. Used on footer and nav
+   links, where a colour-only hover on an already-muted link is barely visible.
+   Not a utility composition because Tailwind has no origin-aware scale-x pair
+   that survives `group-hover` on an inline element. */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 1px;
+  width: 100%;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease-brand);
+}
+.link-underline:hover::after,
+.link-underline:focus-visible::after {
+  transform: scaleX(1);
 }
 
 @keyframes loading-slide {

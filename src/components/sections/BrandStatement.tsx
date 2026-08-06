@@ -12,7 +12,7 @@ export function BrandStatement({
   headline: string;
 }) {
   return (
-    <section id="about" className="scroll-mt-20 bg-ivory px-6 py-32 lg:px-10">
+    <section id="about" className="scroll-mt-header bg-ivory px-6 py-32 lg:px-10">
       <div className="mx-auto max-w-5xl text-center">
         <motion.p
           initial={{ opacity: 0, y: 16 }}

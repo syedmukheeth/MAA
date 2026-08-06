@@ -2,8 +2,8 @@ import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function CustomStudioLoading() {
   return (
-    <div className="-mt-20">
-      <div className="bg-charcoal pt-20 pb-16">
+    <div className="-mt-header">
+      <div className="bg-espresso pt-header pb-16">
         <div className="mx-auto max-w-7xl px-6 pt-16 text-center lg:px-10">
           <h1 className="font-heading text-4xl text-ivory sm:text-5xl">
             Custom Studio

@@ -30,6 +30,8 @@ export default async function Home() {
         subtext={settings.heroSubtext}
         imageUrl={settings.heroImageUrl}
         deliveryMessage={settings.deliveryMessage}
+        yearsExperience={settings.statYearsExperience}
+        projectsDelivered={settings.statProjectsDelivered}
       />
       <BrandStatement label={settings.brandLabel} headline={settings.brandHeadline} />
       <CustomStudioTeaser />
