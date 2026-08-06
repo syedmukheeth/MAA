@@ -13,7 +13,7 @@ import { ImageResponse } from "next/og";
  * --charcoal / --ivory / --gold.
  */
 export const runtime = "edge";
-export const alt = "MAA FURNITURE — Crafted For Homes, Built For Generations";
+export const alt = "MAA FURNITURE | Crafted For Homes, Built For Generations";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

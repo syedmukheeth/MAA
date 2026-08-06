@@ -722,7 +722,7 @@ export function CheckoutWizard({
                   <div className="relative size-48 rounded-lg overflow-hidden border border-linen bg-white p-2 shadow-sm">
                     <img
                       src={settings.upiQrImage}
-                      alt="UPI QR code — scan with any UPI app to pay"
+                      alt="UPI QR code, scan with any UPI app to pay"
                       width={192}
                       height={192}
                       className="h-full w-full object-contain"

@@ -35,6 +35,9 @@ export const EASE = {
 } as const;
 
 export const DUR = {
+  /** UI feedback — modals opening, a price swapping under the cursor. Scroll
+      reveals can afford to be unhurried; a response to a click cannot. */
+  snap: 0.28,
   fast: 0.45,
   base: 0.7,
   slow: 1.0,

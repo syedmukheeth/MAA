@@ -22,7 +22,7 @@ export function EmptyResults({
           : `No ${entity} found here yet`}
       </h3>
       <p className="mt-2 max-w-sm text-sm text-graphite/60">
-        Try a different spelling or a broader word — or browse everything we
+        Try a different spelling or a broader word, or browse everything we
         have.
       </p>
       <Link

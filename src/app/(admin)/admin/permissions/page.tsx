@@ -30,7 +30,7 @@ const ROLE_NOTES: { role: string; note: string }[] = [
   },
   {
     role: "Manager",
-    note: "Sits between customer and owner. Handles day-to-day operations — products, inventory, orders, combos, custom requests, and website settings.",
+    note: "Sits between customer and owner. Handles day-to-day operations: products, inventory, orders, combos, custom requests, and website settings.",
   },
   {
     role: "Admin",

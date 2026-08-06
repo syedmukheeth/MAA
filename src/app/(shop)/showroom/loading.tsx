@@ -8,8 +8,8 @@ export default function ShowroomLoading() {
           Our Showroom
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-graphite/70">
-          Walk through it before you own it — see the wood, feel the finish,
-          and picture it in your home.
+          Walk through it before you own it. See the wood, feel the finish, and
+          picture it in your home.
         </p>
       </div>
 

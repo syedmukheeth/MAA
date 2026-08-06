@@ -44,12 +44,12 @@ export async function generateMetadata({
     : undefined;
 
   const base = active ? `${CATEGORY_LABELS[active]} Furniture` : "All Furniture";
-  const title = q?.trim() ? `"${q.trim()}" — ${base}` : base;
+  const title = q?.trim() ? `"${q.trim()}" | ${base}` : base;
   return {
     title,
     description: active
       ? `Handcrafted ${CATEGORY_LABELS[active].toLowerCase()} furniture, built to last. Delivered across India.`
-      : "Browse the full MAA FURNITURE collection — handcrafted sofas, beds, dining and office furniture.",
+      : "Browse the full MAA FURNITURE collection of handcrafted sofas, beds, dining and office furniture.",
     // Filtered views are near-duplicates of the parent; point ranking at one URL.
     alternates: { canonical: active ? `/products?category=${active}` : "/products" },
   };

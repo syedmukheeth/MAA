@@ -123,7 +123,7 @@ export function UserRoleTable({
                     onClick={() => requestToggleActive(u)}
                     aria-label={`${u.name} is ${
                       u.isActive ? "active" : "suspended"
-                    } — ${u.isActive ? "suspend" : "reactivate"}`}
+                    }, ${u.isActive ? "suspend" : "reactivate"}`}
                     className={`rounded-full px-3 py-1 text-xs transition-colors touch-manipulation disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                       u.isActive
                         ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/25"

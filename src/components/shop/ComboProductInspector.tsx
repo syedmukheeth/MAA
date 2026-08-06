@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { X, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { SafeImage } from "./SafeImage";
 import { motion, AnimatePresence } from "framer-motion";
+import { EASE, DUR } from "@/lib/motion";
 
 export type InspectorProduct = {
   id: string;
@@ -91,6 +92,7 @@ function InspectorView({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: DUR.snap, ease: EASE.out }}
           onClick={onClose}
           className="absolute inset-0 bg-charcoal/70 backdrop-blur-md"
         />
@@ -100,7 +102,7 @@ function InspectorView({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
+          transition={{ duration: DUR.snap, ease: EASE.out }}
           className="relative z-10 flex h-full max-h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-linen/20 bg-white shadow-2xl"
         >
           {/* Top Bar / Navigation Tabs */}

@@ -40,7 +40,7 @@ export async function updateRequestStatus(
     action: "request.status_change",
     entity: "CustomFurnitureRequest",
     entityId: id,
-    summary: `${request.name}: ${request.status} → ${status}${trimmedNote ? ` — ${trimmedNote}` : ""}`,
+    summary: `${request.name}: ${request.status} → ${status}${trimmedNote ? `: ${trimmedNote}` : ""}`,
     metadata: { from: request.status, to: status, note: trimmedNote },
   });
 

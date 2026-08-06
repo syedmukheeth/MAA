@@ -120,7 +120,7 @@ export function InventoryTable({ rows }: { rows: InventoryRow[] }) {
                       <button
                         type="button"
                         title="Receive stock"
-                        aria-label={`Receive stock for ${r.productName} — ${r.variantName}`}
+                        aria-label={`Receive stock for ${r.productName}, ${r.variantName}`}
                         onClick={() => setDialog({ mode: "receive", row: r })}
                         className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze"
                       >
@@ -129,7 +129,7 @@ export function InventoryTable({ rows }: { rows: InventoryRow[] }) {
                       <button
                         type="button"
                         title="Adjust stock"
-                        aria-label={`Adjust stock for ${r.productName} — ${r.variantName}`}
+                        aria-label={`Adjust stock for ${r.productName}, ${r.variantName}`}
                         onClick={() => setDialog({ mode: "adjust", row: r })}
                         className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze"
                       >
@@ -200,7 +200,7 @@ function ReceiveDialog({
         <DialogHeader>
           <DialogTitle>Receive stock</DialogTitle>
           <DialogDescription>
-            {row.productName} — {row.variantName} (current: {row.stock})
+            {row.productName}, {row.variantName} (current: {row.stock})
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -281,7 +281,7 @@ function AdjustDialog({
         <DialogHeader>
           <DialogTitle>Adjust stock</DialogTitle>
           <DialogDescription>
-            {row.productName} — {row.variantName} (current: {row.stock}).
+            {row.productName}, {row.variantName} (current: {row.stock}).
             Use a negative number to remove stock.
           </DialogDescription>
         </DialogHeader>

@@ -90,7 +90,7 @@ export async function adjustStock(input: {
           action: "inventory.adjust",
           entity: "Variant",
           entityId: input.variantId,
-          summary: `${delta > 0 ? "+" : ""}${delta} units — ${reason}`,
+          summary: `${delta > 0 ? "+" : ""}${delta} units, ${reason}`,
           metadata: { delta, reason, damaged: Boolean(input.damaged) },
         },
         tx

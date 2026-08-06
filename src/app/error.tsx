@@ -23,7 +23,7 @@ export default function Error({
         We couldn&apos;t load this page
       </h1>
       <p className="mt-3 max-w-sm text-sm text-graphite/70">
-        This is on us, not you. Try again — if it keeps happening, please let us
+        This is on us, not you. Try again. If it keeps happening, please let us
         know and we&apos;ll sort it out.
       </p>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

@@ -130,7 +130,7 @@ export function Navbar({
       }`}
     >
       <nav className="mx-auto flex h-header max-w-7xl items-center justify-between gap-6 px-6 lg:px-10">
-        <Link href="/" className="group shrink-0" aria-label="MAA FURNITURE — home">
+        <Link href="/" className="group shrink-0" aria-label="MAA FURNITURE, home">
           <BrandMark size="sm" tone={solid ? "dark" : "light"} />
         </Link>
 

@@ -15,14 +15,14 @@ export default async function CustomStudioPage() {
 
   return (
     <div className="-mt-header">
-      <div className="bg-espresso pt-header">
-        <div className="mx-auto max-w-7xl px-6 pt-16 text-center lg:px-10">
+      <div className="bg-gradient-to-b from-charcoal to-espresso pt-header">
+        <div className="mx-auto max-w-7xl px-6 pb-20 pt-16 text-center lg:px-10">
           <h1 className="font-heading text-4xl text-ivory sm:text-5xl">
             Custom Studio
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-ivory/70">
-            Furniture built to your exact space, taste, and budget — from a
-            single chair to a full home.
+            Furniture built to your exact space, taste, and budget. One chair or
+            a full home.
           </p>
         </div>
       </div>

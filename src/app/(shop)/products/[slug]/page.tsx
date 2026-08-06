@@ -47,7 +47,7 @@ export async function generateMetadata({
   // than a generic one — search and link previews both fall back to junk.
   const description = (
     product.description.trim() ||
-    `${product.name} — handcrafted ${CATEGORY_LABELS[
+    `${product.name}, handcrafted ${CATEGORY_LABELS[
       product.category
     ].toLowerCase()} furniture from ${SITE_NAME}.`
   ).slice(0, 155);

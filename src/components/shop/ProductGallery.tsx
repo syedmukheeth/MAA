@@ -64,7 +64,7 @@ export function ProductGallery({
             >
               <SafeImage
                 src={img}
-                alt={`${alt} — view ${i + 1}`}
+                alt={`${alt}, view ${i + 1}`}
                 fill
                 sizes="120px"
                 className="object-cover"

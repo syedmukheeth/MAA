@@ -7,7 +7,7 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Showroom | MAA FURNITURE",
   description:
-    "Visit the MAA FURNITURE showroom — walk through live pieces, explore materials and finishes, and talk to our design team in person.",
+    "Visit the MAA FURNITURE showroom. Walk through live pieces, explore materials and finishes, and talk to our design team in person.",
 };
 
 export default async function ShowroomPage() {
@@ -20,8 +20,8 @@ export default async function ShowroomPage() {
           Our Showroom
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-graphite/70">
-          Walk through it before you own it — see the wood, feel the finish,
-          and picture it in your home.
+          Walk through it before you own it. See the wood, feel the finish, and
+          picture it in your home.
         </p>
       </div>
       <ShowroomFaqContact

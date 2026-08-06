@@ -106,7 +106,7 @@ function LightboxView({
       >
         <Image
           src={images[active]}
-          alt={`${alt} — image ${active + 1}`}
+          alt={`${alt}, image ${active + 1}`}
           fill
           sizes="100vw"
           className="object-contain"

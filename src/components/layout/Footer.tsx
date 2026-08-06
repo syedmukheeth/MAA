@@ -138,7 +138,7 @@ export async function Footer({
       <div className="relative mx-auto max-w-7xl px-6 py-14 sm:py-16 lg:px-10 lg:py-20">
         <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-[1.3fr_1fr_1fr_1fr] lg:gap-14">
           <div className="col-span-2 sm:col-span-3 lg:col-span-1">
-            <Link href="/" className="group inline-block" aria-label="MAA FURNITURE — home">
+            <Link href="/" className="group inline-block" aria-label="MAA FURNITURE, home">
               <BrandMark size="md" tone="light" />
             </Link>
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-ivory/60">

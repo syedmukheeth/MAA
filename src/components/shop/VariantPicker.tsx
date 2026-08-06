@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { AddToCartButton } from "@/components/shop/AddToCartButton";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatINR } from "@/lib/format";
+import { EASE, DUR } from "@/lib/motion";
 
 export type VariantOption = {
   id: string;
@@ -113,7 +114,7 @@ export function VariantPicker({
             initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 15 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
+            transition={{ duration: DUR.snap, ease: EASE.out }}
             className="flex items-baseline gap-2 text-2xl font-semibold text-charcoal tabular-nums"
           >
             <span>{formatINR(price)}</span>

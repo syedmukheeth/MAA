@@ -59,7 +59,7 @@ export function Topbar({
 
       <div className="hidden lg:block">
         <p className="font-heading text-sm text-muted-foreground">
-          MAA FURNITURE — Back Office
+          MAA FURNITURE Back Office
         </p>
       </div>
 
