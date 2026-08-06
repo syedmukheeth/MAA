@@ -23,7 +23,8 @@ import { ShopMenu } from "@/components/layout/ShopMenu";
 import { InstagramIcon, FacebookIcon, WhatsAppIcon } from "@/components/icons/social";
 import { CATEGORY_LABELS } from "@/lib/validations/product";
 import type { RoomCategory } from "@/lib/shop-sections";
-import { DUR, EASE_OUT_EXPO, STAGGER } from "@/lib/motion";
+import { DUR, EASE, STAGGER } from "@/lib/motion";
+import { whatsappLink } from "@/lib/whatsapp";
 
 /** Shop is not here — it is the mega-menu trigger, rendered separately. */
 const NAV_LINKS = [
@@ -107,7 +108,7 @@ export function Navbar({
   // Transparent only over the hero: on home, unscrolled, with nothing open.
   const solid = !isHome || scrolled || drawerOpen || shopOpen;
   const isStaff = user != null && user.role !== "CUSTOMER";
-  const whatsappDigits = whatsapp?.replace(/[^0-9]/g, "");
+  const whatsappHref = whatsappLink(whatsapp);
   const phoneNumbers = (phone ?? "")
     .split(",")
     .map((p) => p.replace(/[^0-9+]/g, ""))
@@ -236,7 +237,7 @@ export function Navbar({
             <motion.div
               initial={{ y: -12, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: DUR.base, ease: EASE_OUT_EXPO }}
+              transition={{ duration: DUR.base, ease: EASE.out }}
               className="px-6 pb-16 pt-6"
             >
               <NavSearch
@@ -269,7 +270,7 @@ export function Navbar({
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: DUR.fast, ease: EASE_OUT_EXPO }}
+                        transition={{ duration: DUR.fast, ease: EASE.out }}
                         className="overflow-hidden"
                       >
                         {categories.map((key) => (
@@ -304,7 +305,7 @@ export function Navbar({
                       key={link.href}
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.08 + i * STAGGER, duration: DUR.base, ease: EASE_OUT_EXPO }}
+                      transition={{ delay: 0.08 + i * STAGGER.base, duration: DUR.base, ease: EASE.out }}
                       className="border-b border-hairline"
                     >
                       <Link
@@ -333,9 +334,9 @@ export function Navbar({
                     {num}
                   </a>
                 ))}
-                {whatsappDigits && (
+                {whatsappHref && (
                   <a
-                    href={`https://wa.me/${whatsappDigits}`}
+                    href={whatsappHref}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 text-sm text-graphite"
@@ -425,7 +426,7 @@ function NavIcon({
           key={badge}
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: DUR.fast, ease: EASE_OUT_EXPO }}
+          transition={{ duration: DUR.fast, ease: EASE.out }}
           className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-bronze px-1 text-[9px] font-semibold leading-4 text-ivory"
         >
           {badge > 9 ? "9+" : badge}

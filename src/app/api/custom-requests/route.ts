@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getActiveUser } from "@/lib/auth/session";
 import { customRequestSchema } from "@/lib/validations/custom-request";
 import { customRequestRatelimit } from "@/lib/redis";
 import { sendEmail } from "@/lib/email";
@@ -13,6 +13,27 @@ async function clientIp() {
 }
 
 export async function POST(request: Request) {
+  // CSRF: API routes (unlike server actions) lack built-in origin checking.
+  // Verify the Origin header matches our own host to block cross-site POSTs.
+  const origin = request.headers.get("origin");
+  const host = request.headers.get("host");
+  if (origin && host) {
+    try {
+      const originHost = new URL(origin).host;
+      if (originHost !== host) {
+        return NextResponse.json(
+          { error: "Cross-origin requests are not allowed." },
+          { status: 403 }
+        );
+      }
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid request origin." },
+        { status: 403 }
+      );
+    }
+  }
+
   // Rate limit before parsing or touching the DB. This route is public (it is
   // not in the proxy matcher) and every accepted request emails every OWNER and
   // ADMIN — unlimited, it is an email amplifier aimed at our own staff.
@@ -37,6 +58,14 @@ export async function POST(request: Request) {
     );
   }
 
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  if (contentLength > 100 * 1024) {
+    return NextResponse.json(
+      { error: "Payload too large. Maximum size allowed is 100KB." },
+      { status: 413 }
+    );
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = customRequestSchema.safeParse(body);
   if (!parsed.success) {
@@ -46,12 +75,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const user = await getCurrentUser();
+  const user = await getActiveUser();
+  if (!user) {
+    return NextResponse.json(
+      { error: "Please log in to submit a custom furniture request.", requiresAuth: true },
+      { status: 401 }
+    );
+  }
 
   const created = await prisma.customFurnitureRequest.create({
     data: {
       ...parsed.data,
-      submittedById: user?.sub,
+      submittedById: user.sub,
     },
   });
 

@@ -31,6 +31,8 @@ export type AuditAction =
   | "inventory.receive"
   | "inventory.adjust"
   | "order.status_change"
+  | "order.created"
+  | "order.email_failed"
   | "order.cancel"
   | "order.refund"
   | "request.status_change"

@@ -31,11 +31,11 @@ export function OrderTimelineStepper({
   const activeIndex = STEPS.findIndex((s) => s.status === status);
   
   return (
-    <div className="rounded-2xl border border-linen bg-white p-6 space-y-6">
-      <h3 className="font-heading text-lg text-charcoal">Order Status</h3>
+    <div className="rounded-2xl border border-border bg-card p-6 space-y-6">
+      <h3 className="font-heading text-lg text-card-foreground">Order Status</h3>
       
       {isCancelled && (
-        <div className="rounded-xl bg-brand-red/5 border border-brand-red/10 p-4 flex gap-3 text-sm text-brand-red">
+        <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 flex gap-3 text-sm text-destructive">
           <XCircle className="shrink-0 mt-0.5" size={20} />
           <div>
             <p className="font-semibold">This order was cancelled</p>
@@ -58,23 +58,23 @@ export function OrderTimelineStepper({
             !isCancelled && index === activeIndex && !isCompleted;
           const isLast = index === STEPS.length - 1;
 
-          let dotClass = "bg-white border-linen text-transparent";
-          let textColor = "text-graphite/40";
-          let labelColor = "text-graphite/50";
+          let dotClass = "bg-background border-border text-transparent";
+          let textColor = "text-muted-foreground/60";
+          let labelColor = "text-muted-foreground";
           // Connector line colored green once this step is passed.
-          const lineClass = isCompleted ? "bg-sage" : "bg-linen";
+          const lineClass = isCompleted ? "bg-sage" : "bg-border";
 
           if (isCompleted) {
             dotClass = "bg-sage border-sage text-ivory";
-            textColor = "text-graphite/60";
-            labelColor = "text-charcoal font-medium";
+            textColor = "text-muted-foreground";
+            labelColor = "text-card-foreground font-medium";
           } else if (isActive) {
             dotClass = "bg-bronze border-bronze text-ivory ring-4 ring-bronze/20";
-            textColor = "text-graphite/80";
-            labelColor = "text-charcoal font-bold";
+            textColor = "text-card-foreground/80";
+            labelColor = "text-card-foreground font-bold";
           } else if (isCancelled) {
-            textColor = "text-graphite/30";
-            labelColor = "text-graphite/30";
+            textColor = "text-muted-foreground/40";
+            labelColor = "text-muted-foreground/40";
           }
 
           return (

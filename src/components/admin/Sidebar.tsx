@@ -83,7 +83,20 @@ export const NAV_ITEMS: {
     href: "/admin/settings",
     label: "Website Settings",
     icon: Settings,
-    roles: ["OWNER", "ADMIN"],
+    roles: ["OWNER", "ADMIN", "MANAGER"],
+  },
+  {
+    href: "/admin/permissions",
+    label: "Roles & Permissions",
+    icon: ShieldCheck,
+    roles: ["OWNER", "ADMIN", "MANAGER"],
+  },
+  {
+    href: "/admin/audit",
+    label: "Audit Log",
+    icon: ScrollText,
+    // Owner-only: a log the people it watches can curate isn't a control.
+    roles: ["OWNER"],
   },
   {
     href: "/admin/permissions",

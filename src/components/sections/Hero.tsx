@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { DUR, EASE_OUT_EXPO, revealMask } from "@/lib/motion";
+import { DUR, EASE, revealMask } from "@/lib/motion";
 
 export function Hero({
   headline,
@@ -39,7 +39,7 @@ export function Hero({
       <motion.div
         initial={{ scale: 1.12 }}
         animate={{ scale: 1 }}
-        transition={{ duration: 12, ease: EASE_OUT_EXPO }}
+        transition={{ duration: 12, ease: EASE.out }}
         className="absolute inset-0"
       >
         <Image
@@ -96,7 +96,7 @@ export function Hero({
           <motion.p
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: DUR.slow, delay: 0.55, ease: EASE_OUT_EXPO }}
+            transition={{ duration: DUR.slow, delay: 0.55, ease: EASE.out }}
             className="mx-auto mt-7 max-w-xl text-base leading-relaxed text-ivory/85 sm:text-lg lg:mx-0"
           >
             {subtext}
@@ -105,7 +105,7 @@ export function Hero({
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: DUR.slow, delay: 0.7, ease: EASE_OUT_EXPO }}
+            transition={{ duration: DUR.slow, delay: 0.7, ease: EASE.out }}
             className="mt-11 flex flex-col items-center gap-6 sm:flex-row sm:justify-center lg:justify-start"
           >
             <Link
@@ -135,7 +135,7 @@ export function Hero({
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: DUR.slow, delay: 1, ease: EASE_OUT_EXPO }}
+        transition={{ duration: DUR.slow, delay: 1, ease: EASE.out }}
         className="absolute inset-x-0 bottom-0 z-10 border-t border-ivory/15"
       >
         <div className="mx-auto grid max-w-7xl grid-cols-3 divide-x divide-ivory/15 px-6 lg:px-10">

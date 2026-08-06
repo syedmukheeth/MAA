@@ -122,6 +122,9 @@ model User {
   passwordHash String
   role         Role     @default(CUSTOMER)
   isActive     Boolean  @default(true)
+  /// Incremented on password change and role change. JWTs carry the version at
+  /// issue time; any token whose version is behind the current value is rejected.
+  tokenVersion Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

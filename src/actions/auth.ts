@@ -3,6 +3,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createHash, randomBytes } from "node:crypto";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { signSession, type Role } from "@/lib/auth/jwt";
@@ -34,6 +35,15 @@ const FALLBACK_MAX_ATTEMPTS = 10;
 
 function checkInMemoryFallback(key: string): boolean {
   const now = Date.now();
+
+  // Probabilistic GC: on ~1% of calls, evict stale entries so the Map
+  // never grows unboundedly during a prolonged Redis outage.
+  if (Math.random() < 0.01) {
+    for (const [k, v] of fallbackStore) {
+      if (now > v.resetAt) fallbackStore.delete(k);
+    }
+  }
+
   const record = fallbackStore.get(key);
 
   if (!record || now > record.resetAt) {
@@ -50,11 +60,16 @@ function checkInMemoryFallback(key: string): boolean {
 }
 
 async function limitOrAllow(limiter: Ratelimit, key: string): Promise<boolean> {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token || url.includes("localhost")) {
+    return true;
+  }
   try {
     const { success } = await limiter.limit(key);
     return success;
   } catch (err) {
-    console.warn(`Rate limiter unavailable for key "${key}", using in-memory fallback:`, err);
+    console.warn(`Rate limiter unavailable for key, using in-memory fallback:`, err);
     return checkInMemoryFallback(key);
   }
 }
@@ -84,11 +99,13 @@ async function createSessionCookie(user: {
   id: string;
   email: string;
   role: Role;
+  tokenVersion?: number;
 }) {
   const token = await signSession({
     sub: user.id,
     email: user.email,
     role: user.role,
+    tv: user.tokenVersion ?? 0,
   });
   const store = await cookies();
   store.set(SESSION_COOKIE, token, {
@@ -103,71 +120,121 @@ async function createSessionCookie(user: {
 export async function registerAction(
   input: RegisterInput
 ): Promise<{ error?: string }> {
-  const parsed = registerSchema.safeParse(input);
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  try {
+    const parsed = registerSchema.safeParse(input);
+    if (!parsed.success) {
+      return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    }
+
+    const rawEmail = parsed.data.email.trim();
+    const normalizedEmail = rawEmail.toLowerCase();
+
+    const allowed = await limitOrAllow(
+      registerRatelimit,
+      `register:${await clientIp()}`
+    );
+    if (!allowed) {
+      return { error: "Too many attempts. Please try again later." };
+    }
+
+    const existing = await prisma.user.findFirst({
+      where: {
+        OR: [{ email: normalizedEmail }, { email: rawEmail }],
+      },
+    });
+    if (existing) {
+      return { error: "An account with this email already exists" };
+    }
+
+    const passwordHash = await hashPassword(parsed.data.password);
+    const user = await prisma.user.create({
+      data: {
+        name: parsed.data.name.trim(),
+        email: normalizedEmail,
+        passwordHash,
+        role: "CUSTOMER",
+      },
+    });
+
+    await createSessionCookie(user);
+    redirect("/");
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "digest" in err &&
+      typeof (err as { digest?: string }).digest === "string" &&
+      (err as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+    ) {
+      throw err;
+    }
+    console.error("Registration action failed:", err);
+    return {
+      error: "Registration failed. Please check your information and try again.",
+    };
   }
-
-  const allowed = await limitOrAllow(registerRatelimit, `register:${await clientIp()}`);
-  if (!allowed) {
-    return { error: "Too many attempts. Please try again later." };
-  }
-
-  const existing = await prisma.user.findUnique({
-    where: { email: parsed.data.email },
-  });
-  if (existing) {
-    return { error: "An account with this email already exists" };
-  }
-
-  const passwordHash = await hashPassword(parsed.data.password);
-  const user = await prisma.user.create({
-    data: {
-      name: parsed.data.name,
-      email: parsed.data.email,
-      passwordHash,
-      role: "CUSTOMER",
-    },
-  });
-
-  await createSessionCookie(user);
-  redirect(HOME_ROUTE);
 }
 
 export async function loginAction(
   input: LoginInput
 ): Promise<{ error?: string }> {
-  const parsed = loginSchema.safeParse(input);
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
-  }
+  try {
+    const parsed = loginSchema.safeParse(input);
+    if (!parsed.success) {
+      return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    }
 
-  // Limit on BOTH email and IP. Email alone lets an attacker lock any user —
-  // including the owner — out of their own account by spamming failures at it.
-  // IP alone lets a password spray walk the whole user table unimpeded.
-  const ip = await clientIp();
-  const [byEmail, byIp] = await Promise.all([
-    limitOrAllow(loginRatelimit, `login:${parsed.data.email}`),
-    limitOrAllow(loginIpRatelimit, `login-ip:${ip}`),
-  ]);
-  if (!byEmail || !byIp) {
-    return { error: "Too many attempts. Please try again in a minute." };
-  }
+    const rawInput = parsed.data.email.trim();
+    const lowerInput = rawInput.toLowerCase();
+    const ip = await clientIp();
 
-  const user = await prisma.user.findUnique({
-    where: { email: parsed.data.email },
-  });
-  if (!user || !user.isActive) {
-    return { error: "Invalid email or password" };
-  }
+    const [byEmail, byIp] = await Promise.all([
+      limitOrAllow(loginRatelimit, `login:${lowerInput}`),
+      limitOrAllow(loginIpRatelimit, `login-ip:${ip}`),
+    ]);
+    if (!byEmail || !byIp) {
+      return { error: "Too many attempts. Please try again in a minute." };
+    }
 
-  const valid = await verifyPassword(parsed.data.password, user.passwordHash);
-  if (!valid) {
-    return { error: "Invalid email or password" };
-  }
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: lowerInput },
+          { email: `${lowerInput}@maafurnitures.com` },
+        ],
+      },
+    });
+    if (!user || !user.isActive) {
+      return { error: "Invalid email or password" };
+    }
 
-  await createSessionCookie(user);
-  redirect(safeNextPath(parsed.data.next));
+    const valid = await verifyPassword(parsed.data.password, user.passwordHash);
+    if (!valid) {
+      return { error: "Invalid email or password" };
+    }
+
+    await createSessionCookie(user);
+
+    const isStaffUser = user.role !== "CUSTOMER";
+    const requestedNext = safeNextPath(parsed.data.next);
+    const destination = isStaffUser
+      ? (requestedNext.startsWith("/admin") ? requestedNext : "/admin")
+      : requestedNext;
+
+    redirect(destination);
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "digest" in err &&
+      typeof (err as { digest?: string }).digest === "string" &&
+      (err as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+    ) {
+      throw err;
+    }
+    console.error("Login action failed:", err);
+    return { error: "Login failed. Please check your credentials and try again." };
+  }
 }
 
 export async function logoutAction(): Promise<void> {
@@ -176,7 +243,7 @@ export async function logoutAction(): Promise<void> {
   redirect("/login");
 }
 
-import { redis, forgotPasswordRatelimit } from "@/lib/redis";
+import { redis, forgotPasswordRatelimit, resetPasswordRatelimit } from "@/lib/redis";
 import { getSiteUrl } from "@/lib/site-url";
 import { sendEmail } from "@/lib/email";
 
@@ -187,7 +254,8 @@ function hashResetToken(token: string) {
 export async function forgotPasswordAction(
   email: string
 ): Promise<{ success?: boolean; error?: string }> {
-  if (!email || !email.includes("@")) {
+  const emailParseResult = z.string().email().safeParse(email);
+  if (!emailParseResult.success) {
     return { error: "Please enter a valid email address." };
   }
 
@@ -201,8 +269,11 @@ export async function forgotPasswordAction(
     where: { email },
   });
 
-  // Security: Do not reveal if user email exists or not
-  if (!user || !user.isActive) {
+  if (!user) {
+    // Return success even if user not found to prevent user enumeration
+    return { success: true };
+  }
+  if (!user.isActive) {
     return { success: true };
   }
 
@@ -246,6 +317,13 @@ export async function resetPasswordAction(
     return { error: "Invalid or expired reset token." };
   }
 
+  // Rate limit reset attempts per IP to prevent brute-force
+  const ip = await clientIp();
+  const allowed = await limitOrAllow(resetPasswordRatelimit, `reset-password:${ip}`);
+  if (!allowed) {
+    return { error: "Too many attempts. Please try again later." };
+  }
+
   if (!input.password || input.password.length < 8) {
     return { error: "Password must be at least 8 characters long." };
   }
@@ -269,9 +347,14 @@ export async function resetPasswordAction(
 
   const passwordHash = await hashPassword(input.password);
 
+  // Increment tokenVersion to invalidate all existing sessions — the attacker's
+  // stolen cookie becomes worthless the moment the real user resets.
   await prisma.user.update({
     where: { email },
-    data: { passwordHash },
+    data: {
+      passwordHash,
+      tokenVersion: { increment: 1 },
+    },
   });
 
   await redis.del(tokenKey);

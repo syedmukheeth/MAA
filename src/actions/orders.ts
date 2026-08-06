@@ -23,7 +23,7 @@ import { money, toPaise, type Money } from "@/lib/money";
 import { computeCartTotals } from "@/lib/cart";
 import { recordAudit } from "@/lib/audit";
 import { STAFF_ROLES } from "@/lib/auth/roles";
-import type { OrderStatus } from "@/generated/prisma/client";
+import { Prisma, type OrderStatus } from "@/generated/prisma/client";
 import { randomBytes } from "node:crypto";
 
 const STATUS_FLOW: Record<string, string[]> = {
@@ -280,9 +280,9 @@ export async function placeOrder(
         where: { id: orderId },
         include: { items: true },
       })
-      .then((placedOrder) => {
+      .then(async (placedOrder) => {
         if (placedOrder) {
-          sendEmail({
+          const sent = await sendEmail({
             to: session.email,
             subject: `Order ${placedOrder.orderNumber} confirmed`,
             html: orderConfirmationHtml({
@@ -295,9 +295,30 @@ export async function placeOrder(
               })),
             }),
           });
+
+          if (!sent) {
+            await recordAudit({
+              actorId: session.sub,
+              action: "order.email_failed",
+              entity: "Order",
+              entityId: placedOrder.id,
+              summary: `Failed to send confirmation email for order ${placedOrder.orderNumber}`,
+              metadata: { orderNumber: placedOrder.orderNumber },
+            });
+          }
         }
       })
-      .catch((e) => console.error("Order confirmation email failed:", e));
+      .catch(async (e) => {
+        console.error("Order confirmation email failed:", e);
+        await recordAudit({
+          actorId: session.sub,
+          action: "order.email_failed",
+          entity: "Order",
+          entityId: orderId,
+          summary: `Order confirmation email throw error: ${e instanceof Error ? e.message : String(e)}`,
+          metadata: { orderId },
+        });
+      });
 
     return { orderId };
   } catch (err) {
@@ -329,9 +350,15 @@ export async function updateOrderStatus(
 
   try {
     await prisma.$transaction(async (tx) => {
-      // Determine if a refund request should be initialized
+      // COD orders have no money to refund (nothing was collected online);
+      // online-paid orders get PENDING so the refund queue shows them.
       const isOnlinePaid = order.paymentMethod !== "COD";
-      const initialRefundStatus = nextStatus === "CANCELLED" ? (isOnlinePaid ? "PENDING" : "PENDING") : undefined;
+      const initialRefundStatus =
+        nextStatus === "CANCELLED"
+          ? isOnlinePaid
+            ? "PENDING"
+            : "NOT_APPLICABLE"
+          : undefined;
 
       // Guard against a concurrent transition (double-click / two staff)
       const updated = await tx.order.updateMany({
@@ -416,7 +443,8 @@ export async function cancelOwnOrder(orderId: string): Promise<{ error?: string 
         where: { id: orderId, status: "PENDING" },
         data: {
           status: "CANCELLED",
-          refundStatus: "PENDING",
+          // COD orders have nothing to refund; only online-paid orders queue a refund.
+          refundStatus: order.paymentMethod === "COD" ? "NOT_APPLICABLE" : "PENDING",
           refundAmount: order.total,
         },
       });
@@ -443,7 +471,8 @@ export async function updateRefundStatus(
     status: "PENDING" | "PROCESSED" | "FAILED" | "NOT_APPLICABLE";
     refundTxnId?: string;
     notes?: string;
-    amount?: number;
+    /** String to preserve Decimal precision — do NOT accept a JS number. */
+    amount?: string;
   }
 ): Promise<{ error?: string }> {
   const session = await requireRole([...STAFF_ROLES]);
@@ -451,6 +480,23 @@ export async function updateRefundStatus(
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) return { error: "Order not found" };
 
+  if (input.amount !== undefined) {
+    // Parse as Decimal to avoid JS float precision errors on currency values.
+    let refundDecimal: Prisma.Decimal;
+    try {
+      refundDecimal = new Prisma.Decimal(input.amount);
+    } catch {
+      return { error: "Invalid refund amount" };
+    }
+    if (refundDecimal.isNaN() || refundDecimal.isNegative() || !refundDecimal.isFinite()) {
+      return { error: "Invalid refund amount" };
+    }
+    if (refundDecimal.greaterThan(order.total)) {
+      return { error: "Refund amount cannot exceed order total" };
+    }
+    // Write back as string so the Prisma update below receives a clean Decimal-compatible value.
+    input.amount = refundDecimal.toDecimalPlaces(2).toString() as unknown as string;
+  }
   try {
     await prisma.order.update({
       where: { id: orderId },

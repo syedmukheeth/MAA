@@ -1,11 +1,32 @@
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { searchRatelimit } from "@/lib/redis";
+
+async function clientIp() {
+  const headerList = await headers();
+  return headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+}
 
 /**
  * Live search suggestions for the storefront search bar.
  * Case-insensitive contains match — intentionally forgiving, not exact.
  */
 export async function GET(request: Request) {
+  // Rate limit to prevent DB abuse from bots
+  try {
+    const ip = await clientIp();
+    const { success } = await searchRatelimit.limit(`search:${ip}`);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+  } catch {
+    // Fail open for search — degraded search is better than no search
+  }
+
   const { searchParams } = new URL(request.url);
   const q = (searchParams.get("q") ?? "").trim();
   const scope = searchParams.get("scope") === "combos" ? "combos" : "products";

@@ -42,6 +42,13 @@ export const metadata: Metadata = {
   description:
     "Premium handcrafted furniture designed to bring timeless beauty and lasting comfort into every space. Handcrafted in Kurnool, delivered across India.",
   applicationName: SITE_NAME,
+  icons: {
+    icon: [
+      { url: "/brand/logo.jpeg", type: "image/jpeg" },
+      { url: "/icon.jpeg", type: "image/jpeg" },
+    ],
+    apple: [{ url: "/brand/logo.jpeg", type: "image/jpeg" }],
+  },
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",

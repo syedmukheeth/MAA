@@ -6,11 +6,10 @@ import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/session";
 import { testimonialSchema, type TestimonialInput } from "@/lib/validations/testimonial";
 import { recordAudit } from "@/lib/audit";
-
-const MANAGE_ROLES = ["OWNER", "ADMIN"] as const;
+import { ADMIN_ROLES } from "@/lib/auth/roles";
 
 export async function createTestimonial(input: TestimonialInput): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...ADMIN_ROLES]);
   const parsed = testimonialSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -47,7 +46,7 @@ export async function updateTestimonial(
   id: string,
   input: TestimonialInput
 ): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...ADMIN_ROLES]);
   const parsed = testimonialSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -88,7 +87,7 @@ export async function updateTestimonial(
 }
 
 export async function deleteTestimonial(id: string): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...ADMIN_ROLES]);
   const doomed = await prisma.testimonial.findUnique({
     where: { id },
     select: { name: true, rating: true },
@@ -114,7 +113,7 @@ export async function toggleTestimonialPublished(
   id: string,
   isPublished: boolean
 ): Promise<{ error?: string }> {
-  const session = await requireRole([...MANAGE_ROLES]);
+  const session = await requireRole([...ADMIN_ROLES]);
   const testimonial = await prisma.testimonial.update({
     where: { id },
     data: { isPublished },

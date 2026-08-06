@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/db";
 
 export { PURCHASES_DISABLED_MESSAGE } from "@/lib/site-settings-constants";
@@ -55,7 +56,18 @@ export const DEFAULT_SITE_SETTINGS = {
 
 export type SiteSettings = typeof DEFAULT_SITE_SETTINGS;
 
-export async function getSiteSettings(): Promise<SiteSettings> {
+function cleanJson(val: string | null | undefined): string | null {
+  if (!val) return null;
+  try {
+    JSON.parse(val);
+    return val;
+  } catch {
+    console.warn("Corrupted JSON in site settings ignored:", val);
+    return null;
+  }
+}
+
+export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
   try {
     const row = await prisma.siteSettings.findUnique({
       where: { id: SETTINGS_ID },
@@ -86,14 +98,14 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       allowUPI: row.allowUPI,
       upiId: row.upiId,
       upiQrImage: row.upiQrImage,
-      shopSections: row.shopSections ?? null,
-      shopCustomSections: row.shopCustomSections ?? null,
-      studioWoods: row.studioWoods ?? null,
-      studioFinishes: row.studioFinishes ?? null,
-      studioBudgets: row.studioBudgets ?? null,
-      studioFeatures: row.studioFeatures ?? null,
+      shopSections: cleanJson(row.shopSections),
+      shopCustomSections: cleanJson(row.shopCustomSections),
+      studioWoods: cleanJson(row.studioWoods),
+      studioFinishes: cleanJson(row.studioFinishes),
+      studioBudgets: cleanJson(row.studioBudgets),
+      studioFeatures: cleanJson(row.studioFeatures),
     };
   } catch {
     return DEFAULT_SITE_SETTINGS;
   }
-}
+});

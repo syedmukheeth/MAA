@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -5,31 +6,30 @@ import { verifySession, SESSION_COOKIE, type Role, type SessionPayload } from ".
 
 export { SESSION_COOKIE };
 
-export async function getCurrentUser(): Promise<SessionPayload | null> {
+export const getCurrentUser = cache(async (): Promise<SessionPayload | null> => {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   return verifySession(token);
-}
+});
 
 /**
- * Verifies the JWT and re-checks the user row so suspensions and role
- * changes take effect immediately instead of at token expiry.
- *
- * Exported because the storefront is public: actions reachable by anonymous
- * visitors (add-to-cart) need to branch on "not signed in" rather than be
- * redirected mid-action.
+ * Verifies the JWT and re-checks the user row so suspensions, role
+ * changes, and password changes take effect immediately instead of at
+ * token expiry.
  */
-export async function getActiveUser(): Promise<SessionPayload | null> {
+export const getActiveUser = cache(async (): Promise<SessionPayload | null> => {
   const user = await getCurrentUser();
   if (!user) return null;
   const dbUser = await prisma.user.findUnique({
     where: { id: user.sub },
-    select: { isActive: true, role: true },
+    select: { isActive: true, role: true, tokenVersion: true },
   });
   if (!dbUser || !dbUser.isActive) return null;
+  // Reject tokens minted before the latest password/role change
+  if (dbUser.tokenVersion > user.tv) return null;
   return { ...user, role: dbUser.role as Role };
-}
+});
 
 /**
  * Guards for pages and staff-only actions.

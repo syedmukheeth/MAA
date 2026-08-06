@@ -1,10 +1,12 @@
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 
-export const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+const url = process.env.UPSTASH_REDIS_REST_URL;
+const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+export const redis = (url && token)
+  ? new Redis({ url, token })
+  : new Redis({ url: "https://localhost", token: "none" });
 
 /** Per-account: slows credential stuffing against one known email. */
 export const loginRatelimit = new Ratelimit({
@@ -51,4 +53,20 @@ export const forgotPasswordRatelimit = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(3, "3600 s"), // 3 reset requests per hour per email
   prefix: "ratelimit:forgot-password",
+});
+
+/** Throttle actual reset attempts per IP so a leaked token can't be replayed
+ *  or brute-forced indefinitely. */
+export const resetPasswordRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "900 s"), // 5 attempts per 15 minutes per IP
+  prefix: "ratelimit:reset-password",
+});
+
+/** The search endpoint is public and hits the database. Unbounded, a bot can
+ *  hammer it and create real load on PostgreSQL. */
+export const searchRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(60, "60 s"), // 60 requests per minute per IP
+  prefix: "ratelimit:search",
 });

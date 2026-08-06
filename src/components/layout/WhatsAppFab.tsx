@@ -1,4 +1,5 @@
 import { WhatsAppIcon } from "@/components/icons/social";
+import { whatsappLink } from "@/lib/whatsapp";
 
 /**
  * Desktop-only floating WhatsApp button.
@@ -11,12 +12,12 @@ import { WhatsAppIcon } from "@/components/icons/social";
  * the footer used to fall back to.
  */
 export function WhatsAppFab({ whatsapp }: { whatsapp?: string }) {
-  const digits = whatsapp?.replace(/[^0-9]/g, "");
-  if (!digits) return null;
+  const href = whatsappLink(whatsapp);
+  if (!href) return null;
 
   return (
     <a
-      href={`https://wa.me/${digits}`}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with us on WhatsApp"

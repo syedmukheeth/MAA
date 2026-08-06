@@ -72,11 +72,11 @@ export function Topbar({
           <span className="hidden sm:inline">Visit Store</span>
           <span className="sr-only sm:hidden">Visit Store</span>
         </Link>
-        <div className="hidden md:block text-right">
-          <p className="text-sm text-foreground max-w-[150px] truncate">{email}</p>
-          <p className="text-xs capitalize text-muted-foreground">
+        <div className="hidden md:flex flex-col items-end">
+          <p className="text-sm font-medium text-foreground max-w-[180px] truncate">{email}</p>
+          <span className="text-xs font-semibold capitalize text-bronze">
             {role.toLowerCase()}
-          </p>
+          </span>
         </div>
         <form action={logoutAction}>
           <button

@@ -5,7 +5,10 @@ import { UserRoleTable } from "@/components/admin/UserRoleTable";
 export default async function AdminUsersPage() {
   const session = await requireRole(["OWNER", "ADMIN"]);
 
-  const users = await prisma.user.findMany({ orderBy: { createdAt: "asc" } });
+  const users = await prisma.user.findMany({
+    orderBy: { createdAt: "asc" },
+    take: 200,
+  });
 
   return (
     <div>

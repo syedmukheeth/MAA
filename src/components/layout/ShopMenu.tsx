@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { CATEGORY_LABELS } from "@/lib/validations/product";
 import type { RoomCategory } from "@/lib/shop-sections";
-import { DUR, EASE_OUT_EXPO, STAGGER } from "@/lib/motion";
+import { DUR, EASE, STAGGER } from "@/lib/motion";
 
 const CATEGORY_ICONS: Record<RoomCategory, LucideIcon> = {
   LIVING_ROOM: Sofa,
@@ -108,7 +108,7 @@ export function ShopMenu({
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8, transition: { duration: DUR.fast } }}
-            transition={{ duration: DUR.base, ease: EASE_OUT_EXPO }}
+            transition={{ duration: DUR.base, ease: EASE.out }}
             // Anchored to the header, not the trigger: a full-bleed panel reads
             // as part of the chrome, a trigger-anchored dropdown reads as a form
             // control.
@@ -127,7 +127,7 @@ export function ShopMenu({
                         key={key}
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.05 + i * STAGGER * 0.5, duration: DUR.fast }}
+                        transition={{ delay: 0.05 + i * STAGGER.tight, duration: DUR.fast }}
                       >
                         <Link
                           href={`/products?category=${key}`}

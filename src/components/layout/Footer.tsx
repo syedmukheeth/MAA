@@ -4,6 +4,7 @@ import { hasPublishedTestimonials } from "@/lib/testimonials";
 import { BrandMark } from "@/components/layout/BrandMark";
 import { InstagramIcon, FacebookIcon, WhatsAppIcon } from "@/components/icons/social";
 import { CATEGORY_LABELS, ROOM_CATEGORIES } from "@/lib/validations/product";
+import { whatsappLink } from "@/lib/whatsapp";
 
 type FooterLink = { label: string; href: string };
 
@@ -51,7 +52,7 @@ export async function Footer({
   hours?: string;
   deliveryMessage?: string;
 }) {
-  const whatsappDigits = whatsapp?.replace(/[^0-9]/g, "");
+  const whatsappHref = whatsappLink(whatsapp);
   // showroomPhone is a comma-separated list in site settings — previously the
   // footer ignored it entirely and hardcoded two numbers, so admin edits did
   // nothing.
@@ -122,12 +123,12 @@ export async function Footer({
               </span>
             </div>
           )}
-          {whatsappDigits && (
+          {whatsappHref && (
             <ContactCell
               icon={<WhatsAppIcon size={16} />}
               title="WhatsApp us"
               body={hours ?? "Send photos of your space for a quote"}
-              href={`https://wa.me/${whatsappDigits}`}
+              href={whatsappHref}
               external
             />
           )}
@@ -163,8 +164,8 @@ export async function Footer({
                   <FacebookIcon size={17} />
                 </SocialLink>
               )}
-              {whatsappDigits && (
-                <SocialLink href={`https://wa.me/${whatsappDigits}`} label="WhatsApp">
+              {whatsappHref && (
+                <SocialLink href={whatsappHref} label="WhatsApp">
                   <WhatsAppIcon size={17} />
                 </SocialLink>
               )}

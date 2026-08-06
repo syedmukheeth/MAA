@@ -1,17 +1,17 @@
 import { z } from "zod";
 
 export const customRequestSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  phone: z.string().min(6, "Phone is required"),
-  inspirationUrl: z.string().optional(),
-  imageUrl: z.string().optional(),
-  dimensions: z.string().optional(),
-  wood: z.string().optional(),
-  finish: z.string().optional(),
-  budgetRange: z.string().optional(),
-  description: z.string().optional(),
+  name: z.string().min(2, "Name is required").max(100),
+  phone: z.string().min(6, "Phone is required").max(20),
+  inspirationUrl: z.string().url("Must be a valid URL").max(2048).optional().or(z.literal("")),
+  imageUrl: z.string().max(2048).optional(),
+  dimensions: z.string().max(200).optional(),
+  wood: z.string().max(100).optional(),
+  finish: z.string().max(100).optional(),
+  budgetRange: z.string().max(100).optional(),
+  description: z.string().max(3000).optional(),
   /// JSON string of custom feature answers, e.g. {"Handle Style":"Brass"}.
-  customOptions: z.string().optional(),
+  customOptions: z.string().max(5000).optional(),
 });
 
 export type CustomRequestInput = z.infer<typeof customRequestSchema>;

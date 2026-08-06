@@ -67,7 +67,16 @@ export async function changeUserRole(
 
   await prisma.user.update({
     where: { id: userId },
-    data: { role: nextRole },
+    data: { role: nextRole, tokenVersion: { increment: 1 } },
+  });
+
+  await recordAudit({
+    actorId: session.sub,
+    action: "user.role_change",
+    entity: "User",
+    entityId: userId,
+    summary: `${target.email}: ${target.role} → ${nextRole}`,
+    metadata: { from: target.role, to: nextRole, targetEmail: target.email },
   });
 
   await recordAudit({

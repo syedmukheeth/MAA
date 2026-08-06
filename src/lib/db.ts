@@ -34,7 +34,17 @@ function sslConfig(): pg.PoolConfig["ssl"] {
   if (!useSsl) return false;
 
   const raw = process.env.DATABASE_CA_CERT?.trim();
-  if (!raw) return { rejectUnauthorized: false };
+  if (!raw) {
+    if (process.env.NODE_ENV === "production") {
+      console.warn(
+        "⚠️  DATABASE_CA_CERT is not set. " +
+          "The database connection is encrypted but the server certificate is NOT verified. " +
+          "Set DATABASE_CA_CERT to the Supabase root CA PEM (Dashboard → Settings → Database → SSL certificate) " +
+          "to enable full TLS verification in production."
+      );
+    }
+    return { rejectUnauthorized: false };
+  }
 
   const ca = raw.includes("-----BEGIN CERTIFICATE-----")
     ? raw
@@ -57,8 +67,10 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+// Always cache on globalThis so that hot-reload in dev and module re-evaluation
+// in production (across bundler boundaries) reuse the same pool rather than
+// creating a new one per invocation.
+if (!globalForPrisma.prisma) {
+  globalForPrisma.prisma = createPrismaClient();
 }
+export const prisma = globalForPrisma.prisma;
