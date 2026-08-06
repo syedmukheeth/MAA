@@ -219,7 +219,7 @@ export async function loginAction(
     const requestedNext = safeNextPath(parsed.data.next);
     const destination = isStaffUser
       ? (requestedNext.startsWith("/admin") ? requestedNext : "/admin")
-      : (requestedNext === "/" ? "/account" : requestedNext);
+      : requestedNext;
 
     redirect(destination);
   } catch (err: unknown) {
