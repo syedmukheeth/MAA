@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/session";
 import { recordAudit, diff } from "@/lib/audit";
+import { STAFF_ROLES } from "@/lib/auth/roles";
 import { SETTINGS_ID } from "@/lib/site-settings";
 import {
   siteSettingsSchema,
@@ -13,7 +14,7 @@ import {
 export async function updateSiteSettings(
   input: SiteSettingsInput
 ): Promise<{ error?: string }> {
-  const session = await requireRole(["OWNER", "ADMIN", "MANAGER"]);
+  const session = await requireRole([...STAFF_ROLES]);
 
   const parsed = siteSettingsSchema.safeParse(input);
   if (!parsed.success) {

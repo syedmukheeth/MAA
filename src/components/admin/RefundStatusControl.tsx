@@ -38,7 +38,7 @@ export function RefundStatusControl({
       status,
       refundTxnId: txnId.trim() || undefined,
       notes: notes.trim() || undefined,
-      amount: amount ? parseFloat(amount) : undefined,
+      amount: amount.trim() || undefined,
     });
 
     setLoading(false);

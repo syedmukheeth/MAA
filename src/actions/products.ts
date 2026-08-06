@@ -15,9 +15,15 @@ async function resolveFreeSlug(
   slug: string,
   excludeId?: string
 ): Promise<string> {
+  // Query only exact match or numbered variants (slug-2, slug-3, …).
+  // The previous `startsWith: slug` matched unrelated slugs that share a
+  // prefix (e.g. "sofa" matched "sofa-set"), causing unnecessary numbering.
   const taken = await prisma.product.findMany({
     where: {
-      slug: { startsWith: slug },
+      OR: [
+        { slug },
+        { slug: { startsWith: `${slug}-` } },
+      ],
       ...(excludeId ? { NOT: { id: excludeId } } : {}),
     },
     select: { slug: true },
@@ -296,7 +302,10 @@ export async function getProductsByIds(ids: string[]) {
       })),
     };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Failed to load products" };
+    // Log full error server-side (may include Prisma internals / table names)
+    // but return only a generic message to the client.
+    console.error("getProductsByIds failed:", err);
+    return { error: "Failed to load products" };
   }
 }
 

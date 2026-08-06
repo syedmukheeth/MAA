@@ -1,6 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
+
 import { generateUploadSignature } from "@/lib/cloudinary";
 import { requireRole, requireAuth } from "@/lib/auth/session";
 import { uploadRatelimit } from "@/lib/redis";
@@ -29,10 +29,6 @@ export async function getCustomRequestUploadSignature(): Promise<
   // Require authentication to prevent anonymous Cloudinary storage abuse.
   // The custom request form already requires a logged-in user.
   const session = await requireAuth();
-
-  const headerList = await headers();
-  const ip =
-    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 
   const { success } = await uploadRatelimit.limit(`custom-request:${session.sub}`);
   if (!success) {

@@ -15,16 +15,13 @@ export type SessionPayload = {
 
 const EXPIRY = "7d";
 
-const FALLBACK_SECRET = "maa-furniture-production-secure-jwt-secret-key-32chars";
-
 function getSecretKey() {
   const secret = process.env.JWT_SECRET;
-  if (!secret || secret.includes("dev-only")) {
-    return new TextEncoder().encode(FALLBACK_SECRET);
-  }
-  if (secret.length < 32) {
-    const padded = secret.padEnd(32, "maa-furniture-secure-secret-key-pad");
-    return new TextEncoder().encode(padded);
+  if (!secret || secret.length < 32) {
+    throw new Error(
+      "JWT_SECRET environment variable is missing or too short (minimum 32 characters). " +
+        "Generate one with: node -e \"console.log(require('crypto').randomBytes(48).toString('hex'))\""
+    );
   }
   return new TextEncoder().encode(secret);
 }

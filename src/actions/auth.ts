@@ -3,6 +3,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createHash, randomBytes } from "node:crypto";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { signSession, type Role } from "@/lib/auth/jwt";
@@ -34,6 +35,15 @@ const FALLBACK_MAX_ATTEMPTS = 10;
 
 function checkInMemoryFallback(key: string): boolean {
   const now = Date.now();
+
+  // Probabilistic GC: on ~1% of calls, evict stale entries so the Map
+  // never grows unboundedly during a prolonged Redis outage.
+  if (Math.random() < 0.01) {
+    for (const [k, v] of fallbackStore) {
+      if (now > v.resetAt) fallbackStore.delete(k);
+    }
+  }
+
   const record = fallbackStore.get(key);
 
   if (!record || now > record.resetAt) {
@@ -190,7 +200,6 @@ export async function loginAction(
       where: {
         OR: [
           { email: lowerInput },
-          { name: rawInput },
           { email: `${lowerInput}@maafurnitures.com` },
         ],
       },
@@ -245,7 +254,8 @@ function hashResetToken(token: string) {
 export async function forgotPasswordAction(
   email: string
 ): Promise<{ success?: boolean; error?: string }> {
-  if (!email || !email.includes("@")) {
+  const emailParseResult = z.string().email().safeParse(email);
+  if (!emailParseResult.success) {
     return { error: "Please enter a valid email address." };
   }
 
