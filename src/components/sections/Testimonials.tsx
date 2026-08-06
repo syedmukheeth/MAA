@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Star } from "lucide-react";
+import { Quote, Star } from "lucide-react";
+import { EASE, DUR, STAGGER, VIEWPORT } from "@/lib/motion";
 
 export type TestimonialData = {
   id: string;
@@ -22,32 +23,48 @@ export function Testimonials({ testimonials }: { testimonials: TestimonialData[]
       className="scroll-mt-header bg-ivory px-6 py-28 lg:px-10"
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mb-16 max-w-2xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={VIEWPORT}
+          transition={{ duration: DUR.base, ease: EASE.out }}
+          className="mb-16 max-w-2xl"
+        >
           <p className="text-xs uppercase tracking-[0.35em] text-bronze">
              Customer Stories
           </p>
           <h2 className="mt-5 font-heading text-3xl text-charcoal sm:text-4xl">
             Real homes, real families.
           </h2>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {testimonials.map((t, i) => (
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={VIEWPORT}
+          variants={{ show: { transition: { staggerChildren: STAGGER.base } } }}
+          className="grid grid-cols-1 gap-8 lg:grid-cols-3"
+        >
+          {testimonials.map((t) => (
             <motion.div
               key={t.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.6, delay: i * 0.1 }}
-              className="overflow-hidden rounded-2xl bg-cream flex flex-col h-full"
+              variants={{ hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0 } }}
+              transition={{ duration: DUR.base, ease: EASE.out }}
+              whileHover={{ y: -6 }}
+              className="flex h-full flex-col overflow-hidden rounded-2xl bg-cream shadow-lift transition-shadow duration-500 ease-brand hover:shadow-float"
             >
               {t.imageUrl && (
-                <div className="relative aspect-[16/10] w-full flex-none">
+                <div className="relative aspect-[16/10] w-full flex-none overflow-hidden">
                   <Image src={t.imageUrl} alt={t.name} fill className="object-cover" />
                 </div>
               )}
-              <div className="p-7 flex flex-col flex-1">
-                <div className="flex gap-1 text-bronze flex-none">
+              <div className="relative flex flex-1 flex-col p-7">
+                <Quote
+                  size={40}
+                  className="absolute right-5 top-5 text-bronze/10"
+                  aria-hidden
+                />
+                <div className="flex flex-none gap-1 text-bronze">
                   {Array.from({ length: 5 }).map((_, s) => (
                     <Star
                       key={s}
@@ -57,19 +74,19 @@ export function Testimonials({ testimonials }: { testimonials: TestimonialData[]
                     />
                   ))}
                 </div>
-                <p className="mt-4 text-sm leading-relaxed text-graphite/80 flex-1">
+                <p className="relative mt-4 flex-1 text-sm leading-relaxed text-graphite/80">
                   &ldquo;{t.quote}&rdquo;
                 </p>
-                <p className="mt-5 font-heading text-base text-charcoal flex-none">
+                <p className="mt-5 flex-none font-heading text-base text-charcoal">
                   {t.name}
                 </p>
                 {t.location && (
-                  <p className="text-xs text-graphite/60 flex-none">{t.location}</p>
+                  <p className="flex-none text-xs text-graphite/60">{t.location}</p>
                 )}
               </div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

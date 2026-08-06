@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { MapPin, Clock, Send, Phone, Mail } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/social";
 import { whatsappLink } from "@/lib/whatsapp";
+import { EASE, DUR, VIEWPORT } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,7 +54,13 @@ export function ShowroomFaqContact({
     <section id="showroom" className="scroll-mt-header bg-ivory px-6 py-28 lg:px-10">
       <div className="mx-auto max-w-7xl">
         {/* Showroom */}
-        <div className="grid grid-cols-1 gap-12 rounded-2xl bg-cream p-8 lg:grid-cols-2 lg:p-14">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={VIEWPORT}
+          transition={{ duration: DUR.base, ease: EASE.out }}
+          className="grid grid-cols-1 gap-12 rounded-2xl bg-cream p-8 shadow-lift lg:grid-cols-2 lg:p-14"
+        >
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-bronze">
               Visit Our Showroom
@@ -123,11 +130,16 @@ export function ShowroomFaqContact({
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3815.6388!2d78.0206856!3d15.8375006!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bb5dd6d6cc56eef%3A0x731e09d8ec60ef2d!2sMAA%20FURNITURE!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* FAQ + Contact */}
         <div className="mt-24 grid grid-cols-1 gap-16 lg:grid-cols-2">
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={VIEWPORT}
+            transition={{ duration: DUR.base, ease: EASE.out }}
+          >
             <p className="text-xs uppercase tracking-[0.35em] text-bronze">
               FAQs
             </p>
@@ -146,9 +158,16 @@ export function ShowroomFaqContact({
                 </AccordionItem>
               ))}
             </Accordion>
-          </div>
+          </motion.div>
 
-          <div id="contact" className="scroll-mt-header">
+          <motion.div
+            id="contact"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={VIEWPORT}
+            transition={{ duration: DUR.base, ease: EASE.out, delay: 0.1 }}
+            className="scroll-mt-header"
+          >
             <p className="text-xs uppercase tracking-[0.35em] text-bronze">
               Contact
             </p>
@@ -201,7 +220,7 @@ export function ShowroomFaqContact({
                 </Button>
               </form>
             )}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

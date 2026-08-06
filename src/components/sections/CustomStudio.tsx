@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { UploadCloud, Check, Loader2 } from "lucide-react";
 import { getCustomRequestUploadSignature } from "@/actions/upload";
+import { EASE, DUR, VIEWPORT } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -167,7 +168,12 @@ export function CustomStudio({
   return (
     <section id="custom-studio" className="scroll-mt-header bg-gradient-to-b from-[#F9F6F0] via-[#F3EEE5] to-[#EAE4D8] border-b border-bronze/20 px-6 py-24 lg:px-10">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-16 lg:grid-cols-2">
-        <div>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={VIEWPORT}
+          transition={{ duration: DUR.base, ease: EASE.out }}
+        >
           <p className="text-xs uppercase tracking-[0.35em] font-bold text-bronze">
             Custom Furniture Studio
           </p>
@@ -180,22 +186,22 @@ export function CustomStudio({
             space.
           </p>
 
-          <div className="relative mt-10 aspect-[4/3] overflow-hidden rounded-2xl border border-bronze/20 shadow-md">
+          <div className="group relative mt-10 aspect-[4/3] overflow-hidden rounded-2xl border border-bronze/20 shadow-lift">
             <Image
               src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1600&auto=format&fit=crop"
               alt="Custom furniture design consultation"
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-700 ease-brand group-hover:scale-105"
             />
           </div>
-        </div>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.7 }}
-          className="rounded-2xl bg-white shadow-xl border border-bronze/20 p-8 lg:p-10"
+          viewport={VIEWPORT}
+          transition={{ duration: DUR.base, ease: EASE.out, delay: 0.1 }}
+          className="rounded-2xl bg-white shadow-float border border-bronze/20 p-8 lg:p-10"
         >
           {submitted ? (
             <div className="flex h-full min-h-80 flex-col items-center justify-center text-center">

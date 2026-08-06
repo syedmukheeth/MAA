@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { EASE, DUR, STAGGER, VIEWPORT } from "@/lib/motion";
 
 const WORDS = ["Comfort.", "Lifestyle.", "Luxury.", "Craftsmanship.", "Trust."];
 
@@ -17,8 +18,8 @@ export function BrandStatement({
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.6 }}
-          transition={{ duration: 0.7 }}
+          viewport={VIEWPORT}
+          transition={{ duration: DUR.base, ease: EASE.out }}
           className="text-xs uppercase tracking-[0.35em] text-bronze"
         >
           {label}
@@ -27,27 +28,31 @@ export function BrandStatement({
         <motion.h2
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.6 }}
-          transition={{ duration: 0.8, delay: 0.15 }}
+          viewport={VIEWPORT}
+          transition={{ duration: DUR.hero, ease: EASE.out, delay: 0.1 }}
           className="mt-8 font-heading text-3xl leading-snug text-charcoal sm:text-4xl lg:text-5xl"
         >
           {headline}
         </motion.h2>
 
-        <div className="mt-14 flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
-          {WORDS.map((word, i) => (
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={VIEWPORT}
+          variants={{ show: { transition: { staggerChildren: STAGGER.tight, delayChildren: 0.25 } } }}
+          className="mt-14 flex flex-wrap items-center justify-center gap-x-10 gap-y-6"
+        >
+          {WORDS.map((word) => (
             <motion.span
               key={word}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.6 }}
-              transition={{ duration: 0.6, delay: 0.3 + i * 0.1 }}
-              className="font-heading text-xl text-graphite/70 sm:text-2xl"
+              variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }}
+              transition={{ duration: DUR.base, ease: EASE.out }}
+              className="font-heading text-xl text-graphite/70 transition-colors duration-300 hover:text-bronze sm:text-2xl"
             >
               {word}
             </motion.span>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

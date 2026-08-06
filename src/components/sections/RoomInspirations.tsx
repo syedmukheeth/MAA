@@ -2,6 +2,8 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { ArrowUpRight } from "lucide-react";
+import { EASE, DUR, STAGGER, VIEWPORT } from "@/lib/motion";
 
 const ROOMS = [
   {
@@ -35,40 +37,56 @@ export function RoomInspirations() {
   return (
     <section id="room-inspirations" className="scroll-mt-header bg-cream px-6 py-28 lg:px-10">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-16 max-w-2xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={VIEWPORT}
+          transition={{ duration: DUR.base, ease: EASE.out }}
+          className="mb-16 max-w-2xl"
+        >
           <p className="text-xs uppercase tracking-[0.35em] text-bronze">
             Room Inspirations
           </p>
           <h2 className="mt-5 font-heading text-3xl text-charcoal sm:text-4xl">
             See it, before you build it.
           </h2>
-        </div>
+        </motion.div>
 
-        <div className="flex gap-5 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {ROOMS.map((r, i) => (
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={VIEWPORT}
+          variants={{ show: { transition: { staggerChildren: STAGGER.tight } } }}
+          className="flex cursor-grab gap-5 overflow-x-auto pb-4 active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {ROOMS.map((r) => (
             <motion.a
               href="#"
               key={r.name}
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.6, delay: i * 0.08 }}
-              className="group relative aspect-[3/4] w-64 flex-none overflow-hidden rounded-xl sm:w-72"
+              variants={{ hidden: { opacity: 0, x: 30 }, show: { opacity: 1, x: 0 } }}
+              transition={{ duration: DUR.base, ease: EASE.out }}
+              className="group relative aspect-[3/4] w-64 flex-none overflow-hidden rounded-xl shadow-lift transition-shadow duration-500 ease-brand hover:shadow-float sm:w-72"
             >
               <Image
                 src={r.image}
                 alt={r.name}
                 fill
                 sizes="(min-width: 640px) 288px, 256px"
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                className="object-cover transition-transform duration-700 ease-brand group-hover:scale-110"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/75 via-transparent to-transparent" />
-              <h3 className="absolute bottom-5 left-5 font-heading text-lg text-ivory">
-                {r.name}
-              </h3>
+              <div className="absolute inset-0 bg-gradient-to-t from-espresso/85 via-espresso/10 to-transparent transition-opacity duration-500 group-hover:from-espresso/95" />
+              <div className="absolute inset-x-5 bottom-5 flex items-end justify-between">
+                <h3 className="font-heading text-lg text-ivory">
+                  {r.name}
+                </h3>
+                <ArrowUpRight
+                  size={18}
+                  className="translate-y-1 text-ivory/0 transition-all duration-500 ease-brand group-hover:translate-y-0 group-hover:text-ivory"
+                />
+              </div>
             </motion.a>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
