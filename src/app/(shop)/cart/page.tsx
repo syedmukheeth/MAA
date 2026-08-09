@@ -6,6 +6,7 @@ import { OrderTotals } from "@/components/shop/OrderTotals";
 import {
   getSiteSettings,
   PURCHASES_DISABLED_MESSAGE,
+  STAFF_PURCHASE_BLOCKED_MESSAGE,
 } from "@/lib/site-settings";
 import { computeCartTotals } from "@/lib/cart";
 import { money, toPaise } from "@/lib/money";
@@ -32,6 +33,11 @@ export default async function CartPage() {
     }),
     getSiteSettings(),
   ]);
+
+  // Staff accounts can't check out (see placeOrder) — say so here rather than
+  // letting them walk into a wizard whose final button is guaranteed to fail.
+  const isStaff = session.role !== "CUSTOMER";
+  const canCheckout = settings.allowPurchases && !isStaff;
 
   const items = cart?.items ?? [];
   const unitPriceOf = (item: (typeof items)[number]) =>
@@ -98,7 +104,7 @@ export default async function CartPage() {
               taxAmount={totals.taxAmount.toString()}
               total={totals.total.toString()}
             />
-            {settings.allowPurchases ? (
+            {canCheckout ? (
               <Link
                 href="/checkout"
                 className="mt-6 block rounded-full bg-bronze px-8 py-3 text-center text-sm font-medium text-ivory transition-colors hover:bg-bronze/90"
@@ -107,7 +113,9 @@ export default async function CartPage() {
               </Link>
             ) : (
               <p className="mt-6 rounded-xl border border-linen bg-cream px-4 py-3 text-sm text-graphite/80">
-                {PURCHASES_DISABLED_MESSAGE}
+                {isStaff
+                  ? STAFF_PURCHASE_BLOCKED_MESSAGE
+                  : PURCHASES_DISABLED_MESSAGE}
               </p>
             )}
           </div>

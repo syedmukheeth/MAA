@@ -7,6 +7,7 @@ import { getDefaultVariant } from "@/lib/inventory";
 import {
   getSiteSettings,
   PURCHASES_DISABLED_MESSAGE,
+  STAFF_PURCHASE_BLOCKED_MESSAGE,
 } from "@/lib/site-settings";
 
 /**
@@ -51,6 +52,10 @@ export async function addToCart(input: {
   const session = await getActiveUser();
   if (!session) {
     return { requiresAuth: true, error: "Please sign in to add items to your cart" };
+  }
+  // Staff administer the store, they do not shop in it.
+  if (session.role !== "CUSTOMER") {
+    return { error: STAFF_PURCHASE_BLOCKED_MESSAGE };
   }
   const quantity = sanitizeQuantity(input.quantity);
   if (quantity === null) {

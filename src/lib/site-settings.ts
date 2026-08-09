@@ -1,7 +1,10 @@
 import { cache } from "react";
 import { prisma } from "@/lib/db";
 
-export { PURCHASES_DISABLED_MESSAGE } from "@/lib/site-settings-constants";
+export {
+  PURCHASES_DISABLED_MESSAGE,
+  STAFF_PURCHASE_BLOCKED_MESSAGE,
+} from "@/lib/site-settings-constants";
 
 export const SETTINGS_ID = "singleton";
 

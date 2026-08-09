@@ -11,3 +11,12 @@
  */
 export const PURCHASES_DISABLED_MESSAGE =
   "Sorry, items are not available for purchase right now.";
+
+/**
+ * Staff browse the storefront to check how it looks, not to buy. An owner /
+ * admin / manager order would sit in the same queue they administer and skew
+ * every sales figure, so buying is CUSTOMER-only. Enforced in addToCart and
+ * placeOrder; this string is only what the UI says about it.
+ */
+export const STAFF_PURCHASE_BLOCKED_MESSAGE =
+  "Store accounts cannot place orders. Sign in with a customer account to buy.";

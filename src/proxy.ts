@@ -37,10 +37,13 @@ export async function proxy(request: NextRequest) {
   const session = token ? await verifySession(token) : null;
   const isAuthPage = pathname === "/login" || pathname === "/register";
 
-  // Already signed in: keep auth pages out of the way, go to the store
+  // Already signed in: keep auth pages out of the way. Same split as
+  // loginAction — customers to the store, staff to the back-office settings.
   if (isAuthPage) {
     if (session) {
-      return NextResponse.redirect(new URL("/", request.url));
+      const destination =
+        session.role === "CUSTOMER" ? "/products" : "/admin/settings";
+      return NextResponse.redirect(new URL(destination, request.url));
     }
     return NextResponse.next();
   }

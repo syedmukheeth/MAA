@@ -18,6 +18,7 @@ import { orderConfirmationHtml, orderStatusUpdateHtml } from "@/lib/email-templa
 import {
   getSiteSettings,
   PURCHASES_DISABLED_MESSAGE,
+  STAFF_PURCHASE_BLOCKED_MESSAGE,
 } from "@/lib/site-settings";
 import { money, toPaise, type Money } from "@/lib/money";
 import { computeCartTotals } from "@/lib/cart";
@@ -62,6 +63,12 @@ export async function placeOrder(
   input: ShippingAddressInput & { saveAddress?: boolean; paymentMethod?: string }
 ): Promise<{ error?: string; orderId?: string }> {
   const session = await requireAuth();
+
+  // Staff run the shop; an order placed from an OWNER/ADMIN/MANAGER account
+  // would land in the same queue they process and distort every sales report.
+  if (session.role !== "CUSTOMER") {
+    return { error: STAFF_PURCHASE_BLOCKED_MESSAGE };
+  }
 
   // Checked here as well as in addToCart: a cart filled before buying was
   // switched off must not still be checkout-able.

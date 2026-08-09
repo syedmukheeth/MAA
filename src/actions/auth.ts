@@ -76,8 +76,15 @@ async function limitOrAllow(limiter: Ratelimit, key: string): Promise<boolean> {
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
-/** Every role lands on the store; staff reach the back office via /admin. */
-const HOME_ROUTE = "/";
+/** Customers land in the store catalogue after signing in. */
+const STORE_ROUTE = "/products";
+
+/**
+ * Staff land in the back-office settings, not the storefront: they administer
+ * the shop, they do not buy from it (see the CUSTOMER-only checks in
+ * addToCart / placeOrder).
+ */
+const STAFF_ROUTE = "/admin/settings";
 
 /**
  * Only allow same-origin relative redirects after login.
@@ -87,11 +94,11 @@ const HOME_ROUTE = "/";
  * just typed real credentials straight to an attacker's page. Backslashes are
  * rejected too — some parsers normalise `/\evil.com` the same way.
  */
-function safeNextPath(next: string | undefined): string {
-  if (!next) return HOME_ROUTE;
-  if (!next.startsWith("/")) return HOME_ROUTE;
-  if (next.startsWith("//")) return HOME_ROUTE;
-  if (next.includes("\\")) return HOME_ROUTE;
+function safeNextPath(next: string | undefined): string | null {
+  if (!next) return null;
+  if (!next.startsWith("/")) return null;
+  if (next.startsWith("//")) return null;
+  if (next.includes("\\")) return null;
   return next;
 }
 
@@ -157,7 +164,7 @@ export async function registerAction(
     });
 
     await createSessionCookie(user);
-    redirect("/");
+    redirect(STORE_ROUTE);
   } catch (err: unknown) {
     if (
       typeof err === "object" &&
@@ -218,8 +225,10 @@ export async function loginAction(
     const isStaffUser = user.role !== "CUSTOMER";
     const requestedNext = safeNextPath(parsed.data.next);
     const destination = isStaffUser
-      ? (requestedNext.startsWith("/admin") ? requestedNext : "/admin")
-      : requestedNext;
+      ? requestedNext?.startsWith("/admin")
+        ? requestedNext
+        : STAFF_ROUTE
+      : (requestedNext ?? STORE_ROUTE);
 
     redirect(destination);
   } catch (err: unknown) {

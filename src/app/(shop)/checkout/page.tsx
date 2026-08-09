@@ -21,7 +21,8 @@ export default async function CheckoutPage() {
 
   // Catalogue-only mode: /cart explains why, so send them there rather than
   // rendering a wizard whose final button is guaranteed to fail.
-  if (!settings.allowPurchases) {
+  // Same for staff accounts, which placeOrder refuses outright.
+  if (!settings.allowPurchases || session.role !== "CUSTOMER") {
     redirect("/cart");
   }
 

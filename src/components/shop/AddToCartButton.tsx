@@ -7,7 +7,7 @@ import { ShoppingCart, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addToCart } from "@/actions/cart";
 import { PURCHASES_DISABLED_MESSAGE } from "@/lib/site-settings-constants";
-import { usePurchasingEnabled } from "@/components/shop/PurchasingProvider";
+import { usePurchasing } from "@/components/shop/PurchasingProvider";
 
 import { WishlistToggleButton } from "@/components/shop/WishlistToggleButton";
 
@@ -26,7 +26,7 @@ export function AddToCartButton({
   comboSelections?: { comboItemId: string; variantId: string }[];
   disabled?: boolean;
 }) {
-  const purchasingEnabled = usePurchasingEnabled();
+  const { enabled: purchasingEnabled, disabledMessage } = usePurchasing();
   const router = useRouter();
   const pathname = usePathname();
   const [quantity, setQuantity] = useState(1);
@@ -71,7 +71,7 @@ export function AddToCartButton({
     return (
       <div className="flex flex-col gap-3">
         <p className="rounded-xl border border-linen bg-cream px-4 py-3 text-sm text-graphite/80">
-          {PURCHASES_DISABLED_MESSAGE}
+          {disabledMessage ?? PURCHASES_DISABLED_MESSAGE}
         </p>
         {productId && <WishlistToggleButton productId={productId} />}
       </div>
