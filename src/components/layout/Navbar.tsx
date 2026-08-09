@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Menu, ShoppingCart, User, X, LogOut, ArrowRight, Heart } from "lucide-react";
+import { Menu, ShoppingCart, Settings, User, X, LogOut, ArrowRight, Heart } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import { useWishlist } from "@/hooks/use-wishlist";
 
@@ -126,7 +126,8 @@ export function Navbar({
             )}
           </Link>
 
-          {/* Cart Icon */}
+          {/* Cart Icon — staff cannot place orders, so no cart for them. */}
+          {!isStaff && (
           <Link
             href="/cart"
             aria-label="Cart"
@@ -144,21 +145,41 @@ export function Navbar({
               </span>
             )}
           </Link>
+          )}
+
+          {/* Staff settings entry.
+              Deliberately NOT another bare icon in this row: as one more
+              circle beside wishlist/cart it read as decoration, and staff
+              could not find their way back to the back office from the
+              storefront. Filled bronze + a label makes it the one control
+              here that is obviously a destination. */}
+          {isStaff && (
+            <Link
+              href="/admin/settings"
+              title="Store Settings"
+              className="flex items-center gap-2 rounded-full bg-bronze px-3 py-2 text-xs font-semibold uppercase tracking-widest text-ivory shadow-sm ring-2 ring-bronze/25 transition-all duration-300 hover:bg-bronze/90 hover:ring-bronze/40 sm:px-4"
+            >
+              <Settings size={16} aria-hidden="true" />
+              <span className="hidden sm:inline">Settings</span>
+            </Link>
+          )}
 
           {/* User Icon */}
           {user ? (
+            !isStaff && (
             <Link
-              href={isStaff ? "/admin" : "/account"}
-              aria-label={isStaff ? "Dashboard" : "My Account"}
-              title={isStaff ? "Dashboard" : "My Account"}
+              href="/account"
+              aria-label="My Account"
+              title="My Account"
               className={`rounded-full border p-2 transition-colors duration-300 hover:border-bronze hover:text-bronze ${
                 solid
                   ? "border-linen text-graphite bg-white/50"
                   : "border-ivory/20 text-ivory hover:bg-white/10"
               }`}
             >
-              {isStaff ? <LayoutDashboard size={16} /> : <User size={16} />}
+              <User size={16} />
             </Link>
+            )
           ) : (
             <Link
               href="/login"
@@ -227,6 +248,18 @@ export function Navbar({
                 </li>
               );
             })}
+            {isStaff && (
+              <li className="mt-2">
+                <Link
+                  href="/admin/settings"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-center gap-2 rounded-full bg-bronze px-4 py-3 text-sm font-semibold uppercase tracking-widest text-ivory"
+                >
+                  <Settings size={16} aria-hidden="true" />
+                  Store Settings
+                </Link>
+              </li>
+            )}
             {user && (
               <li className="mt-2">
                 <form action={logoutAction}>

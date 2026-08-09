@@ -130,7 +130,7 @@ export function SearchBar({
           onKeyDown={onKeyDown}
           placeholder={placeholder}
           aria-label={placeholder}
-          className="h-10 w-full rounded-full border border-border bg-white/70 pl-10 pr-9 text-sm text-charcoal outline-none transition-colors placeholder:text-graphite/40 focus:border-bronze"
+          className="h-10 w-full rounded-full border border-border bg-white/70 pl-10 pr-9 text-sm text-charcoal outline-none transition-colors placeholder:text-placeholder focus:border-bronze"
         />
         {value && (
           <button

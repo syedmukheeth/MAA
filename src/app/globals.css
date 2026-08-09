@@ -41,6 +41,7 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
+  --color-placeholder: var(--placeholder);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
@@ -110,6 +111,12 @@
   --secondary-foreground: var(--charcoal);
   --muted: var(--cream);
   --muted-foreground: var(--graphite);
+
+  /* Placeholder text is a hint, not content: it must sit clearly below the
+     value the field will hold. It used to be --muted-foreground (= graphite,
+     the body colour), so a hint looked identical to a filled-in answer.
+     Lightest value that still clears AA 4.5:1 on ivory. */
+  --placeholder: oklch(0.55 0.008 55);
   --accent: var(--bronze);
   --accent-foreground: var(--ivory);
   --destructive: var(--brand-red);
@@ -162,6 +169,9 @@
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
 
+  /* Dimmer than the dark canvas's body text, same intent as the light scale. */
+  --placeholder: oklch(0.58 0.006 75);
+
   /* Warm highlight surface + gold text: the branded active state, replacing
      bg-[#2E2820] text-[#E6C280]. 9.69:1 AAA. */
   --accent: oklch(0.24 0.015 75);
@@ -197,6 +207,16 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Most fields in this app are plain <input>/<textarea> elements with bespoke
+     classes rather than the ui/ primitives, so the token is applied here once
+     instead of per form. `opacity: 1` because Firefox dims placeholders by
+     default, which would darken-then-fade this to something muddy.
+     A `placeholder:*` utility on the element still wins over this. */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--placeholder);
+    opacity: 1;
   }
 }
 
