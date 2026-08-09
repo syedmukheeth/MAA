@@ -34,7 +34,13 @@ export async function sendEmail({
     }
     const res = await resend.emails.send({ from: FROM, to, subject, html });
     if (res.error) {
-      console.error(`EMAIL SEND FAILED [subject="${subject}"]:`, res.error);
+      // Resend's most common rejection is an unverified sending domain, and the
+      // failure is otherwise invisible because callers only see `false`. Log the
+      // sender so the cause is obvious from the deployment logs.
+      console.error(
+        `EMAIL SEND FAILED [from="${FROM}"] [subject="${subject}"]:`,
+        res.error
+      );
       return false;
     }
     return true;

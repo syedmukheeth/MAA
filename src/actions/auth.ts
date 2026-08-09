@@ -203,11 +203,14 @@ export async function loginAction(
       return { error: "Too many attempts. Please try again in a minute." };
     }
 
+    // Case-insensitive: rows created before registerAction normalised on insert
+    // (and rows created by the seed straight from SEED_*_EMAIL) can carry
+    // mixed-case addresses that an exact match would never find.
     const user = await prisma.user.findFirst({
       where: {
         OR: [
-          { email: lowerInput },
-          { email: `${lowerInput}@maafurnitures.com` },
+          { email: { equals: lowerInput, mode: "insensitive" } },
+          { email: { equals: `${lowerInput}@maafurnitures.com`, mode: "insensitive" } },
         ],
       },
     });
@@ -263,19 +266,29 @@ function hashResetToken(token: string) {
 export async function forgotPasswordAction(
   email: string
 ): Promise<{ success?: boolean; error?: string }> {
-  const emailParseResult = z.string().email().safeParse(email);
+  const emailParseResult = z.string().email().safeParse(email.trim());
   if (!emailParseResult.success) {
     return { error: "Please enter a valid email address." };
   }
 
+  // Accounts are stored lower-cased (registerAction normalises before insert),
+  // and login matches case-insensitively. A raw `findUnique` on whatever the
+  // user typed silently missed every account whose input differed in case, and
+  // the enumeration-safe `{ success: true }` below hid the miss — the user saw
+  // "check your email" for a mail that was never sent.
+  const normalizedEmail = emailParseResult.data.toLowerCase();
+
   // Rate limit by email to avoid email bombing
-  const allowed = await limitOrAllow(forgotPasswordRatelimit, `forgot-password:${email}`);
+  const allowed = await limitOrAllow(
+    forgotPasswordRatelimit,
+    `forgot-password:${normalizedEmail}`
+  );
   if (!allowed) {
     return { error: "Too many requests. Please try again later." };
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email },
+  const user = await prisma.user.findFirst({
+    where: { email: { equals: normalizedEmail, mode: "insensitive" } },
   });
 
   if (!user) {
@@ -291,12 +304,14 @@ export async function forgotPasswordAction(
   // takeover. Only a CSPRNG is acceptable here. Redis holds the SHA-256 of the
   // token, so a dump of the store cannot be replayed as a reset link.
   const token = randomBytes(32).toString("base64url");
-  await redis.set(`password-reset:${hashResetToken(token)}`, email, { ex: 3600 });
+  // Store the row's own address, not the typed one: resetPasswordAction looks
+  // the account back up by this exact string.
+  await redis.set(`password-reset:${hashResetToken(token)}`, user.email, { ex: 3600 });
 
   const resetUrl = `${getSiteUrl()}/reset-password?token=${token}`;
 
-  await sendEmail({
-    to: email,
+  const sent = await sendEmail({
+    to: user.email,
     subject: "Reset your MAA FURNITURE password",
     html: `
       <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#2a2420;">
@@ -314,6 +329,16 @@ export async function forgotPasswordAction(
       </div>
     `,
   });
+
+  if (!sent) {
+    // Do not leak whether the address exists, but do not strand a real user on
+    // a "check your email" screen for a mail Resend rejected either.
+    console.error(
+      "Password reset email could not be delivered — check RESEND_API_KEY and that EMAIL_FROM's domain is verified in Resend."
+    );
+    await redis.del(`password-reset:${hashResetToken(token)}`);
+    return { error: "We could not send the reset email right now. Please try again shortly." };
+  }
 
   return { success: true };
 }

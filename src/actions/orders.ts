@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireRole, getActiveUser } from "@/lib/auth/session";
 import {
@@ -282,12 +283,16 @@ export async function placeOrder(
     revalidatePath("/admin/orders");
     revalidatePath("/admin/inventory");
 
-    prisma.order
-      .findUnique({
-        where: { id: orderId },
-        include: { items: true },
-      })
-      .then(async (placedOrder) => {
+    // A bare floating promise does not survive a serverless invocation: Vercel
+    // freezes the sandbox the moment the action's response is flushed, so the
+    // confirmation email was being dropped on production while working locally.
+    // `after()` keeps the invocation alive until this work settles.
+    after(async () => {
+      try {
+        const placedOrder = await prisma.order.findUnique({
+          where: { id: orderId },
+          include: { items: true },
+        });
         if (placedOrder) {
           const sent = await sendEmail({
             to: session.email,
@@ -314,8 +319,7 @@ export async function placeOrder(
             });
           }
         }
-      })
-      .catch(async (e) => {
+      } catch (e) {
         console.error("Order confirmation email failed:", e);
         await recordAudit({
           actorId: session.sub,
@@ -325,7 +329,8 @@ export async function placeOrder(
           summary: `Order confirmation email throw error: ${e instanceof Error ? e.message : String(e)}`,
           metadata: { orderId },
         });
-      });
+      }
+    });
 
     return { orderId };
   } catch (err) {
