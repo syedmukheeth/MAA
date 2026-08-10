@@ -4,7 +4,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, ShoppingCart, Settings, User, X, LogOut, ArrowRight, Heart } from "lucide-react";
+import {
+  Menu,
+  ShoppingCart,
+  Settings,
+  LayoutDashboard,
+  User,
+  X,
+  LogOut,
+  ArrowRight,
+  Heart,
+} from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import { useWishlist } from "@/hooks/use-wishlist";
 
@@ -43,6 +53,7 @@ export function Navbar({
   const isHome = pathname === "/";
   const solid = !isHome || scrolled || open;
   const isStaff = user != null && user.role !== "CUSTOMER";
+  const isAdminActive = pathname.startsWith("/admin");
 
   const isLinkActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -103,11 +114,33 @@ export function Navbar({
               </li>
             );
           })}
+
+          {/* Dashboard sits inside the same link row as Home/Shop/... so staff
+              read it as part of the navigation, but it is a filled bronze pill
+              rather than plain text: it is the one link here that leaves the
+              storefront for the back office. */}
+          {isStaff && (
+            <li>
+              <Link
+                href="/admin"
+                className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition-all duration-300 ${
+                  isAdminActive
+                    ? "bg-charcoal text-ivory shadow-md ring-2 ring-bronze/50"
+                    : "bg-bronze text-ivory shadow-sm ring-2 ring-bronze/25 hover:bg-bronze/90 hover:ring-bronze/40"
+                }`}
+              >
+                <LayoutDashboard size={14} aria-hidden="true" />
+                Dashboard
+              </Link>
+            </li>
+          )}
         </ul>
 
         {/* Desktop and Mobile Controls */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Wishlist Icon */}
+          {/* Wishlist Icon — staff cannot buy, so saving items to buy later is
+              noise for them (same reasoning as the cart below). */}
+          {!isStaff && (
           <Link
             href="/wishlist"
             aria-label="Wishlist"
@@ -125,6 +158,7 @@ export function Navbar({
               </span>
             )}
           </Link>
+          )}
 
           {/* Cart Icon — staff cannot place orders, so no cart for them. */}
           {!isStaff && (
@@ -147,20 +181,16 @@ export function Navbar({
           </Link>
           )}
 
-          {/* Staff settings entry.
-              Deliberately NOT another bare icon in this row: as one more
-              circle beside wishlist/cart it read as decoration, and staff
-              could not find their way back to the back office from the
-              storefront. Filled bronze + a label makes it the one control
-              here that is obviously a destination. */}
+          {/* Below lg the link row is hidden, so the dashboard pill would
+              disappear with it — repeat it here for small screens only. */}
           {isStaff && (
             <Link
-              href="/admin/settings"
-              title="Store Settings"
-              className="flex items-center gap-2 rounded-full bg-bronze px-3 py-2 text-xs font-semibold uppercase tracking-widest text-ivory shadow-sm ring-2 ring-bronze/25 transition-all duration-300 hover:bg-bronze/90 hover:ring-bronze/40 sm:px-4"
+              href="/admin"
+              title="Dashboard"
+              className="flex items-center gap-2 rounded-full bg-bronze px-3 py-2 text-xs font-semibold uppercase tracking-widest text-ivory shadow-sm ring-2 ring-bronze/25 transition-all duration-300 hover:bg-bronze/90 lg:hidden"
             >
-              <Settings size={16} aria-hidden="true" />
-              <span className="hidden sm:inline">Settings</span>
+              <LayoutDashboard size={16} aria-hidden="true" />
+              <span className="hidden sm:inline">Dashboard</span>
             </Link>
           )}
 
@@ -249,16 +279,28 @@ export function Navbar({
               );
             })}
             {isStaff && (
-              <li className="mt-2">
-                <Link
-                  href="/admin/settings"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 rounded-full bg-bronze px-4 py-3 text-sm font-semibold uppercase tracking-widest text-ivory"
-                >
-                  <Settings size={16} aria-hidden="true" />
-                  Store Settings
-                </Link>
-              </li>
+              <>
+                <li className="mt-2">
+                  <Link
+                    href="/admin"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center justify-center gap-2 rounded-full bg-bronze px-4 py-3 text-sm font-semibold uppercase tracking-widest text-ivory"
+                  >
+                    <LayoutDashboard size={16} aria-hidden="true" />
+                    Dashboard
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/settings"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center justify-center gap-2 rounded-full border border-bronze/40 px-4 py-3 text-sm font-semibold uppercase tracking-widest text-bronze"
+                  >
+                    <Settings size={16} aria-hidden="true" />
+                    Store Settings
+                  </Link>
+                </li>
+              </>
             )}
             {user && (
               <li className="mt-2">

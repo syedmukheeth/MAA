@@ -19,10 +19,15 @@ export default async function CheckoutPage() {
     getSiteSettings(),
   ]);
 
+  // Staff never check out (placeOrder refuses them) and have no cart to be
+  // sent back to, so they go straight to the back office.
+  if (session.role !== "CUSTOMER") {
+    redirect("/admin");
+  }
+
   // Catalogue-only mode: /cart explains why, so send them there rather than
   // rendering a wizard whose final button is guaranteed to fail.
-  // Same for staff accounts, which placeOrder refuses outright.
-  if (!settings.allowPurchases || session.role !== "CUSTOMER") {
+  if (!settings.allowPurchases) {
     redirect("/cart");
   }
 

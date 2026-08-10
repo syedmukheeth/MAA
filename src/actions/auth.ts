@@ -80,11 +80,12 @@ const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 const STORE_ROUTE = "/products";
 
 /**
- * Staff land in the back-office settings, not the storefront: they administer
- * the shop, they do not buy from it (see the CUSTOMER-only checks in
- * addToCart / placeOrder).
+ * Staff land on their back-office dashboard, not the storefront: they
+ * administer the shop, they do not buy from it (see the CUSTOMER-only checks
+ * in addToCart / placeOrder). The dashboard is the overview page, so it is the
+ * right first screen for every staff role — settings is one click from there.
  */
-const STAFF_ROUTE = "/admin/settings";
+const STAFF_ROUTE = "/admin";
 
 /**
  * Only allow same-origin relative redirects after login.

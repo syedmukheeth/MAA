@@ -1,18 +1,22 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/session";
 import { CartLineItem } from "@/components/shop/CartLineItem";
 import { OrderTotals } from "@/components/shop/OrderTotals";
-import {
-  getSiteSettings,
-  PURCHASES_DISABLED_MESSAGE,
-  STAFF_PURCHASE_BLOCKED_MESSAGE,
-} from "@/lib/site-settings";
+import { getSiteSettings, PURCHASES_DISABLED_MESSAGE } from "@/lib/site-settings";
 import { computeCartTotals } from "@/lib/cart";
 import { money, toPaise } from "@/lib/money";
 
 export default async function CartPage() {
   const session = await requireAuth();
+
+  // Staff have no cart at all — the nav hides the icon and placeOrder refuses
+  // them, so a hand-typed /cart should land on the back office, not on an
+  // empty basket they can never fill.
+  if (session.role !== "CUSTOMER") {
+    redirect("/admin");
+  }
 
   const [cart, settings] = await Promise.all([
     prisma.cart.findUnique({
@@ -34,10 +38,7 @@ export default async function CartPage() {
     getSiteSettings(),
   ]);
 
-  // Staff accounts can't check out (see placeOrder) — say so here rather than
-  // letting them walk into a wizard whose final button is guaranteed to fail.
-  const isStaff = session.role !== "CUSTOMER";
-  const canCheckout = settings.allowPurchases && !isStaff;
+  const canCheckout = settings.allowPurchases;
 
   const items = cart?.items ?? [];
   const unitPriceOf = (item: (typeof items)[number]) =>
@@ -113,9 +114,7 @@ export default async function CartPage() {
               </Link>
             ) : (
               <p className="mt-6 rounded-xl border border-linen bg-cream px-4 py-3 text-sm text-graphite/80">
-                {isStaff
-                  ? STAFF_PURCHASE_BLOCKED_MESSAGE
-                  : PURCHASES_DISABLED_MESSAGE}
+                {PURCHASES_DISABLED_MESSAGE}
               </p>
             )}
           </div>
