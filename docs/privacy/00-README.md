@@ -30,15 +30,16 @@ documented here depend on legal interpretation and are marked
 
 ## Before this goes live
 
-Two things must be done by a person, not by code:
-
-1. **Name the Data Protection Officer.** `GRIEVANCE_OFFICER.name` in
-   `src/lib/privacy/constants.ts` is currently `TODO_FILL_BEFORE_DEPLOY`. The
-   privacy and grievance pages render a visible warning while it is unset, and
-   DPDP §5 requires the notice to identify a real person.
+1. ~~**Name the Data Protection Officer.**~~ Done — `GRIEVANCE_OFFICER.name` in
+   `src/lib/privacy/constants.ts` is **Syed Mukheeth**, contactable at
+   `maafurniture.shop@gmail.com` with the phone falling back to
+   `SiteSettings.showroomPhone`. `isGrievanceOfficerConfigured()` now returns
+   true, so the "Setup incomplete" banner no longer renders on `/privacy` and
+   `/grievance`.
 2. **Set `CRON_SECRET`** in the Vercel project. Without it the nightly erasure
    job refuses to run (fail-closed), which means scheduled deletions silently
    never happen — safe, but a broken promise. See `.env.example`.
+   **Env vars only apply to new deployments — redeploy after adding it.**
 
 ## Updating the privacy notice
 

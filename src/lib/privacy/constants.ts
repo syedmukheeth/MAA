@@ -29,7 +29,7 @@ export const PRIVACY_NOTICE_EFFECTIVE_DATE = "14 August 2026";
  * than none.
  */
 export const GRIEVANCE_OFFICER = {
-  name: "TODO_FILL_BEFORE_DEPLOY",
+  name: "Syed Mukheeth",
   email: "maafurniture.shop@gmail.com",
   /** Null falls back to SiteSettings.showroomPhone at render time. */
   phone: null as string | null,

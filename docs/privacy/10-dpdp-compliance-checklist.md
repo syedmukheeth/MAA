@@ -65,7 +65,7 @@ Broadly:
 | §12(2) — Erasure | 7-day cooling-off, cron execution, anonymise-and-retain for invoices | `lib/privacy/erasure.ts` | COMPLIANT | [05](./05-erasure-runbook.md); `anonymise.test.ts` |
 | §12(3) — Retention where required by law | Open orders block erasure; invoices anonymised not deleted | `OPEN_ORDER_STATUSES` guard | COMPLIANT | `ON_HOLD` path |
 | §13 — Grievance redressal | `/account/privacy` and public `/grievance`; 30-day SLA; DPB escalation stated | `actions/privacy.ts` | COMPLIANT | — |
-| §13 — Named grievance officer published | Contact channel published; **name is a TODO placeholder** | `constants.ts` | **NOT IMPLEMENTED** | `GRIEVANCE_OFFICER.name === "TODO_FILL_BEFORE_DEPLOY"`; pages show a warning |
+| §13 — Named grievance officer published | Syed Mukheeth, `maafurniture.shop@gmail.com`, phone from `SiteSettings.showroomPhone` | `constants.ts` | COMPLIANT | Rendered on `/privacy` and `/grievance`; `isGrievanceOfficerConfigured()` true |
 | §14 — Right to nominate | Notice invites contact; handled manually | — | PARTIALLY COMPLIANT | Storing a nominee is more personal data for a rarely used right |
 | Requests affect only the requester's own data | No privacy action accepts a user id; all scoped to `session.sub` | `actions/privacy.ts` | COMPLIANT | [04](./04-data-principal-rights.md) |
 
@@ -136,14 +136,15 @@ position needs confirming.
 
 ## Must be done before launch
 
-1. **Name the Data Protection Officer** — `GRIEVANCE_OFFICER.name`. Currently
-   `TODO_FILL_BEFORE_DEPLOY`; the notice and grievance pages show a visible
-   warning until it is set.
-2. **Set `CRON_SECRET`** in Vercel, or scheduled erasures never run.
-3. **Apply the three migrations** — see
-   [verification-checklist.md](./verification-checklist.md).
-4. **Confirm the Supabase, Resend and Upstash regions** and update
-   [09](./09-third-party-processing.md) and the notice.
+1. ~~Name the Data Protection Officer~~ — **done**, Syed Mukheeth.
+2. **Set `CRON_SECRET`** in Vercel, or scheduled erasures never run. **Still
+   outstanding.** Redeploy after adding it — env vars only apply to new
+   deployments.
+3. ~~Apply the three migrations~~ — **done** 2026-08-14, `prisma migrate status`
+   reports the schema up to date.
+4. **Confirm the Resend and Upstash regions** and update
+   [09](./09-third-party-processing.md). Vercel (`icn1`) and Supabase
+   (`ap-northeast-2`) are confirmed Seoul.
 5. **Start the testimonial consent drive** — the homepage trust block is empty
    until it is done ([06](./06-consent-and-testimonials.md)).
 
