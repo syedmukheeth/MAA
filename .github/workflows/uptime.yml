@@ -1,0 +1,103 @@
+name: Uptime check
+
+# External health monitoring.
+#
+# This runs on GitHub's infrastructure, not Vercel's, which is the entire point:
+# the application cannot report that it is down, because if it were down the
+# code that would report it is not running. Something outside the deployment has
+# to do the checking.
+#
+# GitHub Actions was chosen over a monitoring SaaS for two reasons. It needs no
+# new account, and it introduces no new data processor — GitHub already hosts
+# this code, whereas an external monitor receiving request metadata would need
+# adding to docs/privacy/09-third-party-processing.md and to the privacy notice.
+#
+# On failure GitHub emails the repository owner and shows a red mark on the
+# Actions tab. No extra configuration is needed for that.
+#
+# Limitations, stated plainly:
+#  - Scheduled workflows are best-effort. GitHub delays them under load, so
+#    treat the interval as "roughly every 15 minutes", not a guarantee.
+#  - GitHub disables scheduled workflows in repositories with no activity for
+#    60 days. If this repo goes quiet, re-enable it on the Actions tab.
+#  - This cannot detect a GitHub outage, which is an acceptable blind spot.
+
+on:
+  schedule:
+    # Every 15 minutes.
+    - cron: "*/15 * * * *"
+  # So it can be run by hand from the Actions tab when investigating.
+  workflow_dispatch:
+
+# If a run is still going when the next fires, let the new one win — a stale
+# check is worse than no check.
+concurrency:
+  group: uptime
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check application health
+        env:
+          # The www host is canonical — the apex 308-redirects to it. Requests
+          # follow redirects anyway (--location below), so this stays correct if
+          # that ever changes.
+          #
+          # Override by setting a repository variable named HEALTH_URL
+          # (Settings → Secrets and variables → Actions → Variables).
+          HEALTH_URL: ${{ vars.HEALTH_URL || 'https://www.maafurniture.shop/api/health' }}
+        run: |
+          set -uo pipefail
+
+          # Three attempts with backoff before declaring a problem. A single
+          # failed request is usually a cold start or a transient network blip,
+          # and an alert that cries wolf is one that gets muted.
+          attempt=1
+          max_attempts=3
+
+          while [ "$attempt" -le "$max_attempts" ]; do
+            echo "Attempt $attempt of $max_attempts against $HEALTH_URL"
+
+            # --location matters: the apex domain 308-redirects to www, and
+            # without it every check would report the site as down.
+            body=$(curl --silent --show-error --location --max-time 20 \
+                        --write-out '\n%{http_code}' \
+                        "$HEALTH_URL" 2>/dev/null) || body=""
+
+            code=$(printf '%s' "$body" | tail -n1)
+            payload=$(printf '%s' "$body" | sed '$d')
+
+            echo "  HTTP $code"
+            echo "  $payload"
+
+            if [ "$code" = "200" ]; then
+              case "$payload" in
+                *'"status":"ok"'*)
+                  echo "Healthy."
+                  exit 0
+                  ;;
+                *'"degraded"'*)
+                  # Not a retry case. Degraded is a real, stable condition —
+                  # retrying just delays the notification.
+                  echo "::error title=Site degraded::Serving traffic, but a dependency needs attention. $payload"
+                  echo "Common causes: CRON_SECRET unset so scheduled erasures are not running, or Redis unreachable so rate limiting has failed open."
+                  exit 1
+                  ;;
+              esac
+            fi
+
+            if [ "$attempt" -lt "$max_attempts" ]; then
+              sleep $((attempt * 10))
+            fi
+            attempt=$((attempt + 1))
+          done
+
+          echo "::error title=Site down::No healthy response after $max_attempts attempts (last HTTP ${code:-none})."
+          exit 1

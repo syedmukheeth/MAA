@@ -14,30 +14,56 @@ is the code that is not running. `/admin/monitoring` says so on the page itself.
 
 Detecting a total outage requires something *outside* this deployment.
 
-### Required: an external uptime check
+### The external check: `.github/workflows/uptime.yml`
 
-Point any external checker at:
+Runs on **GitHub's** infrastructure, every ~15 minutes, against:
 
 ```
-https://maafurniture.shop/api/health
+https://www.maafurniture.shop/api/health
 ```
 
-Alert on **both**:
+Fails the workflow — which emails the repository owner and marks the Actions tab
+red — on either:
 
-1. **HTTP 503** — the database is unreachable and the site cannot function.
-2. **A response body containing `"degraded"`** — still serving traffic, but
-   something needs attention.
+1. **No healthy response after 3 attempts** (covers 503, timeouts, DNS failure,
+   a broken build, total outage).
+2. **A `degraded` body**, immediately and without retrying, since degraded is a
+   stable condition rather than a blip.
 
-Every free tier is sufficient: UptimeRobot, Better Stack, Cronitor, or a GitHub
-Actions workflow on a schedule. This is configuration, not code, and it is the
-one piece of monitoring that has to live somewhere else.
+Override the target by setting a repository variable `HEALTH_URL`
+(Settings → Secrets and variables → Actions → Variables).
 
-**No monitoring service has been signed up for**, deliberately — that is an
-account decision, and every external monitor that receives request metadata is
-a processor that would need adding to
+**Why GitHub Actions rather than a monitoring SaaS.** It needs no new account,
+and it introduces no new data processor — GitHub already hosts this code,
+whereas an external monitor receiving request metadata would need adding to
 [09-third-party-processing.md](./09-third-party-processing.md) and to the
 privacy notice. A checker that only pings `/api/health` receives no personal
 data, because the response deliberately contains none.
+
+**Design details that were established by testing, not assumption:**
+
+- **`--location` is required.** The apex domain 308-redirects to `www`. Without
+  it every check reports the site as down — this was caught by running the
+  script against production before trusting it.
+- **Three attempts with backoff** before declaring an outage. A single failed
+  request is usually a cold start, and an alert that cries wolf gets muted.
+- **Degraded does not retry.** Retrying a stable condition only delays the
+  notification.
+
+All four paths were verified against the real endpoint and a local stub:
+healthy → pass; degraded → fail with the reason; unreachable host → three
+attempts then fail; apex redirect → followed correctly.
+
+**Limitations, stated plainly:**
+
+- Scheduled workflows are best-effort. GitHub delays them under load, so the
+  interval is "roughly every 15 minutes", not a guarantee. For a furniture shop
+  this is proportionate; if minute-level detection ever matters, a dedicated
+  service is the answer.
+- **GitHub disables scheduled workflows after 60 days of repository
+  inactivity.** If the repo goes quiet, re-enable it on the Actions tab. This is
+  the most likely way this check dies silently.
+- It cannot detect a GitHub outage. Acceptable blind spot.
 
 ---
 
@@ -194,10 +220,11 @@ which case check what it receives before pointing it at anything but
 
 ## Remaining gaps
 
-- **No external uptime check is configured yet.** Until one is, a total outage
-  is still noticed by a customer first. This is the top item.
 - **No anomalous-query-volume detection.** A slow scrape staying under every
   threshold trips nothing.
+- **The uptime check depends on repository activity.** GitHub disables scheduled
+  workflows after 60 days of inactivity, so a quiet repo eventually loses its
+  monitoring without saying so.
 - **Nothing watches Supabase, Cloudinary, Resend or Upstash consoles directly.**
   A compromise of a provider account would not surface here.
 - **No performance monitoring.** Slow is not the same as broken, and only broken

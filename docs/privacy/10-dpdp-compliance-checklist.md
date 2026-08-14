@@ -105,7 +105,7 @@ Broadly:
 | Notification process | Runbook with templates and contact tree | COMPLIANT — [08](./08-breach-response.md) |
 | Board notification | Documented; never exercised | PARTIALLY COMPLIANT |
 | Detection capability | Ten detectors, throttled alerting to the DPO, OWNER-only dashboard | COMPLIANT for security events |
-| Application health monitoring | Error capture with PII scrubbing, grouped by fingerprint; three-state `/api/health`; cron heartbeat; `/admin/monitoring` | PARTIALLY COMPLIANT — **no external uptime check configured**, so a total outage is still noticed by a customer first. See [11](./11-monitoring.md) |
+| Application health monitoring | Error capture with PII scrubbing, grouped by fingerprint; three-state `/api/health`; cron heartbeat; `/admin/monitoring`; external GitHub Actions uptime check every ~15 min | COMPLIANT — see [11](./11-monitoring.md) |
 
 ## Children's data (§9)
 
