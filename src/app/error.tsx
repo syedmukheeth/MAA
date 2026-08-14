@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { reportClientError } from "@/actions/monitoring";
 
 export default function Error({
   error,
@@ -14,6 +15,13 @@ export default function Error({
     // Next sanitizes server error messages in production; the digest is the
     // only handle that ties this screen to the server log.
     console.error("Unhandled error:", error);
+    // Report it so it reaches /admin/monitoring. Server errors are already
+    // captured by instrumentation.ts, but this boundary also catches failures
+    // that happen purely in the browser, which the server never sees.
+    void reportClientError({
+      message: error.message,
+      digest: error.digest,
+    }).catch(() => {});
   }, [error]);
 
   return (

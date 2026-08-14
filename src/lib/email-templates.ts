@@ -207,6 +207,46 @@ export function securityAlertHtml(input: {
   );
 }
 
+/**
+ * Application error alert.
+ *
+ * The message is already scrubbed by lib/monitoring/scrub.ts before it reaches
+ * storage, so including it here is safe — but it is the only detail sent, and
+ * anything richer stays behind the login.
+ */
+export function errorAlertHtml(input: {
+  isNew: boolean;
+  name: string;
+  message: string;
+  route: string | null;
+  source: string;
+  occurrences: number;
+  dashboardUrl: string;
+}) {
+  return emailLayout(
+    `
+      <p style="margin:0 0 8px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#b3261e;">
+        ${input.isNew ? "New error" : "Recurring error"}
+      </p>
+      <h1 style="font-size:20px;margin:0 0 8px;">${esc(input.name)}</h1>
+      <p style="color:#5c5349;font-family:monospace;font-size:13px;">${esc(input.message)}</p>
+      <table style="width:100%;margin-top:16px;font-size:13px;color:#5c5349;">
+        <tr><td style="padding:4px 0;">Where</td><td style="padding:4px 0;text-align:right;">${esc(input.route ?? "unknown")}</td></tr>
+        <tr><td style="padding:4px 0;">Source</td><td style="padding:4px 0;text-align:right;">${esc(input.source)}</td></tr>
+        <tr><td style="padding:4px 0;">Times seen</td><td style="padding:4px 0;text-align:right;">${esc(input.occurrences)}</td></tr>
+      </table>
+      <p style="margin-top:16px;">
+        <a href="${esc(input.dashboardUrl)}" style="color:#a5732f;">Open the monitoring dashboard</a>
+      </p>
+      <p style="margin-top:24px;font-size:12px;color:#8a8078;">
+        Further alerts for this error are paused for an hour. Personal data is stripped
+        from error text before it is stored or sent.
+      </p>
+    `,
+    `${input.isNew ? "New" : "Recurring"} error: ${input.name}`
+  );
+}
+
 export function customRequestNotificationHtml(request: CustomRequestLike) {
   const adminUrl = `${getSiteUrl()}/admin/requests`;
   return emailLayout(

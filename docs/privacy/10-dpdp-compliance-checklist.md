@@ -105,7 +105,7 @@ Broadly:
 | Notification process | Runbook with templates and contact tree | COMPLIANT — [08](./08-breach-response.md) |
 | Board notification | Documented; never exercised | PARTIALLY COMPLIANT |
 | Detection capability | Ten detectors, throttled alerting to the DPO, OWNER-only dashboard | COMPLIANT for security events |
-| Application health monitoring | None — no uptime or error tracking | **NOT IMPLEMENTED** |
+| Application health monitoring | Error capture with PII scrubbing, grouped by fingerprint; three-state `/api/health`; cron heartbeat; `/admin/monitoring` | PARTIALLY COMPLIANT — **no external uptime check configured**, so a total outage is still noticed by a customer first. See [11](./11-monitoring.md) |
 
 ## Children's data (§9)
 
@@ -151,10 +151,13 @@ position needs confirming.
 
 ## Recommended next
 
-1. Uptime and error monitoring. Security detection now exists; application
-   health does not, so an outage or unhandled exception still goes unnoticed.
+1. **Configure an external uptime check** against `/api/health`, alerting on a
+   503 or a body containing `degraded`. Free tiers suffice. This is the one
+   piece of monitoring that cannot live inside the deployment — if the site is
+   down, so is the code that would report it. See [11](./11-monitoring.md).
 2. A retention sweep for closed enquiries, aged-out orders and old audit rows.
-   `SecurityEvent` is already swept by the nightly cron — extend that same job.
+   `SecurityEvent` and `ErrorEvent` are already swept by the nightly cron —
+   extend that same job.
 3. Remove `email` from the JWT payload, with a back-compat release.
 4. Telugu and Hindi translations of the notice.
 5. Data processing agreements with all five processors.

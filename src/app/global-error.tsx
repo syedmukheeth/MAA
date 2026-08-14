@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { reportClientError } from "@/actions/monitoring";
 
 /**
  * Last resort: catches failures in the root layout itself, where the normal
@@ -25,6 +26,13 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error("Root layout error:", error);
+    // Deliberately still reported from here even though the layout itself has
+    // failed: this boundary catches the worst class of error in the app, and it
+    // is the one least likely to be noticed any other way.
+    void reportClientError({
+      message: error.message,
+      digest: error.digest,
+    }).catch(() => {});
   }, [error]);
 
   return (

@@ -26,6 +26,7 @@ documented here depend on legal interpretation and are marked
 | [08-breach-response.md](./08-breach-response.md) | What to do when personal data is exposed |
 | [09-third-party-processing.md](./09-third-party-processing.md) | Every processor, what it receives, and where it runs |
 | [10-dpdp-compliance-checklist.md](./10-dpdp-compliance-checklist.md) | Requirement → implementation → status → evidence |
+| [11-monitoring.md](./11-monitoring.md) | Uptime, health checks and error tracking — and the external check you still need |
 | [verification-checklist.md](./verification-checklist.md) | Manual test script for the privacy features |
 
 ## Before this goes live

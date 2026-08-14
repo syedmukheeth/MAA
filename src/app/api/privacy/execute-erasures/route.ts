@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { executeErasure } from "@/lib/privacy/erasure";
 import { reportSecurityEvent } from "@/lib/security";
 import { purgeExpiredSecurityEvents } from "@/lib/security/retention";
+import { purgeOldErrors } from "@/lib/monitoring/errors";
+import { recordHeartbeat } from "@/lib/monitoring/heartbeat";
 
 /**
  * Runs the erasure requests whose cooling-off window has closed.
@@ -104,14 +106,21 @@ export async function GET(request: NextRequest) {
   // Vercel's Hobby plan allows limited cron entries, and a retention sweep has
   // no reason to run on its own schedule.
   let securityEventsPurged = 0;
+  let errorsPurged = 0;
   try {
     securityEventsPurged = await purgeExpiredSecurityEvents();
+    errorsPurged = await purgeOldErrors();
   } catch (err) {
     // Never let housekeeping fail the erasures, which are the obligation.
     console.error(
-      `Security event purge failed [${err instanceof Error ? err.name : "unknown"}]`
+      `Retention sweep failed [${err instanceof Error ? err.name : "unknown"}]`
     );
   }
+
+  // Last, and only on a successful run. /api/health reports this as "stale"
+  // when it stops advancing, which is how a silently dead cron gets noticed —
+  // the failure mode where nothing throws and erasures simply never happen.
+  await recordHeartbeat();
 
   return NextResponse.json({
     due: due.length,
@@ -119,5 +128,6 @@ export async function GET(request: NextRequest) {
     skipped,
     imagesFailed,
     securityEventsPurged,
+    errorsPurged,
   });
 }

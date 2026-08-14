@@ -173,10 +173,10 @@ never mistaken for a quiet system.
 
 ### Remaining gaps
 
-- **No uptime or error monitoring.** An unhandled exception or an outage still
-  goes unnoticed unless someone looks. This covers *security* events, not
-  application health.
 - **No anomalous-query-volume detection.** A slow scrape staying under every
   threshold would not trip anything.
 - **Nothing watches Supabase, Cloudinary, Resend or Upstash directly.** A
   compromise of a provider console would not surface here.
+- Application health is covered separately in
+  [11-monitoring.md](./11-monitoring.md) — including the external uptime check
+  that still needs configuring.

@@ -19,6 +19,7 @@ indefinitely by default.
 | `PrivacyRequest` | Life of the account + 8 years | Evidence that requests were honoured | Retained; erasure `note` scrubbed if it held personal data |
 | `AuditLog` | 8 years | Internal control | Rows about an erased user have `summary` replaced and `targetEmail` stripped |
 | `SecurityEvent` | **730 days** | Security monitoring (§8(5)) and breach reconstruction | `purgeExpiredSecurityEvents()` in the nightly cron. Already pseudonymous — keyed IP hash and user id only |
+| `ErrorEvent` | **90 days** since last occurrence | Diagnosing faults | `purgeOldErrors()` in the nightly cron. Scrubbed of personal data at capture; holds no user id, IP or session identifier |
 | Rate-limit counters (IP, email) | ≤1 hour | Security | Redis TTL — self-expiring, no action needed |
 | Password-reset token | 1 hour | Security | Redis TTL; also deleted on use |
 | Session cookie | 7 days | Authentication | Browser expiry; invalidated early by `tokenVersion` |

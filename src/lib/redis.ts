@@ -93,6 +93,18 @@ export const grievanceRatelimit = new Ratelimit({
   prefix: "ratelimit:grievance",
 });
 
+/**
+ * Client error reports come from an unauthenticated, publicly reachable action
+ * that writes to the database. Without a cap it is a free write amplifier.
+ * Generous, because a genuinely broken page can legitimately report a handful
+ * of errors as a user retries.
+ */
+export const clientErrorRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, "3600 s"),
+  prefix: "ratelimit:client-error",
+});
+
 /** The search endpoint is public and hits the database. Unbounded, a bot can
  *  hammer it and create real load on PostgreSQL. */
 export const searchRatelimit = new Ratelimit({

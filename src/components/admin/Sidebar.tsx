@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   Siren,
+  Activity,
   ScrollText,
   Store,
   MessageSquare,
@@ -108,6 +109,14 @@ export const NAV_ITEMS: {
     icon: ScrollText,
     // Owner-only: a log the people it watches can curate isn't a control.
     roles: ["OWNER"],
+  },
+  {
+    href: "/admin/monitoring",
+    label: "Monitoring",
+    icon: Activity,
+    // Operational rather than a control over staff, so ADMIN sees it too —
+    // whoever is fixing the site needs to know what is broken.
+    roles: ["OWNER", "ADMIN"],
   },
   {
     href: "/admin/security",

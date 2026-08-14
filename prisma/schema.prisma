@@ -101,6 +101,54 @@ enum SecuritySeverity {
   CRITICAL
 }
 
+enum ErrorSource {
+  /// Thrown during a server render, a server action, or a route handler.
+  SERVER
+  /// Reached a React error boundary in the browser.
+  CLIENT
+  /// Thrown by a scheduled job, where nobody is watching a screen.
+  CRON
+}
+
+/// Application errors, grouped rather than logged one row per occurrence.
+///
+/// The unit is the FINGERPRINT, not the incident: an error that fires ten
+/// thousand times is one row with a count, not ten thousand rows. A table that
+/// grows per-occurrence becomes unreadable exactly when something is badly
+/// broken, which is the moment it needs to be readable.
+///
+/// Messages are scrubbed before they are stored. A Prisma error interpolates
+/// the failing query's parameters into its message, which for this application
+/// means shipping names, phone numbers and street addresses — so an unfiltered
+/// error store would quietly become one of the largest collections of personal
+/// data in the system.
+model ErrorEvent {
+  id String @id @default(cuid())
+  /// Stable hash of the scrubbed message plus the top stack frame. Two
+  /// occurrences of the same bug share it; two different bugs do not.
+  fingerprint String      @unique
+  source      ErrorSource
+  /// Scrubbed. Never contains personal data.
+  message     String
+  /// Error class name, e.g. PrismaClientKnownRequestError.
+  name        String?
+  /// Route or action where it surfaced. Path only, never a query string —
+  /// query strings are where identifiers end up.
+  route       String?
+  /// Scrubbed and truncated stack, for the top few frames only.
+  stack       String?
+  occurrences Int      @default(1)
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  /// Cleared by staff once believed fixed. A recurrence after this reopens it.
+  resolvedAt  DateTime?
+  /// Set when an alert was sent, so the throttle is visible in the UI.
+  alertedAt   DateTime?
+
+  @@index([lastSeenAt])
+  @@index([resolvedAt, lastSeenAt])
+}
+
 /// Security telemetry, kept deliberately free of personal data.
 ///
 /// DPDP §8(6) requires notifying the Board and every affected principal after a

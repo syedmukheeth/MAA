@@ -135,6 +135,22 @@ user row cannot be removed.
 `summary` is written to be safe in an alert email and never contains personal
 data. Retention 730 days, swept nightly.
 
+## ErrorEvent *(new)*
+
+`fingerprint`, `source`, `message`, `name`, `route`, `stack`, `occurrences`,
+`firstSeenAt`, `lastSeenAt`, `resolvedAt`, `alertedAt`.
+
+Application errors, grouped by fingerprint. **Holds no user id, IP or session
+identifier at all** — unlike `SecurityEvent`, which needs a keyed IP hash to
+correlate attacks, error tracking needs no identity to be useful.
+
+Messages, stacks and routes are scrubbed at capture
+(`src/lib/monitoring/scrub.ts`) because the errors most worth keeping are the
+ones carrying personal data — a Prisma failure in `placeOrder` interpolates the
+customer's shipping name, phone and address into its message. Redaction is by
+pattern and therefore best-effort; see
+[11-monitoring.md](./11-monitoring.md). Retention 90 days.
+
 ## StockMovement.byUserId — known gap
 
 A bare `String?` with no foreign key, recording which staff member moved stock.
