@@ -95,16 +95,17 @@ Broadly:
 | Secrets management | Server-only; no secret behind `NEXT_PUBLIC_`; `.env` gitignored | `.env.example` | COMPLIANT |
 | No personal data in logs | Audit summaries, order errors, email logs and dev scripts all scrubbed | [07](./07-security-controls.md) | COMPLIANT |
 | No personal data in API responses | `/admin/users` leak fixed with explicit `select` | `admin/users/page.tsx` | COMPLIANT |
-| Breach detection | **No alerting or monitoring of any kind** | — | **NOT IMPLEMENTED** |
+| Breach detection | `SecurityEvent` + detectors for stuffing, spraying, takeover, escalation, cron abuse; throttled email alerts on HIGH/CRITICAL; OWNER-only `/admin/security` | `src/lib/security/**` | COMPLIANT — for security events. Application health is still unmonitored |
 
 ## Breach notification (§8(6))
 
 | Requirement | Implementation | Status |
 |---|---|---|
-| Ability to identify affected data and users | `AuditLog` + provider logs | PARTIALLY COMPLIANT — forensics yes, detection no |
+| Ability to identify affected data and users | `AuditLog` + `SecurityEvent` (incl. `ipHash` correlation) + provider logs | COMPLIANT |
 | Notification process | Runbook with templates and contact tree | COMPLIANT — [08](./08-breach-response.md) |
 | Board notification | Documented; never exercised | PARTIALLY COMPLIANT |
-| Detection capability | None | **NOT IMPLEMENTED** — highest-value next step |
+| Detection capability | Ten detectors, throttled alerting to the DPO, OWNER-only dashboard | COMPLIANT for security events |
+| Application health monitoring | None — no uptime or error tracking | **NOT IMPLEMENTED** |
 
 ## Children's data (§9)
 
@@ -150,9 +151,10 @@ position needs confirming.
 
 ## Recommended next
 
-1. Error monitoring and alerting — the largest remaining gap.
-2. A retention sweep cron for closed enquiries, aged-out orders and old audit
-   rows. The cron pattern already exists.
+1. Uptime and error monitoring. Security detection now exists; application
+   health does not, so an outage or unhandled exception still goes unnoticed.
+2. A retention sweep for closed enquiries, aged-out orders and old audit rows.
+   `SecurityEvent` is already swept by the nightly cron — extend that same job.
 3. Remove `email` from the JWT payload, with a back-compat release.
 4. Telugu and Hindi translations of the notice.
 5. Data processing agreements with all five processors.

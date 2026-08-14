@@ -15,6 +15,7 @@ import {
   Settings,
   ShieldCheck,
   ShieldAlert,
+  Siren,
   ScrollText,
   Store,
   MessageSquare,
@@ -106,6 +107,15 @@ export const NAV_ITEMS: {
     label: "Audit Log",
     icon: ScrollText,
     // Owner-only: a log the people it watches can curate isn't a control.
+    roles: ["OWNER"],
+  },
+  {
+    href: "/admin/security",
+    label: "Security",
+    icon: Siren,
+    // Same reasoning as the audit log, and more so: the privilege-escalation
+    // events here are the first thing an attacker with staff access would want
+    // to remove.
     roles: ["OWNER"],
   },
 ];

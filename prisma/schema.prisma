@@ -60,6 +60,79 @@ enum PrivacyRequestStatus {
   CANCELLED
 }
 
+/// Things worth knowing about before they become a breach notification.
+///
+/// Deliberately a short list of high-signal events. A security log nobody reads
+/// is worse than none — it creates the impression of monitoring while burying
+/// the one line that mattered.
+enum SecurityEventType {
+  /// A single failed password attempt. Individually meaningless; the value is
+  /// in the count, which is what the detector aggregates over.
+  LOGIN_FAILED
+  /// Many failures against one account in a short window.
+  CREDENTIAL_STUFFING_SUSPECTED
+  /// Many failures across DIFFERENT accounts from one source — password
+  /// spraying, which the per-account limiter never sees.
+  PASSWORD_SPRAYING_SUSPECTED
+  /// A success immediately after a burst of failures. The strongest single
+  /// signal of an actual account takeover.
+  LOGIN_SUCCESS_AFTER_FAILURES
+  /// A role was raised to staff or owner.
+  PRIVILEGE_ESCALATION
+  /// A staff account was suspended or reactivated.
+  STAFF_ACCESS_CHANGED
+  /// A signed-in user hit a page their role does not permit. One is a stray
+  /// bookmark; a run of them is someone trying doors.
+  UNAUTHORISED_ACCESS_ATTEMPT
+  /// Someone called the erasure cron without a valid secret.
+  CRON_AUTH_FAILED
+  /// A single account pulled its full data export unusually often.
+  BULK_DATA_EXPORT
+  /// An erasure completed. Not an attack — recorded because it is an
+  /// irreversible destruction of personal data and must be accountable.
+  ERASURE_EXECUTED
+}
+
+enum SecuritySeverity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+/// Security telemetry, kept deliberately free of personal data.
+///
+/// DPDP §8(6) requires notifying the Board and every affected principal after a
+/// breach, which is impossible without knowing what happened and to whom. This
+/// table is that record — and it must not itself become the next breach, so it
+/// stores a keyed hash of the client IP rather than the IP, and a user id
+/// rather than an email address.
+model SecurityEvent {
+  id       String            @id @default(cuid())
+  type     SecurityEventType
+  severity SecuritySeverity
+  /// HMAC-SHA256 of the client IP, truncated. Lets us say "the same source
+  /// tried 40 accounts" without retaining anyone's IP address.
+  ipHash   String?
+  /// The account involved, when there is one. Deliberately NOT a foreign key:
+  /// a failed login may name an address that has no account at all, and a
+  /// security log must never be a reason a user row cannot be removed.
+  userId   String?
+  /// One line, safe to put in an alert email. Never contains personal data.
+  summary  String
+  metadata Json?
+  /// Set when an alert was actually delivered, so the dashboard can show what
+  /// was noticed but not sent (throttled) versus never noticed at all.
+  alertedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+  @@index([severity, createdAt])
+  @@index([ipHash, createdAt])
+}
+
 model SiteSettings {
   id String @id @default("singleton")
 

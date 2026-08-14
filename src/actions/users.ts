@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/session";
 import { recordAudit } from "@/lib/audit";
+import { reportSecurityEvent } from "@/lib/security";
 import type { Role } from "@/lib/auth/jwt";
 
 /**
@@ -83,6 +84,19 @@ export async function changeUserRole(
     metadata: { from: target.role, to: nextRole },
   });
 
+  // Only a rise in privilege is a security signal. A demotion is routine
+  // housekeeping; someone gaining access to every customer record is the event
+  // you want to hear about within the hour, and the one an attacker who has
+  // taken a staff session performs first.
+  if (ROLE_RANK[nextRole] > ROLE_RANK[target.role]) {
+    await reportSecurityEvent({
+      type: "PRIVILEGE_ESCALATION",
+      userId: target.id,
+      summary: `Account promoted from ${target.role} to ${nextRole}`,
+      metadata: { from: target.role, to: nextRole, byActor: session.sub },
+    });
+  }
+
   revalidatePath("/admin/users");
   return {};
 }
@@ -118,6 +132,18 @@ export async function setUserActive(
     summary: `${target.id} ${isActive ? "reactivated" : "suspended"}`,
     metadata: { isActive, targetRole: target.role },
   });
+
+  // Staff only. Suspending a customer is ordinary moderation; reactivating a
+  // dormant staff account is how an attacker quietly restores a foothold they
+  // had lost, so it is worth surfacing even though it looks administrative.
+  if (target.role !== "CUSTOMER") {
+    await reportSecurityEvent({
+      type: "STAFF_ACCESS_CHANGED",
+      userId: target.id,
+      summary: `${target.role} account ${isActive ? "reactivated" : "suspended"}`,
+      metadata: { isActive, targetRole: target.role, byActor: session.sub },
+    });
+  }
 
   revalidatePath("/admin/users");
   return {};

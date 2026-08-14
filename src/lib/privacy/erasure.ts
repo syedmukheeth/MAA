@@ -4,6 +4,7 @@ import { recordAudit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
 import { erasureCompletedHtml } from "@/lib/email-templates";
 import { destroyUpload } from "@/lib/cloudinary";
+import { reportSecurityEvent } from "@/lib/security";
 import {
   anonymisedCustomRequestFields,
   anonymisedOrderFields,
@@ -192,6 +193,17 @@ export async function executeErasure(userId: string): Promise<ErasureOutcome> {
       metadata: { imagesFailed, imagesPurged },
     });
   }
+
+  // Not an attack, and not alertable — but an irreversible destruction of
+  // personal data belongs in the security timeline, so that reconstructing
+  // "what happened to this account" after the fact does not require joining
+  // three tables.
+  await reportSecurityEvent({
+    type: "ERASURE_EXECUTED",
+    userId,
+    summary: "Personal data erased; order records anonymised and retained",
+    metadata: { imagesPurged, imagesFailed },
+  });
 
   await sendEmail({
     to: originalEmail,

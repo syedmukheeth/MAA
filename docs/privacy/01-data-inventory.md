@@ -116,6 +116,25 @@ the address is not stored twice. A DB check constraint requires one or the other
 
 `note` is the principal's own words and can contain anything they chose to write.
 
+## SecurityEvent *(new)*
+
+`type`, `severity`, `ipHash`, `userId`, `summary`, `metadata`, `alertedAt`,
+`createdAt`.
+
+Breach detection telemetry. **Deliberately built so it is not itself a personal
+data store**: it holds a keyed HMAC of the client IP rather than the address,
+and a user id rather than an email. `hashIp` returns null rather than falling
+back to an unkeyed digest if `JWT_SECRET` is missing — the IPv4 space is small
+enough to enumerate, so a bare hash of an IP is reversible and would still be
+personal data.
+
+`userId` has **no foreign key** on purpose: a failed login can name an address
+with no account behind it, and a security log must never become the reason a
+user row cannot be removed.
+
+`summary` is written to be safe in an alert email and never contains personal
+data. Retention 730 days, swept nightly.
+
 ## StockMovement.byUserId — known gap
 
 A bare `String?` with no foreign key, recording which staff member moved stock.

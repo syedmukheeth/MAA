@@ -165,6 +165,48 @@ export function grievanceNotificationHtml(input: {
   );
 }
 
+/**
+ * Security alert to the Data Protection Officer.
+ *
+ * Carries NO personal data — not the affected email address, not an IP, not a
+ * name. This is an unencrypted message to a mailbox, and a breach alert that
+ * leaks the data it is warning about is its own incident. The identifying
+ * detail stays behind the login at /admin/security.
+ */
+export function securityAlertHtml(input: {
+  severity: string;
+  eventType: string;
+  summary: string;
+  occurrences: number;
+  windowMinutes: number;
+  dashboardUrl: string;
+}) {
+  const isCritical = input.severity === "CRITICAL";
+  return emailLayout(
+    `
+      <p style="margin:0 0 8px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:${isCritical ? "#b3261e" : "#a5732f"};">
+        ${esc(input.severity)} security alert
+      </p>
+      <h1 style="font-size:22px;margin:0 0 8px;">${esc(input.eventType)}</h1>
+      <p style="color:#5c5349;">${esc(input.summary)}</p>
+      <p style="color:#5c5349;">
+        This has happened <strong>${esc(input.occurrences)}</strong> time(s) in the last
+        ${esc(input.windowMinutes)} minutes. Further alerts of this type are paused for that
+        window so a single incident cannot flood your inbox.
+      </p>
+      <p style="margin-top:16px;">
+        <a href="${esc(input.dashboardUrl)}" style="color:#a5732f;">Review it in the security dashboard</a>
+      </p>
+      <p style="margin-top:24px;font-size:12px;color:#8a8078;">
+        Details are deliberately not included in this email. If this turns out to be a
+        personal data breach, DPDP section 8(6) requires notifying the Data Protection
+        Board of India and every affected person — see docs/privacy/08-breach-response.md.
+      </p>
+    `,
+    `${input.severity} security alert: ${input.eventType}`
+  );
+}
+
 export function customRequestNotificationHtml(request: CustomRequestLike) {
   const adminUrl = `${getSiteUrl()}/admin/requests`;
   return emailLayout(

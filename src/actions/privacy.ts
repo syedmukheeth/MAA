@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { requireAuth, SESSION_COOKIE } from "@/lib/auth/session";
 import { verifyPassword } from "@/lib/auth/password";
 import { recordAudit } from "@/lib/audit";
+import { reportSecurityEvent } from "@/lib/security";
 import { clientIp, limitOrAllow } from "@/lib/rate-limit";
 import {
   dataExportRatelimit,
@@ -147,6 +148,25 @@ export async function exportMyData(): Promise<
     entityId: session.sub,
     summary: "Data export downloaded",
   });
+
+  // A repeat export is the shape of a hijacked session being drained: the rate
+  // limiter caps it at three a day, so reaching the cap is itself the signal.
+  // One export is a person exercising a right; three in a day is worth a look.
+  const exportsToday = await prisma.auditLog.count({
+    where: {
+      action: "privacy.export",
+      entityId: session.sub,
+      createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+    },
+  });
+  if (exportsToday >= 3) {
+    await reportSecurityEvent({
+      type: "BULK_DATA_EXPORT",
+      userId: session.sub,
+      summary: `One account downloaded its full data export ${exportsToday} times in 24 hours`,
+      metadata: { exportsIn24h: exportsToday },
+    });
+  }
 
   const stamp = new Date().toISOString().slice(0, 10);
   return {

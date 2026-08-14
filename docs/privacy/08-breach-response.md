@@ -46,7 +46,9 @@ application:
 | Question | Where to look |
 |---|---|
 | What data was affected? | [01-data-inventory.md](./01-data-inventory.md) — map the compromised component to fields |
-| Which users? | `AuditLog` (`entity`, `entityId`, `createdAt`); Supabase query logs; Vercel request logs |
+| When was it first noticed? | `/admin/security` — the timeline, including events that were detected but throttled from alerting |
+| Which users? | `AuditLog` (`entity`, `entityId`, `createdAt`); `SecurityEvent.userId`; Supabase query logs; Vercel request logs |
+| Same source across accounts? | `SecurityEvent.ipHash` — correlates one origin without holding anyone's IP |
 | When did it start? | Vercel deployment history; Supabase logs; `git log` |
 | What systems? | [09-third-party-processing.md](./09-third-party-processing.md) |
 | Was it read or only exposed? | Access logs in the relevant provider's console |
@@ -113,13 +115,68 @@ directory. Fix the root cause before closing.
 | Email | Resend dashboard |
 | Rate limiting | Upstash console |
 
-## Preparation gap
+## Detection
 
-There is **no automated breach detection**. No alerting on anomalous query
-volume, no failed-login alerting, no uptime or error monitoring integration.
-Discovery today depends on someone noticing.
+Detection is built in, using the existing database, Redis and email — no
+external monitoring service, so no additional processor and no new cross-border
+disclosure.
 
-The audit log gives good *forensics* after the fact; it does not give
-*detection*. Adding error monitoring is the highest-value next step and is
-recorded as a gap in
-[10-dpdp-compliance-checklist.md](./10-dpdp-compliance-checklist.md).
+**Table:** `SecurityEvent` · **Code:** `src/lib/security/` · **Dashboard:**
+`/admin/security` (OWNER only) · **Alerts:** email to the DPO.
+
+| Detected | Type | Severity | Alerts? |
+|---|---|---|---|
+| Failed sign-in | `LOGIN_FAILED` | INFO | No — the aggregate is the signal |
+| ≥6 failures on one account in 15 min | `CREDENTIAL_STUFFING_SUSPECTED` | HIGH | Yes |
+| One source failing ≥5 *different* accounts in 30 min | `PASSWORD_SPRAYING_SUSPECTED` | HIGH | Yes |
+| Success after ≥5 failures in 30 min | `LOGIN_SUCCESS_AFTER_FAILURES` | **CRITICAL** | Yes |
+| Role raised | `PRIVILEGE_ESCALATION` | HIGH | Yes |
+| Staff account suspended/reactivated | `STAFF_ACCESS_CHANGED` | MEDIUM | No |
+| Signed-in user hitting a forbidden page | `UNAUTHORISED_ACCESS_ATTEMPT` | LOW | No |
+| Erasure cron called without a valid token | `CRON_AUTH_FAILED` | HIGH | Yes |
+| ≥3 full data exports by one account in 24h | `BULK_DATA_EXPORT` | MEDIUM | No |
+| Erasure completed | `ERASURE_EXECUTED` | INFO | No |
+
+Stuffing and spraying are separated deliberately: ten attempts against one
+account and one attempt against ten accounts need different responses, and the
+per-account rate limiter never sees the second.
+
+### The log is not itself a liability
+
+`SecurityEvent` stores a **keyed HMAC of the client IP**, never the address, and
+a **user id**, never an email. The key is derived from `JWT_SECRET`; if that is
+unset, `hashIp` returns null rather than falling back to an unkeyed digest —
+the IPv4 space is small enough to enumerate, so a bare hash of an IP is
+reversible in seconds and would still be personal data. Asserted in
+`src/lib/security/events.test.ts`.
+
+Retention is **730 days**, swept by the nightly cron
+(`src/lib/security/retention.ts`).
+
+### Alerting
+
+Alerts fire on HIGH and CRITICAL only, to `GRIEVANCE_OFFICER.email`.
+
+Throttled per event type — 1 hour, or 15 minutes for CRITICAL — claimed with a
+Redis `SET NX EX` so two concurrent invocations cannot both send. The throttle
+**fails open**: if Redis is unreachable we would rather send a duplicate than
+drop the alert telling you the database is being drained. This is deliberately
+the opposite of the rate limiters, where failing closed is correct.
+
+**Alert emails contain no personal data** — no address, no IP, no name. They
+state what happened, how many times, and link to `/admin/security`. An alert is
+an unencrypted message to a mailbox; one that leaks the data it is warning about
+is its own incident.
+
+The dashboard distinguishes *alerted* from *throttled*, so a quiet inbox is
+never mistaken for a quiet system.
+
+### Remaining gaps
+
+- **No uptime or error monitoring.** An unhandled exception or an outage still
+  goes unnoticed unless someone looks. This covers *security* events, not
+  application health.
+- **No anomalous-query-volume detection.** A slow scrape staying under every
+  threshold would not trip anything.
+- **Nothing watches Supabase, Cloudinary, Resend or Upstash directly.** A
+  compromise of a provider console would not surface here.

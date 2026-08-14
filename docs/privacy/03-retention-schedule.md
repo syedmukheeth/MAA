@@ -18,6 +18,7 @@ indefinitely by default.
 | `ConsentRecord` | Life of the account + 8 years | Evidence of lawful basis (§6(1) burden of proof) | Flipped to `WITHDRAWN` on erasure, rows retained |
 | `PrivacyRequest` | Life of the account + 8 years | Evidence that requests were honoured | Retained; erasure `note` scrubbed if it held personal data |
 | `AuditLog` | 8 years | Internal control | Rows about an erased user have `summary` replaced and `targetEmail` stripped |
+| `SecurityEvent` | **730 days** | Security monitoring (§8(5)) and breach reconstruction | `purgeExpiredSecurityEvents()` in the nightly cron. Already pseudonymous — keyed IP hash and user id only |
 | Rate-limit counters (IP, email) | ≤1 hour | Security | Redis TTL — self-expiring, no action needed |
 | Password-reset token | 1 hour | Security | Redis TTL; also deleted on use |
 | Session cookie | 7 days | Authentication | Browser expiry; invalidated early by `tokenVersion` |

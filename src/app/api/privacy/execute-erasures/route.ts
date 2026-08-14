@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { executeErasure } from "@/lib/privacy/erasure";
+import { reportSecurityEvent } from "@/lib/security";
+import { purgeExpiredSecurityEvents } from "@/lib/security/retention";
 
 /**
  * Runs the erasure requests whose cooling-off window has closed.
@@ -37,6 +39,18 @@ function authorised(request: NextRequest): boolean {
 
 export async function GET(request: NextRequest) {
   if (!authorised(request)) {
+    // This is the one route that can destroy personal data in bulk. An
+    // unauthenticated call is either a misconfiguration (CRON_SECRET unset, in
+    // which case erasures are silently not running and you need to know) or
+    // somebody probing it. Both warrant an alert.
+    await reportSecurityEvent({
+      type: "CRON_AUTH_FAILED",
+      ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+      summary: process.env.CRON_SECRET
+        ? "Erasure cron called with a missing or invalid bearer token"
+        : "Erasure cron called while CRON_SECRET is unset — scheduled deletions are NOT running",
+      metadata: { secretConfigured: Boolean(process.env.CRON_SECRET) },
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -86,5 +100,24 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ due: due.length, erased, skipped, imagesFailed });
+  // Piggy-backs on the same nightly run rather than declaring a second cron:
+  // Vercel's Hobby plan allows limited cron entries, and a retention sweep has
+  // no reason to run on its own schedule.
+  let securityEventsPurged = 0;
+  try {
+    securityEventsPurged = await purgeExpiredSecurityEvents();
+  } catch (err) {
+    // Never let housekeeping fail the erasures, which are the obligation.
+    console.error(
+      `Security event purge failed [${err instanceof Error ? err.name : "unknown"}]`
+    );
+  }
+
+  return NextResponse.json({
+    due: due.length,
+    erased,
+    skipped,
+    imagesFailed,
+    securityEventsPurged,
+  });
 }

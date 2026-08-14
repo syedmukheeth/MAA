@@ -2,6 +2,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { reportSecurityEvent } from "@/lib/security";
 import { verifySession, SESSION_COOKIE, type Role, type SessionPayload } from "./jwt";
 
 export { SESSION_COOKIE };
@@ -41,7 +42,22 @@ export const getActiveUser = cache(async (): Promise<SessionPayload | null> => {
 export async function requireRole(allowed: Role[]): Promise<SessionPayload> {
   const user = await getActiveUser();
   if (!user) redirect("/login");
-  if (!allowed.includes(user.role)) redirect("/403");
+  if (!allowed.includes(user.role)) {
+    // Recorded, not just redirected. A signed-in user reaching a page their
+    // role forbids is usually a stale bookmark — but a run of them from one
+    // account is someone trying doors, and that is invisible if the only
+    // response is a silent 403.
+    //
+    // Deliberately fire-and-forget with a catch: an authorisation check must
+    // never fail open, or fail at all, because telemetry is unavailable.
+    void reportSecurityEvent({
+      type: "UNAUTHORISED_ACCESS_ATTEMPT",
+      userId: user.sub,
+      summary: `${user.role} attempted an action restricted to ${allowed.join(", ")}`,
+      metadata: { role: user.role, allowed },
+    }).catch(() => {});
+    redirect("/403");
+  }
   return user;
 }
 

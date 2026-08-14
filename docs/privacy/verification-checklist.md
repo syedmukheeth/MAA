@@ -219,7 +219,42 @@ Watch the server console while doing each:
 - [ ] The old contact form is gone; WhatsApp, phone and email links work
 - [ ] The `/grievance` link is present
 
-## 15. Full regression sweep
+## 15. Breach detection
+
+Use a throwaway account. Every check is observable at `/admin/security` as OWNER.
+
+- [ ] As MANAGER or ADMIN, `/admin/security` → `/403`. As OWNER → loads
+- [ ] Fresh install shows "No security events recorded yet"
+- [ ] One wrong password → a `LOGIN_FAILED` row, **no email sent**
+- [ ] Six wrong passwords on one account within 15 min →
+      `CREDENTIAL_STUFFING_SUSPECTED` (HIGH) **and one alert email**
+- [ ] Repeat immediately → a second event, but **no second email** (throttled).
+      The dashboard should mark it `throttled`, not `alerted`
+- [ ] Fail against five different accounts from one machine →
+      `PASSWORD_SPRAYING_SUSPECTED`
+- [ ] Five failures then the correct password →
+      `LOGIN_SUCCESS_AFTER_FAILURES` (CRITICAL) and an alert
+- [ ] Promote a customer to MANAGER → `PRIVILEGE_ESCALATION` + alert. Demote →
+      **no** event (only a rise is a signal)
+- [ ] Suspend a staff account → `STAFF_ACCESS_CHANGED`. Suspend a customer →
+      no event
+- [ ] As a CUSTOMER, open `/admin` → `UNAUTHORISED_ACCESS_ATTEMPT` (LOW)
+- [ ] `curl` the erasure cron with no token → `CRON_AUTH_FAILED` + alert, and
+      the summary should say whether `CRON_SECRET` is configured
+- [ ] Download your data three times in a day → `BULK_DATA_EXPORT`
+
+Then verify the log is not itself a liability:
+
+```sql
+SELECT "ipHash", "userId", "summary" FROM "SecurityEvent" ORDER BY "createdAt" DESC LIMIT 20;
+```
+
+- [ ] `ipHash` is a 32-char hex string — **no dotted-quad IP anywhere**
+- [ ] No email address in any `summary` or `metadata`
+- [ ] Open an alert email → it names the event type and a count, links to the
+      dashboard, and contains **no email address, IP or customer name**
+
+## 16. Full regression sweep
 
 The privacy work touched registration, the footer, checkout and the admin. Walk
 the core flow once:

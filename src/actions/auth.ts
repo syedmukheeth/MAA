@@ -10,6 +10,7 @@ import { signSession, type Role } from "@/lib/auth/jwt";
 import { SESSION_COOKIE } from "@/lib/auth/session";
 import { loginRatelimit, loginIpRatelimit, registerRatelimit } from "@/lib/redis";
 import { clientIp, limitOrAllow } from "@/lib/rate-limit";
+import { reportFailedLogin, reportLoginSuccess } from "@/lib/security";
 import { PRIVACY_NOTICE_VERSION } from "@/lib/privacy/constants";
 import {
   loginSchema,
@@ -180,13 +181,23 @@ export async function loginAction(
       },
     });
     if (!user || !user.isActive) {
+      // Recorded even when the address matches no account: a source working
+      // through a list of guessed addresses is exactly the spraying pattern the
+      // detector looks for, and it is invisible if only real accounts count.
+      // The response to the client is unchanged, so this leaks no enumeration.
+      await reportFailedLogin({ ip, userId: user?.id ?? null });
       return { error: "Invalid email or password" };
     }
 
     const valid = await verifyPassword(parsed.data.password, user.passwordHash);
     if (!valid) {
+      await reportFailedLogin({ ip, userId: user.id });
       return { error: "Invalid email or password" };
     }
+
+    // Before the cookie is set, so a takeover alert is recorded even if the
+    // session write somehow fails.
+    await reportLoginSuccess({ ip, userId: user.id });
 
     await createSessionCookie(user);
 
