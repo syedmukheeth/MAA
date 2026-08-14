@@ -10,9 +10,12 @@
  *
  * Passwords come from STAFF_OWNER_PASSWORD / STAFF_ADMIN_PASSWORD /
  * STAFF_MANAGER_PASSWORD when set; otherwise a random one is generated and
- * printed once. Emails are always stored lower-cased to match loginAction.
+ * written to a gitignored staff-credentials.local.txt, never to stdout.
+ * Emails are always stored lower-cased to match loginAction.
  */
 import { randomBytes } from "node:crypto";
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
 import { PrismaClient } from "../../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
@@ -58,11 +61,17 @@ async function main() {
     throw new Error("DATABASE_URL is not set — pass --env-file=.env");
   }
 
-  const results: { role: string; email: string; password: string }[] = [];
+  const results: {
+    role: string;
+    email: string;
+    password: string;
+    generated: boolean;
+  }[] = [];
 
   for (const staff of STAFF) {
     const email = staff.email.trim().toLowerCase();
-    const password = process.env[staff.envKey] ?? generatePassword();
+    const fromEnv = process.env[staff.envKey];
+    const password = fromEnv ?? generatePassword();
     const passwordHash = await bcrypt.hash(password, 12);
 
     // Bumping tokenVersion invalidates any session still holding the old
@@ -84,14 +93,50 @@ async function main() {
       },
     });
 
-    results.push({ role: user.role, email: user.email, password });
+    results.push({
+      role: user.role,
+      email: user.email,
+      password,
+      generated: !fromEnv,
+    });
   }
+
+  // Passwords are written to a gitignored file, not to stdout.
+  //
+  // A terminal scrollback is not a secret store: it survives in shell history
+  // files, CI logs and screenshots, and cleartext staff credentials sitting
+  // there indefinitely is the kind of thing that turns one leaked laptop into
+  // an owner-level account takeover. The operator reads this file once and
+  // deletes it.
+  const generated = results.filter((r) => r.generated);
 
   console.log("\nStaff accounts ready:\n");
   for (const r of results) {
-    console.log(`  ${r.role.padEnd(8)} ${r.email.padEnd(32)} ${r.password}`);
+    console.log(
+      `  ${r.role.padEnd(8)} ${r.email.padEnd(32)} ${
+        r.generated ? "password generated" : "password set from env"
+      }`
+    );
   }
-  console.log("\nStore these somewhere safe — the hashes cannot be read back.\n");
+
+  if (generated.length > 0) {
+    const outPath = path.join(process.cwd(), "staff-credentials.local.txt");
+    const body = [
+      `Generated ${new Date().toISOString()}`,
+      "DELETE THIS FILE once the passwords are in your password manager.",
+      "",
+      ...generated.map((r) => `${r.role.padEnd(8)} ${r.email.padEnd(32)} ${r.password}`),
+      "",
+    ].join("\n");
+    // 0600: readable by the operator only, not by anything else on the machine.
+    await writeFile(outPath, body, { encoding: "utf8", mode: 0o600 });
+    console.log(
+      `\n${generated.length} generated password(s) written to staff-credentials.local.txt`
+    );
+    console.log("Move them into a password manager and delete that file.\n");
+  } else {
+    console.log("\nAll passwords came from environment variables.\n");
+  }
 }
 
 main()

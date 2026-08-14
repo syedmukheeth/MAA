@@ -78,6 +78,93 @@ type CustomRequestLike = {
   description?: string | null;
 };
 
+/**
+ * DPDP correspondence.
+ *
+ * These deliberately restate what was asked and by when it will be answered:
+ * the Act gives the data principal a right to know how their request is being
+ * handled, and an email they can keep is the cheapest way to discharge it.
+ * None of them echoes the personal data the request was about.
+ */
+
+export function privacyRequestReceivedHtml(input: {
+  requestType: string;
+  slaDays: number;
+}) {
+  return emailLayout(
+    `
+      <h1 style="font-size:22px;margin:0 0 8px;">We received your request</h1>
+      <p style="color:#5c5349;">You asked us to handle a <strong>${esc(input.requestType)}</strong> request for your personal data.</p>
+      <p style="color:#5c5349;">We will respond within ${esc(input.slaDays)} days. If you did not make this request, reply to this email straight away.</p>
+    `,
+    `Your ${input.requestType.toLowerCase()} request`
+  );
+}
+
+export function erasureScheduledHtml(input: {
+  scheduledFor: Date;
+  coolingOffDays: number;
+  grievanceUrl: string;
+}) {
+  const when = input.scheduledFor.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  return emailLayout(
+    `
+      <h1 style="font-size:22px;margin:0 0 8px;">Your account is scheduled for deletion</h1>
+      <p style="color:#5c5349;">We have locked your account now, so nobody can sign in to it. Your personal data will be permanently deleted on <strong>${esc(when)}</strong>.</p>
+      <p style="color:#5c5349;">If you change your mind before then, contact us through <a href="${esc(input.grievanceUrl)}" style="color:#a5732f;">our grievance page</a> within ${esc(input.coolingOffDays)} days and we will restore your account.</p>
+      <p style="color:#5c5349;">Please note: we are required by tax law to keep a record of orders you have already placed. Those records will be kept, but your name, phone number and street address will be removed from them.</p>
+    `,
+    "Your account is scheduled for deletion"
+  );
+}
+
+export function erasureCompletedHtml(input: { retentionYears: number }) {
+  return emailLayout(
+    `
+      <h1 style="font-size:22px;margin:0 0 8px;">Your data has been deleted</h1>
+      <p style="color:#5c5349;">Your account, saved addresses, cart and any custom furniture enquiries have been permanently deleted, along with any photos you uploaded.</p>
+      <p style="color:#5c5349;">Your past invoices remain in our accounts for ${esc(input.retentionYears)} years as Indian tax law requires, but your name, phone number and street address have been removed from them.</p>
+      <p style="color:#5c5349;">This is the last email you will receive from us.</p>
+    `,
+    "Your data has been deleted"
+  );
+}
+
+export function grievanceAcknowledgedHtml(input: {
+  slaDays: number;
+  officerName: string;
+}) {
+  return emailLayout(
+    `
+      <h1 style="font-size:22px;margin:0 0 8px;">We received your complaint</h1>
+      <p style="color:#5c5349;">${esc(input.officerName)} will look into it and respond within ${esc(input.slaDays)} days.</p>
+      <p style="color:#5c5349;">If you are not satisfied with our response, you may complain to the Data Protection Board of India.</p>
+    `,
+    "We received your complaint"
+  );
+}
+
+/** Sent to the grievance officer, not the customer. */
+export function grievanceNotificationHtml(input: {
+  category: string;
+  body: string;
+  adminUrl: string;
+}) {
+  return emailLayout(
+    `
+      <h1 style="font-size:22px;margin:0 0 8px;">New privacy grievance</h1>
+      <p style="color:#5c5349;">Category: <strong>${esc(input.category)}</strong></p>
+      <p style="color:#5c5349;">${esc(input.body)}</p>
+      <p style="margin-top:16px;"><a href="${esc(input.adminUrl)}" style="color:#a5732f;">Open the privacy request queue</a></p>
+    `,
+    "New privacy grievance"
+  );
+}
+
 export function customRequestNotificationHtml(request: CustomRequestLike) {
   const adminUrl = `${getSiteUrl()}/admin/requests`;
   return emailLayout(

@@ -63,6 +63,36 @@ export const resetPasswordRatelimit = new Ratelimit({
   prefix: "ratelimit:reset-password",
 });
 
+/**
+ * A data export assembles every row we hold about one person into a single JSON
+ * payload — the most concentrated read in the app. Keyed per user, not per IP:
+ * the limit exists to stop a hijacked session from repeatedly exfiltrating, and
+ * three per day is far above any genuine need.
+ */
+export const dataExportRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(3, "86400 s"),
+  prefix: "ratelimit:data-export",
+});
+
+/**
+ * Erasure and correction requests. Low limit because each one creates staff
+ * work and, for erasure, schedules an irreversible job.
+ */
+export const privacyRequestRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "86400 s"),
+  prefix: "ratelimit:privacy-request",
+});
+
+/** Grievances email the grievance officer, so the endpoint is an email
+ *  amplifier the same way custom requests are. */
+export const grievanceRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(3, "86400 s"),
+  prefix: "ratelimit:grievance",
+});
+
 /** The search endpoint is public and hits the database. Unbounded, a bot can
  *  hammer it and create real load on PostgreSQL. */
 export const searchRatelimit = new Ratelimit({

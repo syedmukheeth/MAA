@@ -29,7 +29,7 @@ export async function sendEmail({
   try {
     const resend = getResend();
     if (!resend) {
-      console.warn(`EMAIL SEND SKIPPED (RESEND_API_KEY not configured) [subject="${subject}"]`);
+      console.warn("EMAIL SEND SKIPPED (RESEND_API_KEY not configured)");
       return false;
     }
     const res = await resend.emails.send({ from: FROM, to, subject, html });
@@ -37,15 +37,21 @@ export async function sendEmail({
       // Resend's most common rejection is an unverified sending domain, and the
       // failure is otherwise invisible because callers only see `false`. Log the
       // sender so the cause is obvious from the deployment logs.
+      //
+      // Neither the subject nor the raw error object is logged: subjects carry
+      // order numbers and, for custom requests, a customer's name, and Resend's
+      // error payload echoes the `to:` address. Both would put personal data
+      // into Vercel's log store, which has its own retention we do not control.
       console.error(
-        `EMAIL SEND FAILED [from="${FROM}"] [subject="${subject}"]:`,
-        res.error
+        `EMAIL SEND FAILED [from="${FROM}"] [reason=${res.error.name}]`
       );
       return false;
     }
     return true;
   } catch (err) {
-    console.error(`EMAIL SEND ERROR [subject="${subject}"]:`, err);
+    console.error(
+      `EMAIL SEND ERROR [${err instanceof Error ? err.name : "unknown"}]`
+    );
     return false;
   }
 }

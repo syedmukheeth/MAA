@@ -28,7 +28,6 @@ export default async function AccountLayout({
       </main>
       <Footer
         instagramUrl={settings.instagramUrl}
-        facebookUrl={settings.facebookUrl}
         whatsapp={settings.showroomWhatsapp}
         deliveryMessage={settings.deliveryMessage}
       />

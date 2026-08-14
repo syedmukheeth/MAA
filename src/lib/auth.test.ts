@@ -3,17 +3,23 @@ import { registerSchema, loginSchema } from "./validations/auth";
 import { STAFF_ROLES, ADMIN_ROLES, USER_MANAGE_ROLES } from "./auth/roles";
 
 describe("Auth Validation Schemas", () => {
+  // marketingConsent is required (never defaulted) so a caller cannot register
+  // by omitting it and have silence read as agreement. The consent rules
+  // themselves are covered in validations/privacy.test.ts; here it is just the
+  // field every registration has to carry.
+  const base = { name: "Alice", email: "alice@example.com", marketingConsent: false };
+
   it("validates password strength rules correctly", () => {
     // Too short
-    expect(registerSchema.safeParse({ name: "Alice", email: "alice@example.com", password: "Pass1" }).success).toBe(false);
+    expect(registerSchema.safeParse({ ...base, password: "Pass1" }).success).toBe(false);
     // Missing uppercase
-    expect(registerSchema.safeParse({ name: "Alice", email: "alice@example.com", password: "password123" }).success).toBe(false);
+    expect(registerSchema.safeParse({ ...base, password: "password123" }).success).toBe(false);
     // Missing lowercase
-    expect(registerSchema.safeParse({ name: "Alice", email: "alice@example.com", password: "PASSWORD123" }).success).toBe(false);
+    expect(registerSchema.safeParse({ ...base, password: "PASSWORD123" }).success).toBe(false);
     // Missing number
-    expect(registerSchema.safeParse({ name: "Alice", email: "alice@example.com", password: "Password" }).success).toBe(false);
+    expect(registerSchema.safeParse({ ...base, password: "Password" }).success).toBe(false);
     // Valid strong password
-    expect(registerSchema.safeParse({ name: "Alice", email: "alice@example.com", password: "Password123" }).success).toBe(true);
+    expect(registerSchema.safeParse({ ...base, password: "Password123" }).success).toBe(true);
   });
 
   it("validates login inputs", () => {

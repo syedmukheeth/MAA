@@ -75,8 +75,12 @@ export async function changeUserRole(
     action: "user.role_change",
     entity: "User",
     entityId: userId,
-    summary: `${target.email}: ${target.role} → ${nextRole}`,
-    metadata: { from: target.role, to: nextRole, targetEmail: target.email },
+    // The user id, not the email. `entityId` already identifies the account and
+    // the admin UI joins to User for display, so duplicating the address into a
+    // log that is retained for years is collection for nothing — and it is what
+    // made a DPDP erasure need a JSONB scrub in the first place.
+    summary: `${target.id}: ${target.role} → ${nextRole}`,
+    metadata: { from: target.role, to: nextRole },
   });
 
   revalidatePath("/admin/users");
@@ -111,8 +115,8 @@ export async function setUserActive(
     action: "user.set_active",
     entity: "User",
     entityId: userId,
-    summary: `${target.email} ${isActive ? "reactivated" : "suspended"}`,
-    metadata: { isActive, targetEmail: target.email, targetRole: target.role },
+    summary: `${target.id} ${isActive ? "reactivated" : "suspended"}`,
+    metadata: { isActive, targetRole: target.role },
   });
 
   revalidatePath("/admin/users");

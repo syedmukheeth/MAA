@@ -1,12 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { MapPin, Clock, MessageCircle, Send, Phone, Mail } from "lucide-react";
+import Link from "next/link";
+import { MapPin, Clock, MessageCircle, Phone, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   Accordion,
   AccordionContent,
@@ -44,7 +41,7 @@ export function ShowroomFaqContact({
   phone: string;
   whatsapp: string;
 }) {
-  const [sent, setSent] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const whatsappDigits = whatsapp.replace(/[^0-9]/g, "");
 
   return (
@@ -111,15 +108,60 @@ export function ShowroomFaqContact({
             </div>
           </div>
 
-          <div className="relative min-h-64 overflow-hidden rounded-xl">
-            <iframe
-              title="MAA FURNITURE Showroom Location"
-              className="absolute inset-0 h-full w-full border-0"
-              loading="lazy"
-              allowFullScreen
-              referrerPolicy="no-referrer-when-downgrade"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3815.6388!2d78.0206856!3d15.8375006!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bb5dd6d6cc56eef%3A0x731e09d8ec60ef2d!2sMAA%20FURNITURE!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
-            />
+          {/*
+            Click-to-load, not an eager iframe.
+
+            Embedded directly, this contacts Google and sets Google's cookies
+            the moment anyone opens /showroom, whether or not they ever look at
+            the map — an undisclosed transfer of every visitor's IP address and
+            referrer to a third party. Deferring it until someone asks for the
+            map makes the transfer a choice, disclosed in the notice, and cuts
+            a third-party frame out of the initial page load.
+
+            No cookie banner: DPDP has no ePrivacy-style consent-for-cookies
+            rule, so a banner would be the wrong regulation's answer — and one
+            everybody clicks through without reading.
+          */}
+          <div className="relative min-h-64 overflow-hidden rounded-xl border border-linen">
+            {mapLoaded ? (
+              <iframe
+                title="MAA FURNITURE Showroom Location"
+                className="absolute inset-0 h-full w-full border-0"
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3815.6388!2d78.0206856!3d15.8375006!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bb5dd6d6cc56eef%3A0x731e09d8ec60ef2d!2sMAA%20FURNITURE!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-cream p-6 text-center">
+                <MapPin className="text-bronze" size={28} />
+                <p className="text-sm text-graphite/70">{address}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setMapLoaded(true)}
+                  className="rounded-full"
+                >
+                  Show map
+                </Button>
+                <p className="max-w-xs text-xs text-graphite/50">
+                  Loads Google Maps, which will see your IP address. See our{" "}
+                  <Link href="/privacy" className="underline hover:text-bronze">
+                    Privacy Notice
+                  </Link>
+                  .{" "}
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-bronze"
+                  >
+                    Or get directions
+                  </a>
+                  .
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -154,51 +196,74 @@ export function ShowroomFaqContact({
               Let&apos;s start the conversation.
             </h2>
 
-            {sent ? (
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-8 rounded-xl bg-cream p-8 text-center"
+            {/*
+              This was a form that called preventDefault(), set a flag, and
+              rendered "Message sent — we'll get back to you within one business
+              day." It had no action, no endpoint and no storage: every enquiry
+              typed into it was discarded while the customer was told it had
+              arrived.
+
+              Replaced with the channels that actually reach someone rather than
+              rebuilt, because building it properly would mean a new store of
+              names, emails and message bodies — a fresh personal-data category
+              with its own retention and deletion obligations — to duplicate a
+              WhatsApp number that already works and is where this business
+              actually converts.
+            */}
+            <p className="mt-6 text-sm leading-relaxed text-graphite/70">
+              We answer fastest on WhatsApp, usually within a couple of hours
+              during showroom hours. Call us if it is urgent.
+            </p>
+
+            <div className="mt-8 space-y-3">
+              <a
+                href={`https://wa.me/${whatsappDigits.startsWith("91") ? whatsappDigits : `91${whatsappDigits}`}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-xl border border-linen bg-cream p-4 transition-colors hover:border-bronze/40"
               >
-                <p className="font-heading text-lg text-charcoal">
-                  Message sent
-                </p>
-                <p className="mt-2 text-sm text-graphite/70">
-                  We&apos;ll get back to you within one business day.
-                </p>
-              </motion.div>
-            ) : (
-              <form
-                className="mt-8 space-y-5"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  setSent(true);
-                }}
+                <MessageCircle className="text-bronze" size={20} />
+                <span className="text-sm">
+                  <span className="block font-medium text-charcoal">
+                    WhatsApp us
+                  </span>
+                  <span className="text-graphite/60">{whatsapp}</span>
+                </span>
+              </a>
+
+              <a
+                href={`tel:${phone.split(",")[0]?.replace(/[^0-9+]/g, "")}`}
+                className="flex items-center gap-3 rounded-xl border border-linen bg-cream p-4 transition-colors hover:border-bronze/40"
               >
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="contact-name">Name</Label>
-                    <Input id="contact-name" placeholder="Your name" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contact-email">Email</Label>
-                    <Input id="contact-email" type="email" placeholder="you@email.com" required />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact-message">Message</Label>
-                  <Textarea id="contact-message" placeholder="How can we help?" rows={4} />
-                </div>
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="w-full rounded-full bg-bronze text-ivory hover:bg-bronze/90 sm:w-auto"
-                >
-                  <Send className="mr-2" size={16} />
-                  Send Message
-                </Button>
-              </form>
-            )}
+                <Phone className="text-bronze" size={20} />
+                <span className="text-sm">
+                  <span className="block font-medium text-charcoal">Call us</span>
+                  <span className="text-graphite/60">{phone}</span>
+                </span>
+              </a>
+
+              <a
+                href="mailto:maafurniture.shop@gmail.com"
+                className="flex items-center gap-3 rounded-xl border border-linen bg-cream p-4 transition-colors hover:border-bronze/40"
+              >
+                <Mail className="text-bronze" size={20} />
+                <span className="text-sm">
+                  <span className="block font-medium text-charcoal">Email us</span>
+                  <span className="text-graphite/60">
+                    maafurniture.shop@gmail.com
+                  </span>
+                </span>
+              </a>
+            </div>
+
+            <p className="mt-6 text-xs text-graphite/50">
+              For anything about your personal data — a correction, a deletion,
+              or a complaint — use our{" "}
+              <Link href="/grievance" className="underline hover:text-bronze">
+                grievance page
+              </Link>
+              .
+            </p>
           </div>
         </div>
       </div>

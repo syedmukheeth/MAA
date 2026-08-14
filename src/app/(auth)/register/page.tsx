@@ -18,7 +18,13 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) });
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
+    // Unticked by default and never pre-ticked: a pre-ticked consent box is not
+    // freely given consent under DPDP §6, and it is the specific dark pattern
+    // the Act's "free, specific, informed, unconditional" wording rules out.
+    defaultValues: { marketingConsent: false },
+  });
 
   const onSubmit = async (data: RegisterInput) => {
     setServerError(null);
@@ -79,6 +85,34 @@ export default function RegisterPage() {
           )}
         </div>
 
+        {/*
+          The ONLY consent checkbox on this form. Everything else it collects —
+          name, email, password — is needed to provide the account itself, which
+          is contract performance under DPDP §7(a), not consent. A mandatory
+          tick-to-continue box for those would be consent that is not freely
+          given, and one the user could untick would break signup.
+        */}
+        <div className="rounded-lg border border-border bg-sand/30 p-3">
+          <label
+            htmlFor="marketingConsent"
+            className="flex cursor-pointer items-start gap-3 text-sm text-graphite/80"
+          >
+            <input
+              id="marketingConsent"
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-bronze"
+              {...register("marketingConsent")}
+            />
+            <span>
+              Email me new arrivals and offers.{" "}
+              <span className="text-graphite/60">
+                Optional. You can turn this off any time in Account → Privacy,
+                and it never affects your orders.
+              </span>
+            </span>
+          </label>
+        </div>
+
         <div aria-live="polite">
           {serverError && (
             <div
@@ -107,6 +141,24 @@ export default function RegisterPage() {
             "Create Account"
           )}
         </Button>
+
+        {/*
+          Notice, not consent. Deliberately NOT a checkbox: the processing this
+          refers to runs on contract performance, and dressing it up as a
+          tick-box would misstate the lawful basis. DPDP §5 requires the notice
+          to be available at the point of collection, which is what this is.
+        */}
+        <p className="text-center text-xs text-graphite/50">
+          By creating an account you agree to our{" "}
+          <Link href="/terms" className="underline hover:text-bronze">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="underline hover:text-bronze">
+            Privacy Notice
+          </Link>
+          .
+        </p>
       </form>
 
       <p className="mt-6 text-center text-sm text-graphite/70">

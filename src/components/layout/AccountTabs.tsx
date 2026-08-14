@@ -11,6 +11,7 @@ export function AccountTabs() {
   const tabs = [
     { label: "Profile", href: "/account" },
     { label: "Orders", href: "/account/orders" },
+    { label: "Privacy", href: "/account/privacy" },
   ];
 
   return (

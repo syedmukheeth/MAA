@@ -320,7 +320,9 @@ export async function placeOrder(
           }
         }
       } catch (e) {
-        console.error("Order confirmation email failed:", e);
+        console.error(
+          `Order confirmation email failed [${e instanceof Error ? e.name : "unknown"}]`
+        );
         await recordAudit({
           actorId: session.sub,
           action: "order.email_failed",
@@ -337,7 +339,13 @@ export async function placeOrder(
     if (err instanceof CheckoutError || err instanceof InsufficientStockError) {
       return { error: err.message };
     }
-    console.error("placeOrder failed:", err);
+    // Only the error's type, never the error itself. A Prisma
+    // PrismaClientKnownRequestError interpolates the failing query's parameters
+    // into its message, and for this query those parameters are the customer's
+    // shipping name, phone number and street address.
+    console.error(
+      `placeOrder failed [${err instanceof Error ? err.name : "unknown"}] [user=${session.sub}]`
+    );
     return { error: "Could not place your order. Please try again." };
   }
 }

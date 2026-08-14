@@ -21,6 +21,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/combos`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/custom-studio`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/showroom`, changeFrequency: "monthly", priority: 0.7 },
+    // Low priority but deliberately listed: these must be reachable without a
+    // session, and having them here keeps the list in sync with PUBLIC_PREFIXES
+    // in src/proxy.ts — anything advertised to crawlers and gated there is a
+    // URL Google is told to index and then bounced off.
+    { url: `${base}/privacy`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${base}/terms`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${base}/grievance`, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   try {

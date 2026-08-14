@@ -1,6 +1,6 @@
 "use server";
 
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
@@ -9,70 +9,14 @@ import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { signSession, type Role } from "@/lib/auth/jwt";
 import { SESSION_COOKIE } from "@/lib/auth/session";
 import { loginRatelimit, loginIpRatelimit, registerRatelimit } from "@/lib/redis";
-import type { Ratelimit } from "@upstash/ratelimit";
+import { clientIp, limitOrAllow } from "@/lib/rate-limit";
+import { PRIVACY_NOTICE_VERSION } from "@/lib/privacy/constants";
 import {
   loginSchema,
   registerSchema,
   type LoginInput,
   type RegisterInput,
 } from "@/lib/validations/auth";
-
-async function clientIp() {
-  const headerList = await headers();
-  return headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-}
-
-/**
- * In-memory sliding-window fallback store.
- *
- * If Upstash Redis is unreachable or out of quota, `.limit()` rejects.
- * To prevent authentication from failing open into unbounded brute-force,
- * this fallback enforces local rate limits per Node instance during outages.
- */
-const fallbackStore = new Map<string, { count: number; resetAt: number }>();
-const FALLBACK_WINDOW_MS = 60 * 1000;
-const FALLBACK_MAX_ATTEMPTS = 10;
-
-function checkInMemoryFallback(key: string): boolean {
-  const now = Date.now();
-
-  // Probabilistic GC: on ~1% of calls, evict stale entries so the Map
-  // never grows unboundedly during a prolonged Redis outage.
-  if (Math.random() < 0.01) {
-    for (const [k, v] of fallbackStore) {
-      if (now > v.resetAt) fallbackStore.delete(k);
-    }
-  }
-
-  const record = fallbackStore.get(key);
-
-  if (!record || now > record.resetAt) {
-    fallbackStore.set(key, { count: 1, resetAt: now + FALLBACK_WINDOW_MS });
-    return true;
-  }
-
-  if (record.count >= FALLBACK_MAX_ATTEMPTS) {
-    return false;
-  }
-
-  record.count += 1;
-  return true;
-}
-
-async function limitOrAllow(limiter: Ratelimit, key: string): Promise<boolean> {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token || url.includes("localhost")) {
-    return true;
-  }
-  try {
-    const { success } = await limiter.limit(key);
-    return success;
-  } catch (err) {
-    console.warn(`Rate limiter unavailable for key, using in-memory fallback:`, err);
-    return checkInMemoryFallback(key);
-  }
-}
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
@@ -161,6 +105,26 @@ export async function registerAction(
         email: normalizedEmail,
         passwordHash,
         role: "CUSTOMER",
+        // Consent is recorded in the same write as the account so the two can
+        // never disagree about whether it was given at signup.
+        //
+        // Only a ticked box writes a row. An unticked box writes NOTHING — it
+        // does not write a WITHDRAWN record, because that would claim consent
+        // was given and then revoked, which is false. Absence of a row is the
+        // correct representation of "never agreed", and isGranted() treats it
+        // as such.
+        ...(parsed.data.marketingConsent
+          ? {
+              consentRecords: {
+                create: {
+                  purpose: "MARKETING_EMAIL" as const,
+                  status: "GRANTED" as const,
+                  noticeVersion: PRIVACY_NOTICE_VERSION,
+                  source: "REGISTRATION" as const,
+                },
+              },
+            }
+          : {}),
       },
     });
 

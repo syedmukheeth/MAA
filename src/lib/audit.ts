@@ -41,7 +41,21 @@ export type AuditAction =
   | "user.set_active"
   | "testimonial.create"
   | "testimonial.update"
-  | "testimonial.delete";
+  | "testimonial.delete"
+  // DPDP. These record that a right was exercised and honoured — the trail a
+  // fiduciary needs to show it responded, without re-recording the personal
+  // data the request was about.
+  | "privacy.consent_grant"
+  | "privacy.consent_withdraw"
+  | "privacy.export"
+  | "privacy.correction"
+  | "privacy.erasure_request"
+  | "privacy.erasure_blocked"
+  | "privacy.erasure_cancel"
+  | "privacy.erasure_complete"
+  | "privacy.erasure_purge_failed"
+  | "privacy.grievance"
+  | "privacy.request_status_change";
 
 type Client = Pick<typeof prisma, "auditLog"> | Prisma.TransactionClient;
 
@@ -69,8 +83,10 @@ export async function recordAudit(
       },
     });
   } catch (err) {
-    // Deliberately swallowed — see design notes above.
-    console.error(`AUDIT WRITE FAILED [${input.action}] by ${input.actorId}:`, err);
+    // Deliberately swallowed — see design notes above. The actor id is left out
+    // on purpose: this line lands in Vercel's log store, which has its own
+    // retention, and `action` alone is enough to diagnose a failing write.
+    console.error(`AUDIT WRITE FAILED [${input.action}]:`, err);
   }
 }
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { UploadCloud, Check, Loader2 } from "lucide-react";
 import { getCustomRequestUploadSignature } from "@/actions/upload";
 import { Button } from "@/components/ui/button";
@@ -378,6 +379,16 @@ export function CustomStudio({
               >
                 {submitting ? "Submitting..." : "Submit Design Request"}
               </Button>
+
+              <p className="text-xs text-graphite/50">
+                We use your name, phone number and any photos only to understand
+                and quote this request — we call you to discuss it. If it does
+                not become an order, we delete it. See our{" "}
+                <Link href="/privacy" className="underline hover:text-bronze">
+                  Privacy Notice
+                </Link>
+                .
+              </p>
             </form>
           )}
         </motion.div>

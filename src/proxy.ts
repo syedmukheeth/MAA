@@ -51,7 +51,23 @@ export async function proxy(request: NextRequest) {
   // Storefront must stay crawlable and shareable — no auth gate. This list is
   // the same set app/sitemap.ts advertises to crawlers; anything listed there
   // and gated here is a URL Google is told to index and then bounced off.
-  const PUBLIC_PREFIXES = ["/products", "/combos", "/custom-studio", "/showroom"];
+  //
+  // /privacy, /terms and /grievance are here for a second reason: DPDP §5
+  // requires the notice to be available to a data principal at the point they
+  // give their data, and §13 requires a reachable grievance channel. A privacy
+  // notice you have to create an account to read is not a notice, and someone
+  // whose account is locked pending erasure — or who never had one — must still
+  // be able to complain. Without these entries the proxy 307s all three to
+  // /login.
+  const PUBLIC_PREFIXES = [
+    "/products",
+    "/combos",
+    "/custom-studio",
+    "/showroom",
+    "/privacy",
+    "/terms",
+    "/grievance",
+  ];
   const isPublicStorefrontPage =
     pathname === "/" || PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   if (isPublicStorefrontPage) {

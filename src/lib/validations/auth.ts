@@ -10,6 +10,18 @@ export const registerSchema = z.object({
     .regex(/[A-Z]/, "Must contain an uppercase letter")
     .regex(/[a-z]/, "Must contain a lowercase letter")
     .regex(/[0-9]/, "Must contain a number"),
+  /**
+   * Marketing email is the only thing at signup that runs on consent (DPDP §6).
+   * Everything else the form collects is needed to perform the contract the
+   * account itself is, so none of it gets a checkbox — a tick-to-proceed box is
+   * not freely given consent, and one the user could untick would break signup.
+   *
+   * Required rather than defaulted: a `.default(false)` would make the parsed
+   * input type optional, and a caller that simply omitted the field would be
+   * accepted. Requiring it means the only way to register is to state a
+   * position either way, and the form ships that position as `false`.
+   */
+  marketingConsent: z.boolean(),
 });
 
 export const loginSchema = z.object({

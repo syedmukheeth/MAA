@@ -19,7 +19,13 @@ type TestimonialDefaults = {
   imageUrl: string;
   isPublished: boolean;
   sortOrder: number;
+  subjectUserId: string;
+  /** Whether the linked customer has already consented in their own account. */
+  hasSubjectConsent: boolean;
 };
+
+/** Minimal shape for the customer picker — no phone, no address, no order history. */
+export type CustomerOption = { id: string; name: string; email: string };
 
 const EMPTY: TestimonialDefaults = {
   name: "",
@@ -27,14 +33,20 @@ const EMPTY: TestimonialDefaults = {
   quote: "",
   rating: 5,
   imageUrl: "",
-  isPublished: true,
+  // Unpublished by default. Publishing names a real person on the homepage and
+  // needs their consent first, so the safe default is a draft.
+  isPublished: false,
   sortOrder: 0,
+  subjectUserId: "",
+  hasSubjectConsent: false,
 };
 
 export function TestimonialForm({
   defaults = EMPTY,
+  customers = [],
 }: {
   defaults?: TestimonialDefaults;
+  customers?: CustomerOption[];
 }) {
   const router = useRouter();
   const [values, setValues] = useState(defaults);
@@ -42,6 +54,15 @@ export function TestimonialForm({
   const [submitting, setSubmitting] = useState(false);
 
   const isEdit = Boolean(defaults.id);
+
+  // Whether publishing is currently permitted, mirrored from the server rule in
+  // resolvePublishConsent(). The server is still the authority — this only
+  // stops staff filling in a form that is going to be rejected.
+  const linkedCustomerConsented =
+    values.subjectUserId === defaults.subjectUserId && defaults.hasSubjectConsent;
+  const [offlineConsent, setOfflineConsent] = useState(false);
+  const canPublish =
+    Boolean(values.subjectUserId) && (linkedCustomerConsented || offlineConsent);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -56,6 +77,8 @@ export function TestimonialForm({
       imageUrl: values.imageUrl || undefined,
       isPublished: values.isPublished,
       sortOrder: Number(values.sortOrder),
+      subjectUserId: values.subjectUserId || undefined,
+      offlineConsentRecorded: offlineConsent,
     };
 
     const result = isEdit
@@ -83,13 +106,18 @@ export function TestimonialForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="location">Location (optional)</Label>
+          <Label htmlFor="location">City (optional)</Label>
           <Input
             id="location"
-            placeholder="e.g. Hyderabad, Kurnool"
+            maxLength={40}
+            placeholder="e.g. Kurnool"
             value={values.location}
             onChange={(e) => setValues({ ...values, location: e.target.value })}
           />
+          <p className="text-xs text-muted-foreground">
+            City only — not an area or a street. This is published next to the
+            customer&apos;s name and photo.
+          </p>
         </div>
       </div>
 
@@ -140,15 +168,84 @@ export function TestimonialForm({
         />
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-foreground">
-        <input
-          type="checkbox"
-          checked={values.isPublished}
-          onChange={(e) => setValues({ ...values, isPublished: e.target.checked })}
-          className="size-4 rounded border-border"
-        />
-        Publish directly to storefront homepage
-      </label>
+      {/*
+        Consent block. Publishing a named person's quote, city and photograph is
+        one of only two things this site does that runs on consent (DPDP §6) —
+        there is no contract to perform and nothing the customer gains, so no
+        other lawful basis is available. The server enforces this in
+        resolvePublishConsent(); this section exists so staff can see why the
+        publish box is disabled rather than hitting an error.
+      */}
+      <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
+        <div className="space-y-2">
+          <Label htmlFor="subjectUserId">Customer account</Label>
+          <select
+            id="subjectUserId"
+            value={values.subjectUserId}
+            onChange={(e) =>
+              setValues({ ...values, subjectUserId: e.target.value })
+            }
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Not linked (walk-in customer)</option>
+            {customers.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} — {c.email}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            Linking lets the customer withdraw consent themselves, and lets us
+            take this down automatically if they ask us to delete their data.
+          </p>
+        </div>
+
+        {values.subjectUserId && !linkedCustomerConsented && (
+          <label className="flex items-start gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={offlineConsent}
+              onChange={(e) => setOfflineConsent(e.target.checked)}
+              className="mt-0.5 size-4 rounded border-border"
+            />
+            <span>
+              I confirm this customer agreed, in person or in writing, to us
+              publishing their name, photo and review on our website.
+              <span className="block text-xs text-muted-foreground">
+                This records a consent entry against their account under your
+                name.
+              </span>
+            </span>
+          </label>
+        )}
+
+        {linkedCustomerConsented && (
+          <p className="text-xs text-muted-foreground">
+            This customer has granted publication consent in their own account.
+          </p>
+        )}
+
+        <label className="flex items-start gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            checked={values.isPublished}
+            disabled={!canPublish}
+            onChange={(e) =>
+              setValues({ ...values, isPublished: e.target.checked })
+            }
+            className="mt-0.5 size-4 rounded border-border disabled:opacity-40"
+          />
+          <span className={canPublish ? "" : "text-muted-foreground"}>
+            Publish to the storefront homepage
+            {!canPublish && (
+              <span className="block text-xs">
+                Link a customer account and record their consent first. You can
+                still save this as an unpublished draft.
+              </span>
+            )}
+          </span>
+        </label>
+      </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 

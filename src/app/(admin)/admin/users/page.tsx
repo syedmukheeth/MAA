@@ -5,9 +5,23 @@ import { UserRoleTable } from "@/components/admin/UserRoleTable";
 export default async function AdminUsersPage() {
   const session = await requireRole(["OWNER", "ADMIN"]);
 
+  // Explicit allow-list. Without it, Prisma returns every column and React
+  // serialises the ACTUAL objects into the RSC payload sent to the browser —
+  // not the five fields UserRow declares. That shipped passwordHash and
+  // tokenVersion for up to 200 accounts to anyone who opened this page's
+  // network tab. The narrow type on the client was never a defence; only the
+  // query is.
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "asc" },
     take: 200,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isActive: true,
+      erasedAt: true,
+    },
   });
 
   return (

@@ -111,6 +111,14 @@ function LoginForm() {
           Create one
         </Link>
       </p>
+
+      <p className="mt-4 text-center text-xs text-graphite/50">
+        See our{" "}
+        <Link href="/privacy" className="underline hover:text-bronze">
+          Privacy Notice
+        </Link>{" "}
+        for how we handle your data.
+      </p>
     </>
   );
 }

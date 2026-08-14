@@ -21,6 +21,45 @@ enum RefundStatus {
   FAILED
 }
 
+/// Purposes for which consent (DPDP §6) is the lawful basis.
+///
+/// Deliberately short. Almost nothing this app does runs on consent: accounts,
+/// orders, shipping snapshots and invoices are contract performance, GST
+/// retention is a legal obligation, and rate limiting is a security measure —
+/// all separate legitimate uses under §7. Adding a checkbox for those would be
+/// a lie the customer could untick, which would then break checkout.
+enum ConsentPurpose {
+  MARKETING_EMAIL
+  TESTIMONIAL_PUBLICATION
+}
+
+enum ConsentStatus {
+  GRANTED
+  WITHDRAWN
+}
+
+enum ConsentSource {
+  REGISTRATION
+  ACCOUNT_PRIVACY_PAGE
+  STAFF_RECORDED
+}
+
+enum PrivacyRequestType {
+  EXPORT
+  CORRECTION
+  ERASURE
+  GRIEVANCE
+}
+
+enum PrivacyRequestStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+  ON_HOLD
+  CANCELLED
+}
+
 model SiteSettings {
   id String @id @default("singleton")
 
@@ -125,6 +164,12 @@ model User {
   /// Incremented on password change and role change. JWTs carry the version at
   /// issue time; any token whose version is behind the current value is rejected.
   tokenVersion Int      @default(0)
+  /// Set when a DPDP erasure request has been executed against this row. The
+  /// row itself survives because Order, Cart and AuditLog reference it with
+  /// onDelete: Restrict and orders are a statutory accounting record — what is
+  /// destroyed is the identifying content, not the FK anchor. A non-null value
+  /// means name/email/passwordHash are tombstones, not real data.
+  erasedAt     DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -132,12 +177,81 @@ model User {
   combos                  Combo[]                   @relation("ComboCreatedBy")
   customFurnitureRequests CustomFurnitureRequest[]  @relation("SubmittedBy")
   testimonials            Testimonial[]             @relation("TestimonialCreatedBy")
+  testimonialsAbout       Testimonial[]             @relation("TestimonialSubject")
   auditLogs               AuditLog[]                @relation("AuditActor")
   cart                    Cart?
   orders                  Order[]
   addresses               Address[]
+  consentRecords          ConsentRecord[]
+  privacyRequests         PrivacyRequest[]
 
   @@index([role])
+  @@index([erasedAt])
+}
+
+/// Evidence that consent was given or withdrawn, for one purpose, at one time.
+///
+/// APPEND-ONLY. A grant or a withdrawal inserts a new row; nothing is ever
+/// updated in place. DPDP §6(1) puts the burden of proving consent on the data
+/// fiduciary, and a single mutable row per purpose destroys exactly the history
+/// that discharges it. Current state is the newest row per (userId, purpose) —
+/// which is why there is deliberately no @@unique on that pair.
+///
+/// `noticeVersion` copies PRIVACY_NOTICE_VERSION at grant time so it is always
+/// possible to say which text the person actually read.
+///
+/// onDelete: Restrict — these survive an erasure (status flipped to WITHDRAWN)
+/// because they are the record of what you were entitled to do. Deleting them
+/// destroys your own defence.
+model ConsentRecord {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  purpose       ConsentPurpose
+  status        ConsentStatus
+  grantedAt     DateTime       @default(now())
+  withdrawnAt   DateTime?
+  noticeVersion String
+  source        ConsentSource
+  createdAt     DateTime       @default(now())
+
+  @@index([userId, purpose, grantedAt])
+}
+
+/// A data principal's exercise of a DPDP right, and its resolution.
+///
+/// Covers export, correction, erasure and grievance in one queue so the 30-day
+/// response clock is visible in a single place.
+model PrivacyRequest {
+  id String @id @default(cuid())
+  /// Null only for grievances raised from the public page by someone with no
+  /// account — or whose account is already locked pending erasure and who wants
+  /// to cancel. Every other request type is created behind requireAuth() and
+  /// always has one.
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  /// Reply address for a request with no account behind it. Deliberately the
+  /// only personal data the public grievance form collects — without it there
+  /// is no way to answer the complaint. Never populated when userId is set:
+  /// duplicating an address we already hold would be collection for nothing.
+  contactEmail String?
+  type   PrivacyRequestType
+  status PrivacyRequestStatus @default(PENDING)
+  /// The data principal's own words (grievance body, correction detail).
+  /// Never staff notes — those go in `resolution`.
+  note        String?
+  /// Staff-authored outcome, shown back to the principal on completion.
+  resolution  String?
+  requestedAt DateTime  @default(now())
+  /// ERASURE only: end of the cooling-off window, after which the cron executes.
+  /// Null for every other type.
+  scheduledFor DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status, requestedAt])
+  @@index([userId, requestedAt])
 }
 
 /// Reusable saved delivery addresses. Customers manage these from their
@@ -392,10 +506,23 @@ model Testimonial {
   sortOrder   Int      @default(0)
   createdById String?
   createdBy   User?    @relation("TestimonialCreatedBy", fields: [createdById], references: [id])
+  /// The customer this testimonial is ABOUT, when they have an account.
+  ///
+  /// Distinct from `createdById`, which is the staff member who typed it in.
+  /// Without this link an erasure request cannot find the published row naming
+  /// that person — the name here is free text and unjoinable. Nullable because
+  /// legacy rows predate it and some quotes come from walk-in customers.
+  subjectUserId String?
+  subjectUser   User?   @relation("TestimonialSubject", fields: [subjectUserId], references: [id], onDelete: SetNull)
+  /// The ConsentRecord that permits publication. Required in practice by the
+  /// publish guard in actions/testimonials.ts, not by the database, so that
+  /// unpublished drafts can be saved before consent is obtained.
+  consentRecordId String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([isPublished, sortOrder])
+  @@index([subjectUserId])
 }
 
 /// Who changed what. Required by ULTRAPLAN §2 and previously absent entirely —

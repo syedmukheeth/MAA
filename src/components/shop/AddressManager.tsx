@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { Plus, Pencil, Trash2, Home, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -337,6 +338,15 @@ export function AddressManager({ addresses }: { addresses: SavedAddress[] }) {
               Cancel
             </Button>
           </div>
+
+          <p className="pt-1 text-xs text-graphite/50">
+            Saved addresses are only used to fill in checkout. Delete one any
+            time — see our{" "}
+            <Link href="/privacy" className="underline hover:text-bronze">
+              Privacy Notice
+            </Link>
+            .
+          </p>
         </form>
       )}
 

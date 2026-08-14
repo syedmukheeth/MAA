@@ -14,12 +14,19 @@ import type { Role } from "@/lib/auth/jwt";
 
 const ROLES: Role[] = ["OWNER", "ADMIN", "MANAGER", "CUSTOMER"];
 
+/**
+ * Must stay in step with the `select` in admin/users/page.tsx. This type is
+ * documentation, not enforcement — React serialises whatever the query
+ * returned, so widening the query is what leaks, not widening this.
+ */
 export type UserRow = {
   id: string;
   name: string;
   email: string;
   role: Role;
   isActive: boolean;
+  /** Non-null once the account has been erased under a DPDP request. */
+  erasedAt?: Date | null;
 };
 
 export function UserRoleTable({

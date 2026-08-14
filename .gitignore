@@ -46,3 +46,7 @@ next-env.d.ts
 
 # local dev-preview tooling
 .claude/
+
+# Generated staff passwords from prisma/scripts/upsert-staff.ts.
+# Read once, move into a password manager, then delete.
+staff-credentials.local.txt

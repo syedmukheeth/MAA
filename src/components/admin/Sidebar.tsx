@@ -14,6 +14,7 @@ import {
   Users,
   Settings,
   ShieldCheck,
+  ShieldAlert,
   ScrollText,
   Store,
   MessageSquare,
@@ -77,6 +78,15 @@ export const NAV_ITEMS: {
     href: "/admin/users",
     label: "Users",
     icon: Users,
+    roles: ["OWNER", "ADMIN"],
+  },
+  {
+    href: "/admin/privacy",
+    label: "Privacy Requests",
+    icon: ShieldAlert,
+    // Not MANAGER: completing an erasure irreversibly destroys the identifying
+    // half of an order record, and the last-owner and role-handover reasoning
+    // for staff accounts sits with the same people who manage users.
     roles: ["OWNER", "ADMIN"],
   },
   {

@@ -786,6 +786,21 @@ export function CheckoutWizard({
               {isSubmitting ? "Placing Order…" : `Place Order · ${formatINR(totals.total)}`}
             </Button>
           </div>
+
+          {/*
+            DPDP §5 notice at the point of collection. Says the retention part
+            out loud because it is the one thing customers are surprised by
+            later: a copy of the delivery details is frozen onto the invoice and
+            survives account deletion, because tax law requires it.
+          */}
+          <p className="mt-4 text-xs text-graphite/50">
+            We use your delivery details to fulfil this order, and keep a copy on
+            the invoice for 8 years as Indian tax law requires. See our{" "}
+            <Link href="/privacy" className="underline hover:text-bronze">
+              Privacy Notice
+            </Link>
+            .
+          </p>
         </form>
       )}
     </div>

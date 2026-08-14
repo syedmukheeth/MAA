@@ -1,13 +1,19 @@
 import Image from "next/image";
+import Link from "next/link";
 import { FooterContactIcons } from "@/components/layout/FooterContactIcons";
 
+/**
+ * `facebookUrl` was declared here and never destructured — a dead prop that
+ * three call sites were passing. Removed rather than wired up: SiteSettings
+ * still holds the field, so it can be surfaced deliberately if the business
+ * wants it, but a prop nothing reads is a lie about what the component does.
+ */
 export async function Footer({
   instagramUrl,
   whatsapp,
   deliveryMessage,
 }: {
   instagramUrl?: string | null;
-  facebookUrl?: string | null;
   whatsapp?: string;
   deliveryMessage?: string;
 }) {
@@ -16,7 +22,7 @@ export async function Footer({
   return (
     <footer className="bg-charcoal text-ivory border-t border-bronze/20">
       <div className="mx-auto max-w-7xl px-6 py-12 sm:py-16 lg:px-10 lg:py-16">
-        <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
           
           {/* Main Brand Overview */}
           <div className="max-w-xl space-y-3">
@@ -39,6 +45,40 @@ export async function Footer({
               generations.
               {deliveryMessage ? ` ${deliveryMessage}.` : ""}
             </p>
+          </div>
+
+          {/*
+            Legal links. DPDP §5 wants the privacy notice reachable from
+            everywhere data is collected, and the footer is the one surface on
+            every page. These routes are public in src/proxy.ts — if they ever
+            start redirecting to /login, that list is why.
+          */}
+          <div className="space-y-3">
+            <h4 className="font-heading text-xs font-bold uppercase tracking-widest text-bronze">
+              Legal
+            </h4>
+            <ul className="space-y-2 text-sm text-ivory/70">
+              <li>
+                <Link href="/privacy" className="hover:text-bronze">
+                  Privacy Notice
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="hover:text-bronze">
+                  Terms
+                </Link>
+              </li>
+              <li>
+                <Link href="/grievance" className="hover:text-bronze">
+                  Grievance Redressal
+                </Link>
+              </li>
+              <li>
+                <Link href="/showroom" className="hover:text-bronze">
+                  Showroom
+                </Link>
+              </li>
+            </ul>
           </div>
 
           {/* Contact Icons */}
