@@ -132,10 +132,20 @@ export function ShowroomFaqContact({
                 loading="lazy"
                 allowFullScreen
                 referrerPolicy="no-referrer-when-downgrade"
-                // Built from the showroom address in SiteSettings rather than
-                // pinned to fixed coordinates: if the shop moves, editing the
-                // address in /admin/settings moves the map with it.
-                src={`https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
+                // Google's embed endpoint, hit directly.
+                //
+                // `/maps?q=...&output=embed` is the obvious URL and it does
+                // work in isolation — but it answers with a 301 to this URL,
+                // and that redirect response carries X-Frame-Options:
+                // SAMEORIGIN. Chromium applies the header across the redirect
+                // chain, so the frame was refused and rendered as an empty
+                // broken-content panel. Going straight to the destination
+                // removes the hop and the header with it.
+                //
+                // Still built from the showroom address in SiteSettings rather
+                // than pinned to fixed coordinates: if the shop moves, editing
+                // the address in /admin/settings moves the map with it.
+                src={`https://www.google.com/maps/embed?origin=mfe&pb=!1m2!2m1!1s${encodeURIComponent(address)}`}
               />
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-cream p-6 text-center">
