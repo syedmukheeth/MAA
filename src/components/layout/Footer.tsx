@@ -99,7 +99,16 @@ export async function Footer({
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-ivory/10 pt-8 text-center text-xs text-ivory/50 sm:flex-row sm:text-left">
           <p>&copy; {new Date().getFullYear()} MAA FURNITURE. All rights reserved.</p>
           <p className="font-medium text-ivory/70">
-            Crafted with care, by <span className="text-bronze font-semibold">SAMPeer Studio</span>.
+            Crafted with care, by{" "}
+            <a
+              href="https://sampeer-studio.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-bronze font-semibold underline-offset-4 hover:underline"
+            >
+              SAMPeer Studio
+            </a>
+            .
           </p>
         </div>
       </div>
