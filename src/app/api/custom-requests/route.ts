@@ -1,37 +1,39 @@
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getActiveUser } from "@/lib/auth/session";
 import { customRequestSchema } from "@/lib/validations/custom-request";
 import { customRequestRatelimit } from "@/lib/redis";
+import { clientIp } from "@/lib/rate-limit";
 import { sendEmail } from "@/lib/email";
 import { customRequestNotificationHtml } from "@/lib/email-templates";
-
-async function clientIp() {
-  const headerList = await headers();
-  return headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-}
 
 export async function POST(request: Request) {
   // CSRF: API routes (unlike server actions) lack built-in origin checking.
   // Verify the Origin header matches our own host to block cross-site POSTs.
+  // A missing Origin is a failure, not a pass. Browsers send it on every
+  // cross-site POST, so the only callers without one are non-browser clients —
+  // and letting those through means the check is not the control it claims to
+  // be. Absent, unparseable and mismatched are all refused.
   const origin = request.headers.get("origin");
   const host = request.headers.get("host");
-  if (origin && host) {
-    try {
-      const originHost = new URL(origin).host;
-      if (originHost !== host) {
-        return NextResponse.json(
-          { error: "Cross-origin requests are not allowed." },
-          { status: 403 }
-        );
-      }
-    } catch {
+  if (!origin || !host) {
+    return NextResponse.json(
+      { error: "Invalid request origin." },
+      { status: 403 }
+    );
+  }
+  try {
+    if (new URL(origin).host !== host) {
       return NextResponse.json(
-        { error: "Invalid request origin." },
+        { error: "Cross-origin requests are not allowed." },
         { status: 403 }
       );
     }
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid request origin." },
+      { status: 403 }
+    );
   }
 
   // Rate limit before parsing or touching the DB. This route is public (it is

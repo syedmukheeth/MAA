@@ -1,12 +1,7 @@
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { searchRatelimit } from "@/lib/redis";
-
-async function clientIp() {
-  const headerList = await headers();
-  return headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-}
+import { clientIp } from "@/lib/rate-limit";
 
 /**
  * Live search suggestions for the storefront search bar.
@@ -28,7 +23,10 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const q = (searchParams.get("q") ?? "").trim();
+  // Capped before it reaches Prisma. `contains` is an unindexed ILIKE scan, and
+  // a caller within the rate limit can otherwise send a 100KB term 60 times a
+  // minute against a connection pool capped at 2 (src/lib/db.ts).
+  const q = (searchParams.get("q") ?? "").trim().slice(0, 100);
   const scope = searchParams.get("scope") === "combos" ? "combos" : "products";
 
   if (q.length < 2) {

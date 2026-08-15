@@ -15,6 +15,7 @@ import { PRIVACY_NOTICE_VERSION } from "@/lib/privacy/constants";
 import {
   loginSchema,
   registerSchema,
+  passwordSchema,
   type LoginInput,
   type RegisterInput,
 } from "@/lib/validations/auth";
@@ -334,11 +335,19 @@ export async function resetPasswordAction(
     return { error: "Too many attempts. Please try again later." };
   }
 
-  if (!input.password || input.password.length < 8) {
-    return { error: "Password must be at least 8 characters long." };
+  // Same rules as registration. A reset that accepted a weaker password than
+  // signup would make the mailbox-only path the cheapest way to weaken an
+  // account.
+  const passwordCheck = passwordSchema.safeParse(input.password ?? "");
+  if (!passwordCheck.success) {
+    return {
+      error: passwordCheck.error.issues[0]?.message ?? "Invalid password.",
+    };
   }
 
-  if (input.password !== input.confirmPassword) {
+  const password = passwordCheck.data;
+
+  if (password !== input.confirmPassword) {
     return { error: "Passwords do not match." };
   }
 
@@ -355,7 +364,7 @@ export async function resetPasswordAction(
     return { error: "Account not found or deactivated." };
   }
 
-  const passwordHash = await hashPassword(input.password);
+  const passwordHash = await hashPassword(password);
 
   // Increment tokenVersion to invalidate all existing sessions — the attacker's
   // stolen cookie becomes worthless the moment the real user resets.

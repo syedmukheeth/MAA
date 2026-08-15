@@ -9,9 +9,38 @@ import type { Ratelimit } from "@upstash/ratelimit";
  * from the first the moment either was tuned.
  */
 
+/**
+ * The client address, from a header the platform sets rather than one the
+ * client can choose.
+ *
+ * The leftmost `x-forwarded-for` entry is caller-controlled: a proxy that
+ * appends leaves whatever the client sent sitting in front of the real
+ * address. Keying rate limits on it means an attacker gets a fresh bucket per
+ * request simply by varying the header, and the same value feeds hashIp() into
+ * SecurityEvent.ipHash — so the spraying detector, which groups by ipHash,
+ * never sees a repeat either.
+ *
+ * `x-vercel-forwarded-for` and `x-real-ip` are both overwritten by Vercel's
+ * edge on the way in, so they cannot be forged from outside. The XFF fallback
+ * is for local development, where nothing sets the other two — and it takes the
+ * RIGHTMOST entry, which is the one the nearest trusted hop appended.
+ */
 export async function clientIp(): Promise<string> {
   const headerList = await headers();
-  return headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+
+  const platform =
+    headerList.get("x-vercel-forwarded-for")?.trim() ||
+    headerList.get("x-real-ip")?.trim();
+  if (platform) return platform;
+
+  const forwarded = headerList.get("x-forwarded-for");
+  if (forwarded) {
+    const hops = forwarded.split(",").map((h) => h.trim()).filter(Boolean);
+    const nearest = hops[hops.length - 1];
+    if (nearest) return nearest;
+  }
+
+  return "unknown";
 }
 
 /**
@@ -57,8 +86,13 @@ export async function limitOrAllow(
 ): Promise<boolean> {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  // Unconfigured is an outage, not an exemption. Returning true here disabled
+  // every limit in the application — login, register, password reset, grievance,
+  // data export — with nothing in the UI or the logs to say so, which turns one
+  // missing environment variable in Vercel into unbounded credential stuffing.
+  // The same in-memory fallback that covers a Redis outage covers this.
   if (!url || !token || url.includes("localhost")) {
-    return true;
+    return checkInMemoryFallback(key);
   }
   try {
     const { success } = await limiter.limit(key);

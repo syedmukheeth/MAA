@@ -52,19 +52,11 @@ export async function verifySession(
         tv: payload.tv,
       };
     }
-    // Legacy tokens without `tv` — treat as version 0 for backward compat
-    if (
-      typeof payload.sub === "string" &&
-      typeof payload.email === "string" &&
-      typeof payload.role === "string"
-    ) {
-      return {
-        sub: payload.sub,
-        email: payload.email,
-        role: payload.role as Role,
-        tv: 0,
-      };
-    }
+    // A token with no `tv` claim predates revocation tracking. It used to be
+    // accepted as version 0, which is the same version every account that has
+    // never changed its password or role still carries — so the compatibility
+    // branch was a standing hole in revocation for no remaining benefit. Every
+    // such token expired long ago; anything still presenting one is refused.
     return null;
   } catch {
     return null;

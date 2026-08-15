@@ -30,9 +30,73 @@ export const config = {
   ],
 };
 
+/**
+ * Content-Security-Policy, built per request because the script directive
+ * carries a nonce.
+ *
+ * A static policy cannot restrict scripts here: Next.js streams its own inline
+ * bootstrap scripts into every document, so `script-src 'self'` alone would
+ * blank the site. A nonce minted per response and handed back to Next through
+ * the CSP header is what makes `script-src` enforceable — without it the header
+ * this file used to emit (`frame-ancestors 'none'` and nothing else) left any
+ * future injected script free to run and drive the admin UI as whoever is
+ * signed in.
+ *
+ * `'unsafe-inline'` on style-src is deliberate: Framer Motion writes inline
+ * styles on every animated element and Next injects critical CSS the same way.
+ * Styles are not an execution sink, and the alternative is no policy at all.
+ *
+ * Dev needs `'unsafe-eval'` for HMR; production does not get it.
+ */
+function contentSecurityPolicy(nonce: string): string {
+  const scriptSrc = [
+    "'self'",
+    `'nonce-${nonce}'`,
+    "'strict-dynamic'",
+    process.env.NODE_ENV === "development" ? "'unsafe-eval'" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return [
+    "default-src 'self'",
+    `script-src ${scriptSrc}`,
+    "style-src 'self' 'unsafe-inline'",
+    // Cloudinary serves uploaded product images; Unsplash serves seed
+    // placeholders; blob:/data: are the local preview of a file the user has
+    // picked but not yet uploaded.
+    "img-src 'self' https://res.cloudinary.com https://images.unsplash.com data: blob:",
+    "font-src 'self' data:",
+    // Uploads POST straight to Cloudinary with a signature minted server-side
+    // (src/lib/cloudinary.ts), so the browser talks to that host directly.
+    "connect-src 'self' https://api.cloudinary.com",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+  ].join("; ");
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(SESSION_COOKIE)?.value;
+
+  // Minted once per request and threaded through on the REQUEST headers so
+  // server components (src/components/seo/JsonLd.tsx) can stamp the same value
+  // onto any inline script they render.
+  const nonce = crypto.randomUUID().replace(/-/g, "");
+  const csp = contentSecurityPolicy(nonce);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("content-security-policy", csp);
+
+  /** Every exit from this function goes through here, so no route escapes the policy. */
+  const withCsp = <T extends NextResponse>(response: T): T => {
+    response.headers.set("content-security-policy", csp);
+    return response;
+  };
+  const proceed = () =>
+    withCsp(NextResponse.next({ request: { headers: requestHeaders } }));
 
   const session = token ? await verifySession(token) : null;
   const isAuthPage = pathname === "/login" || pathname === "/register";
@@ -43,9 +107,9 @@ export async function proxy(request: NextRequest) {
     if (session) {
       const destination =
         session.role === "CUSTOMER" ? "/products" : "/admin/settings";
-      return NextResponse.redirect(new URL(destination, request.url));
+      return withCsp(NextResponse.redirect(new URL(destination, request.url)));
     }
-    return NextResponse.next();
+    return proceed();
   }
 
   // Storefront must stay crawlable and shareable — no auth gate. This list is
@@ -71,7 +135,7 @@ export async function proxy(request: NextRequest) {
   const isPublicStorefrontPage =
     pathname === "/" || PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   if (isPublicStorefrontPage) {
-    return NextResponse.next();
+    return proceed();
   }
 
   // Everything still matched here is private.
@@ -80,20 +144,20 @@ export async function proxy(request: NextRequest) {
     if (pathname !== "/logout") {
       loginUrl.searchParams.set("next", pathname);
     }
-    const response = NextResponse.redirect(loginUrl);
+    const response = withCsp(NextResponse.redirect(loginUrl));
     if (token) response.cookies.delete(SESSION_COOKIE);
     return response;
   }
 
   // Back office is staff-only; customers get 403
   if (pathname.startsWith("/admin") && session.role === "CUSTOMER") {
-    return NextResponse.redirect(new URL("/403", request.url));
+    return withCsp(NextResponse.redirect(new URL("/403", request.url)));
   }
 
   // /account is the customer profile area; staff manage things from /admin
   if (pathname.startsWith("/account") && session.role !== "CUSTOMER") {
-    return NextResponse.redirect(new URL("/admin", request.url));
+    return withCsp(NextResponse.redirect(new URL("/admin", request.url)));
   }
 
-  return NextResponse.next();
+  return proceed();
 }

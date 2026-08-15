@@ -1,15 +1,24 @@
 import { z } from "zod";
 
+/**
+ * The one definition of an acceptable password.
+ *
+ * Shared with resetPasswordAction, which previously checked only `length >= 8`
+ * inline — so the weakest path to setting a password was the one reachable with
+ * nothing but access to an email inbox.
+ */
+export const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .max(128, "Password is too long")
+  .regex(/[A-Z]/, "Must contain an uppercase letter")
+  .regex(/[a-z]/, "Must contain a lowercase letter")
+  .regex(/[0-9]/, "Must contain a number");
+
 export const registerSchema = z.object({
   name: z.string().min(2, "Name is too short").max(80),
   email: z.string().email("Enter a valid email"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(128, "Password is too long")
-    .regex(/[A-Z]/, "Must contain an uppercase letter")
-    .regex(/[a-z]/, "Must contain a lowercase letter")
-    .regex(/[0-9]/, "Must contain a number"),
+  password: passwordSchema,
   /**
    * Marketing email is the only thing at signup that runs on consent (DPDP §6).
    * Everything else the form collects is needed to perform the contract the
