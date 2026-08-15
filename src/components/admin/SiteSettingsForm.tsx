@@ -351,14 +351,19 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
           />
         </div>
         <div className="space-y-2">
-          <Label>Background image URL</Label>
-          <Input
-            value={values.heroImageUrl}
-            onChange={(e) => set("heroImageUrl", e.target.value)}
+          <Label>Background image</Label>
+          {/* Upload rather than a URL box: pasting a link meant finding a host
+              first, and the CSP only allows images served from Cloudinary, so a
+              link to anywhere else silently fails to render. */}
+          <ImageUploader
+            multiple={false}
+            value={values.heroImageUrl ? [values.heroImageUrl] : []}
+            onChange={(images) => set("heroImageUrl", images[0] ?? "")}
+            getSignature={getProductImageUploadSignature}
           />
           <p className="text-xs text-muted-foreground">
-            Leave empty to show a plain dark background. Upload a photo of your
-            own work at /admin/products and paste its URL here.
+            The full-screen photo behind the headline on the homepage. Leave it
+            empty and the section shows a plain dark background instead.
           </p>
         </div>
       </section>
@@ -720,10 +725,12 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
         </div>
 
         <div className="space-y-2">
-          <Label>Studio image URL</Label>
-          <Input
-            value={values.studioImageUrl}
-            onChange={(e) => set("studioImageUrl", e.target.value)}
+          <Label>Studio image</Label>
+          <ImageUploader
+            multiple={false}
+            value={values.studioImageUrl ? [values.studioImageUrl] : []}
+            onChange={(images) => set("studioImageUrl", images[0] ?? "")}
+            getSignature={getProductImageUploadSignature}
           />
           <p className="text-xs text-muted-foreground">
             Shown beside the Custom Studio pitch on the homepage and on

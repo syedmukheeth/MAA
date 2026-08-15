@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { parseTrustBadges } from "@/lib/site-content";
+import { CountUp } from "@/components/sections/CountUp";
 
 /**
  * Stats and trust claims, all owner-supplied.
@@ -64,9 +65,10 @@ export function TrustBuilders({
                 transition={{ duration: 0.6, delay: i * 0.1 }}
                 className="text-center lg:text-left"
               >
-                <p className="font-heading text-4xl text-bronze sm:text-5xl">
-                  {s.value}
-                </p>
+                <CountUp
+                  value={s.value}
+                  className="font-heading text-4xl text-bronze sm:text-5xl"
+                />
                 <p className="mt-2 text-sm text-ivory/60">{s.label}</p>
               </motion.div>
             ))}
