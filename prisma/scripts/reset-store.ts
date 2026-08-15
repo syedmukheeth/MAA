@@ -12,7 +12,8 @@ import { PrismaPg } from "@prisma/adapter-pg";
  *
  * What survives:
  *   - every User whose role is not CUSTOMER (matched on role, not on a
- *     hardcoded email, so staff added later survive too)
+ *     hardcoded email, so staff added later survive too) — unless --all-users
+ *     is passed, which deletes staff as well for a clean client handover
  *   - the SiteSettings singleton
  *
  * Everything else goes, including the catalogue.
@@ -36,6 +37,27 @@ const prisma = new PrismaClient({ adapter });
  */
 const confirmed =
   process.env.CONFIRM_RESET === "YES" || process.argv.includes("--confirm");
+
+/**
+ * Deletes staff accounts too, not just customers.
+ *
+ * For a handover this is the point: the accounts on the database were created
+ * during development, by us, with passwords we have seen. Wiping them and
+ * re-provisioning through `npm run db:staff` is what makes the client's
+ * credentials theirs alone.
+ *
+ * It is also the one flag that can lock everybody out of /admin, so it disables
+ * the staff guard below and the run is only complete once db:staff has been run
+ * against the same database.
+ */
+const wipeAllUsers = process.argv.includes("--all-users");
+
+/**
+ * Product categories are a RoomCategory enum column on Product, not a table, so
+ * they disappear with the products — there is nothing separate to clear. The
+ * category *selection* in SiteSettings (shopSections) survives with the rest of
+ * the settings; the client edits it at /admin/settings.
+ */
 
 /** Counted before and after, so the terminal output is the audit trail. */
 async function snapshot() {
@@ -109,7 +131,8 @@ async function main() {
 
   // A reset that leaves nobody able to sign in to /admin is worse than no
   // reset — and it is unrecoverable without going back to seed.ts.
-  if (before.staff === 0) {
+  // Skipped under --all-users, where emptying /admin is the stated intent.
+  if (before.staff === 0 && !wipeAllUsers) {
     console.error(
       "\nAborting: no OWNER/ADMIN/MANAGER account exists, so this reset would " +
         "delete every user and lock everyone out of /admin. Create a staff " +
@@ -122,13 +145,23 @@ async function main() {
   if (!confirmed) {
     console.log(
       "\nDRY RUN — nothing was deleted." +
-        `\n\n${before.staff} staff account(s) and the site settings would be kept.` +
+        (wipeAllUsers
+          ? `\n\nEVERY user would be deleted, including all ${before.staff} staff account(s).` +
+            "\nOnly the site settings would be kept."
+          : `\n\n${before.staff} staff account(s) and the site settings would be kept.`) +
         `\n${before.customers} customer(s), ${before.products} product(s), ` +
         `${before.combos} combo(s), ${before.orders} order(s) and all logs would be deleted.` +
         "\n\nTake a Supabase snapshot first. Then run:" +
-        "\n  npm run db:reset -- --confirm"
+        `\n  npm run db:reset -- --confirm${wipeAllUsers ? " --all-users" : ""}`
     );
     return;
+  }
+
+  if (wipeAllUsers) {
+    console.log(
+      `\n--all-users: deleting all ${before.staff} staff account(s) as well. ` +
+        "Nobody will be able to sign in to /admin until `npm run db:staff` has run."
+    );
   }
 
   console.log("\nDeleting...");
@@ -162,7 +195,9 @@ async function main() {
     prisma.privacyRequest.deleteMany({}),
     prisma.errorEvent.deleteMany({}),
     prisma.securityEvent.deleteMany({}),
-    prisma.user.deleteMany({ where: { role: "CUSTOMER" } }),
+    wipeAllUsers
+      ? prisma.user.deleteMany({})
+      : prisma.user.deleteMany({ where: { role: "CUSTOMER" } }),
   ]);
 
   const deleted = results.reduce((sum, r) => sum + r.count, 0);
@@ -174,8 +209,19 @@ async function main() {
   console.log(
     `\nDone. ${after.staff} staff account(s) and ${after.siteSettings} site settings row(s) kept.` +
       "\nCloudinary images were not deleted — only the rows pointing at them." +
+      "\nDelete the unreferenced assets from the Cloudinary console, or they stay" +
+      "\nin the account and keep counting against its storage quota." +
       "\nRe-add the catalogue at /admin/products before opening the store."
   );
+
+  if (after.staff === 0) {
+    console.log(
+      "\nNO STAFF ACCOUNTS REMAIN. Run this now, on the same database:" +
+        "\n  npm run db:staff" +
+        "\nIt provisions the accounts with one-time passwords that must be changed" +
+        "\nat first login."
+    );
+  }
 }
 
 main()

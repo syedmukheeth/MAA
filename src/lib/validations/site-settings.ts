@@ -3,7 +3,9 @@ import { z } from "zod";
 export const siteSettingsSchema = z.object({
   heroHeadline: z.string().min(2),
   heroSubtext: z.string().min(2),
-  heroImageUrl: z.string().min(2),
+  // Allowed to be empty: there is no built-in hero image any more, and the Hero
+  // renders a plain dark section until the owner uploads one.
+  heroImageUrl: z.string().default(""),
 
   brandLabel: z.string().min(2),
   brandHeadline: z.string().min(2),
@@ -11,7 +13,10 @@ export const siteSettingsSchema = z.object({
   statYearsExperience: z.coerce.number().int().min(0),
   statProjectsDelivered: z.coerce.number().int().min(0),
   statHappyFamilies: z.coerce.number().int().min(0),
-  statGoogleRating: z.string().min(1),
+  // Empty is a valid answer for all four: a shop that has not counted its
+  // projects, or has no Google rating yet, should be able to leave them blank
+  // rather than publish a number somebody invented. Each tile hides itself.
+  statGoogleRating: z.string().default(""),
 
   showroomAddress: z.string().min(2),
   showroomHours: z.string().min(2),
@@ -20,6 +25,25 @@ export const siteSettingsSchema = z.object({
 
   instagramUrl: z.string().optional(),
   facebookUrl: z.string().optional(),
+
+  contactEmail: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => (val === "" ? null : val))
+    .refine((val) => !val || z.string().email().safeParse(val).success, {
+      message: "Enter a valid email address",
+    }),
+  mapsUrl: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => (val === "" ? null : val)),
+  studioImageUrl: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => (val === "" ? null : val)),
 
   deliveryMessage: z.string().min(2),
 
@@ -40,6 +64,8 @@ export const siteSettingsSchema = z.object({
   studioFinishes: safeJsonString(),
   studioBudgets: safeJsonString(),
   studioFeatures: safeJsonString(),
+  trustBadges: safeJsonString(),
+  faqItems: safeJsonString(),
 });
 
 function safeJsonString() {

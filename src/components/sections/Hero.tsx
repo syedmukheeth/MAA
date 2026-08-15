@@ -33,13 +33,25 @@ export function Hero({
         transition={{ duration: 8, ease: "easeOut" }}
         className="absolute inset-0"
       >
-        <Image
-          src={imageUrl}
-          alt="Luxury living room with handcrafted furniture"
-          fill
-          priority
-          className="object-cover"
-        />
+        {/*
+          No image until the owner uploads one at /admin/settings. The default
+          used to be an Unsplash photo of someone else's living room, presented
+          as this shop's work above the words "Crafted For Homes".
+
+          The dark charcoal wash below stands in for it, so the headline keeps
+          its contrast and the section keeps its height.
+        */}
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt="Handcrafted furniture by MAA FURNITURE"
+            fill
+            priority
+            className="object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-charcoal" />
+        )}
         {/* Layered overlay: baseline 35% darkness + smooth top and bottom gradients to secure navbar and button contrast */}
         <div className="absolute inset-0 bg-black/35" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/75" />

@@ -24,13 +24,30 @@ export const getActiveUser = cache(async (): Promise<SessionPayload | null> => {
   if (!user) return null;
   const dbUser = await prisma.user.findUnique({
     where: { id: user.sub },
-    select: { isActive: true, role: true, tokenVersion: true },
+    select: {
+      isActive: true,
+      role: true,
+      tokenVersion: true,
+      mustChangePassword: true,
+    },
   });
   if (!dbUser || !dbUser.isActive) return null;
   // Reject tokens minted before the latest password/role change
   if (dbUser.tokenVersion > user.tv) return null;
-  return { ...user, role: dbUser.role as Role };
+  // The row wins over the `pw` claim: the token is a cache that can be up to
+  // seven days stale, and an operator who re-provisions an account expects the
+  // change screen to appear on the next request, not at token expiry.
+  return { ...user, role: dbUser.role as Role, pw: dbUser.mustChangePassword };
 });
+
+/**
+ * Where an account still on a provisioned temporary password must go.
+ *
+ * Handing a client a password we generated means we have seen it — it sits in
+ * whatever channel it was sent through until they replace it. Blocking every
+ * other route until they do is what keeps that window to one login.
+ */
+export const CHANGE_PASSWORD_ROUTE = "/change-password";
 
 /**
  * Guards for pages and staff-only actions.
@@ -42,6 +59,10 @@ export const getActiveUser = cache(async (): Promise<SessionPayload | null> => {
 export async function requireRole(allowed: Role[]): Promise<SessionPayload> {
   const user = await getActiveUser();
   if (!user) redirect("/login");
+  // Before the role check, not after: an account on a temporary password has no
+  // business anywhere else, and a 403 would be a misleading answer to "why can't
+  // I get in".
+  if (user.pw) redirect(CHANGE_PASSWORD_ROUTE);
   if (!allowed.includes(user.role)) {
     // Recorded, not just redirected. A signed-in user reaching a page their
     // role forbids is usually a stale bookmark — but a run of them from one
@@ -62,6 +83,20 @@ export async function requireRole(allowed: Role[]): Promise<SessionPayload> {
 }
 
 export async function requireAuth(): Promise<SessionPayload> {
+  const user = await getActiveUser();
+  if (!user) redirect("/login");
+  if (user.pw) redirect(CHANGE_PASSWORD_ROUTE);
+  return user;
+}
+
+/**
+ * Signed-in check that tolerates an unsettled password.
+ *
+ * Only the change-password screen and its action may use this — everything else
+ * goes through requireAuth/requireRole so the redirect above is unavoidable.
+ * Without it those two would bounce themselves in a loop.
+ */
+export async function requireAuthPendingPassword(): Promise<SessionPayload> {
   const user = await getActiveUser();
   if (!user) redirect("/login");
   return user;

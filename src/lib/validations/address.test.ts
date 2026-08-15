@@ -37,7 +37,7 @@ describe("address validation schemas", () => {
       expect(res.success).toBe(false);
       if (!res.success) {
         const error = res.error.format();
-        expect(error.state?._errors[0]).toContain("We only deliver in Andhra Pradesh currently");
+        expect(error.state?._errors[0]).toContain("We only deliver in Andhra Pradesh");
       }
     }
   });
@@ -55,7 +55,7 @@ describe("address validation schemas", () => {
       expect(res.success).toBe(false);
       if (!res.success) {
         const error = res.error.format();
-        expect(error.state?._errors[0]).toContain("We only deliver in Andhra Pradesh currently");
+        expect(error.state?._errors[0]).toContain("We only deliver in Andhra Pradesh");
       }
     }
   });
@@ -87,7 +87,7 @@ describe("checkout shipping address schema", () => {
     expect(res.success).toBe(false);
     if (!res.success) {
       const errors = res.error.format();
-      expect(errors.shippingState?._errors[0]).toContain("We only deliver in Andhra Pradesh currently");
+      expect(errors.shippingState?._errors[0]).toContain("We only deliver in Andhra Pradesh");
     }
   });
 });

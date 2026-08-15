@@ -29,6 +29,9 @@ export default async function ShowroomPage() {
         hours={settings.showroomHours}
         phone={settings.showroomPhone}
         whatsapp={settings.showroomWhatsapp}
+        email={settings.contactEmail}
+        mapsUrl={settings.mapsUrl}
+        faqItems={settings.faqItems}
       />
     </div>
   );

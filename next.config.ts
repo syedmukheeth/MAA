@@ -8,16 +8,13 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       // Uploaded product/combo images land here via the signed Cloudinary
-      // upload. Without this, next/image throws on every real product page —
-      // only the Unsplash seed data renders.
+      // upload, and it is now the only remote image host: images.unsplash.com
+      // was allowed for seed placeholders, and leaving it here after the
+      // placeholders were removed would let stock photography drift back into
+      // the site through a settings field without anyone noticing.
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
-      },
-      // Seed placeholders only.
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
       },
     ],
   },

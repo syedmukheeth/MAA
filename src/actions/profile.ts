@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/session";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { passwordSchema } from "@/lib/validations/auth";
 
 export async function updateProfile(input: {
   name: string;
@@ -20,8 +21,13 @@ export async function updateProfile(input: {
   const data: { name: string; passwordHash?: string } = { name };
 
   if (input.password) {
-    if (input.password.length < 8) {
-      return { error: "Password must be at least 8 characters long." };
+    // Same rule as registration and reset. A profile edit that accepted a weaker
+    // password than signup would make this the cheapest way to weaken an account.
+    const passwordCheck = passwordSchema.safeParse(input.password);
+    if (!passwordCheck.success) {
+      return {
+        error: passwordCheck.error.issues[0]?.message ?? "Invalid password.",
+      };
     }
     // A session alone must not be enough to change the password — otherwise a
     // borrowed browser or a stolen cookie converts into permanent account
@@ -46,7 +52,9 @@ export async function updateProfile(input: {
       ...data,
       // If the password changed, bump tokenVersion so every other session
       // (stolen cookies, forgotten tabs) is forced to re-authenticate.
-      ...(data.passwordHash ? { tokenVersion: { increment: 1 } } : {}),
+      ...(data.passwordHash
+        ? { tokenVersion: { increment: 1 }, passwordChangedAt: new Date() }
+        : {}),
     },
   });
 

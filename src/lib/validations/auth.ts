@@ -34,7 +34,11 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().min(1, "Email or username is required"),
+  // A bare username was accepted while loginAction expanded it to
+  // `<name>@maafurnitures.com`. That expansion is gone (the domain was not the
+  // one the site runs on), so anything that is not a full address can only ever
+  // miss — failing here says so instead of returning "invalid email or password".
+  email: z.string().min(1, "Email is required").email("Enter a valid email"),
   password: z.string().min(1, "Password is required"),
   next: z.string().optional(),
 });

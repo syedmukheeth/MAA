@@ -11,6 +11,10 @@ export type SessionPayload = {
   /** Token version at issue time — compared against User.tokenVersion to detect
    *  password changes and role revocations that should invalidate this JWT. */
   tv: number;
+  /** True while the account is still on a provisioned temporary password. Carried
+   *  in the token so the edge proxy can bounce to /change-password without a DB
+   *  read; the authoritative check is the User row read in getActiveUser. */
+  pw?: boolean;
 };
 
 const EXPIRY = "7d";
@@ -50,6 +54,7 @@ export async function verifySession(
         email: payload.email,
         role: payload.role as Role,
         tv: payload.tv,
+        pw: payload.pw === true,
       };
     }
     // A token with no `tv` claim predates revocation tracking. It used to be

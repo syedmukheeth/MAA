@@ -22,8 +22,11 @@ export const shippingAddressSchema = z
     if (!isAPState || !isAPPincode) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
+        // No phone number in the copy: this is a synchronous Zod schema with no
+        // access to SiteSettings, so a number written here goes stale the day
+        // the shop changes it and cannot be fixed from /admin.
         message:
-          "We only deliver in Andhra Pradesh currently. We will come there soon or contact to this number: 8886995345 / 9912330151",
+          "We only deliver in Andhra Pradesh at the moment. Call or WhatsApp us using the contact details in the footer and we will help.",
         path: ["shippingState"],
       });
     }

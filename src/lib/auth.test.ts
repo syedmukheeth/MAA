@@ -24,8 +24,11 @@ describe("Auth Validation Schemas", () => {
 
   it("validates login inputs", () => {
     expect(loginSchema.safeParse({ email: "", password: "123" }).success).toBe(false);
-    expect(loginSchema.safeParse({ email: "maa-owner", password: "MAAOwner@13" }).success).toBe(true);
-    expect(loginSchema.safeParse({ email: "maa-manager", password: "MAAManager@01" }).success).toBe(true);
+    // Bare usernames are rejected: loginAction no longer expands them to a
+    // domain, so accepting one here would only produce a confusing
+    // "invalid email or password" for input that could never match a row.
+    expect(loginSchema.safeParse({ email: "maa-owner", password: "Password123" }).success).toBe(false);
+    expect(loginSchema.safeParse({ email: "owner@example.com", password: "Password123" }).success).toBe(true);
     expect(loginSchema.safeParse({ email: "test@example.com", password: "Password123" }).success).toBe(true);
   });
 });

@@ -32,7 +32,7 @@ export default async function Home() {
         deliveryMessage={settings.deliveryMessage}
       />
       <BrandStatement label={settings.brandLabel} headline={settings.brandHeadline} />
-      <CustomStudioTeaser />
+      <CustomStudioTeaser imageUrl={settings.studioImageUrl} />
       <BestSellers
         products={featuredProducts.map((p) => ({
           id: p.id,
@@ -50,10 +50,12 @@ export default async function Home() {
         projectsDelivered={settings.statProjectsDelivered}
         happyFamilies={settings.statHappyFamilies}
         googleRating={settings.statGoogleRating}
+        trustBadges={settings.trustBadges}
       />
       <ShowroomTeaser
         address={settings.showroomAddress}
         hours={settings.showroomHours}
+        mapsUrl={settings.mapsUrl}
       />
     </>
   );

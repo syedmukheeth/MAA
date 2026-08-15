@@ -6,10 +6,12 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function CustomStudioTeaser() {
+export function CustomStudioTeaser({ imageUrl }: { imageUrl?: string | null }) {
   return (
     <section className="bg-charcoal px-6 py-24 lg:px-10">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 lg:grid-cols-2">
+      <div
+        className={`mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 ${imageUrl ? "lg:grid-cols-2" : ""}`}
+      >
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -36,14 +38,17 @@ export function CustomStudioTeaser() {
           </Button>
         </motion.div>
 
-        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
-          <Image
-            src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1600&auto=format&fit=crop"
-            alt="Custom furniture design consultation"
-            fill
-            className="object-cover"
-          />
-        </div>
+        {/* Nothing rather than stock photography — see SiteSettings.studioImageUrl. */}
+        {imageUrl && (
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+            <Image
+              src={imageUrl}
+              alt="Custom furniture made by MAA FURNITURE"
+              fill
+              className="object-cover"
+            />
+          </div>
+        )}
       </div>
     </section>
   );

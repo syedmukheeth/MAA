@@ -8,10 +8,17 @@ import { Button } from "@/components/ui/button";
 export function ShowroomTeaser({
   address,
   hours,
+  mapsUrl,
 }: {
   address: string;
   hours: string;
+  mapsUrl?: string | null;
 }) {
+  // Falls back to a directions search built from the address, so the link keeps
+  // working when the owner has not pasted a Maps short link.
+  const directionsUrl =
+    mapsUrl ??
+    `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
   return (
     <section className="bg-ivory px-6 py-24 lg:px-10">
       <motion.div
@@ -30,7 +37,7 @@ export function ShowroomTeaser({
           </h2>
           <div className="mt-8 space-y-5">
             <a
-              href="https://maps.app.goo.gl/S6U6o7R79U3My4m46"
+              href={directionsUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-start gap-3 hover:text-bronze transition-colors"

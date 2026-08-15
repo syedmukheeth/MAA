@@ -23,13 +23,30 @@ function InstagramIcon({ size = 18 }: { size?: number }) {
   );
 }
 
+/**
+ * Every channel here comes from SiteSettings. The phone numbers, the email and
+ * the Maps link used to be literals in this file, so changing a phone number
+ * meant a code change and a deploy — and the values drifted out of step with the
+ * same details rendered from the database elsewhere on the page.
+ */
 export function FooterContactIcons({
   instagramUrl,
   whatsappDigits,
+  phones,
+  email,
+  mapsUrl,
 }: {
   instagramUrl?: string | null;
   whatsappDigits: string;
+  /** Comma-separated, as stored in SiteSettings.showroomPhone. */
+  phones: string;
+  email?: string | null;
+  mapsUrl?: string | null;
 }) {
+  const phoneList = phones
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
   const [phoneMenuOpen, setPhoneMenuOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -48,7 +65,8 @@ export function FooterContactIcons({
 
   return (
     <div className="flex flex-wrap items-center gap-3 pt-2">
-      {/* Phone Icon with Self-Contained Dropdown for 2 Phone Numbers */}
+      {/* Phone icon with a dropdown, one entry per number in SiteSettings. */}
+      {phoneList.length > 0 && (
       <div ref={containerRef} className="relative">
         <button
           type="button"
@@ -67,28 +85,25 @@ export function FooterContactIcons({
               Call MAA Furniture
             </p>
             <div className="mt-1 space-y-1">
-              <a
-                href="tel:8886995345"
-                onClick={() => setPhoneMenuOpen(false)}
-                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-ivory hover:bg-bronze/20 hover:text-bronze transition-colors"
-              >
-                <Phone size={14} className="text-bronze shrink-0" />
-                <span>8886995345</span>
-              </a>
-              <a
-                href="tel:9912330151"
-                onClick={() => setPhoneMenuOpen(false)}
-                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-ivory hover:bg-bronze/20 hover:text-bronze transition-colors"
-              >
-                <Phone size={14} className="text-bronze shrink-0" />
-                <span>9912330151</span>
-              </a>
+              {phoneList.map((number) => (
+                <a
+                  key={number}
+                  href={`tel:${number.replace(/[^0-9+]/g, "")}`}
+                  onClick={() => setPhoneMenuOpen(false)}
+                  className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-ivory hover:bg-bronze/20 hover:text-bronze transition-colors"
+                >
+                  <Phone size={14} className="text-bronze shrink-0" />
+                  <span>{number}</span>
+                </a>
+              ))}
             </div>
           </div>
         )}
       </div>
+      )}
 
       {/* WhatsApp Icon */}
+      {whatsappDigits && (
       <a
         href={`https://wa.me/${whatsappDigits}`}
         target="_blank"
@@ -99,16 +114,19 @@ export function FooterContactIcons({
       >
         <MessageCircle size={18} />
       </a>
+      )}
 
       {/* Email Icon */}
-      <a
-        href="mailto:maafurniture.shop@gmail.com"
-        aria-label="Email Us"
-        title="Send an Email (maafurniture.shop@gmail.com)"
-        className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
-      >
-        <Mail size={18} />
-      </a>
+      {email && (
+        <a
+          href={`mailto:${email}`}
+          aria-label="Email Us"
+          title={`Send an Email (${email})`}
+          className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
+        >
+          <Mail size={18} />
+        </a>
+      )}
 
       {/* Instagram Icon */}
       <a
@@ -123,16 +141,18 @@ export function FooterContactIcons({
       </a>
 
       {/* Location / Map Pin Icon */}
-      <a
-        href="https://maps.app.goo.gl/S6U6o7R79U3My4m46"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Open MAA Furniture Google Maps Location"
-        title="Open MAA Furniture Showroom Location in Google Maps"
-        className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
-      >
-        <MapPin size={18} />
-      </a>
+      {mapsUrl && (
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open MAA Furniture Google Maps Location"
+          title="Open MAA Furniture Showroom Location in Google Maps"
+          className="rounded-full border border-ivory/20 p-2.5 text-ivory/70 transition-colors hover:border-bronze hover:text-bronze hover:bg-bronze/10"
+        >
+          <MapPin size={18} />
+        </a>
+      )}
     </div>
   );
 }

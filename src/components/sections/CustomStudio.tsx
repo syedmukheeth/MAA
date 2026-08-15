@@ -57,11 +57,15 @@ export function CustomStudio({
   studioFinishes,
   studioBudgets,
   studioFeatures,
+  // Not `imageUrl` — that name is already the customer's uploaded reference
+  // photo further down this component.
+  showcaseImageUrl,
 }: {
   studioWoods?: string | null;
   studioFinishes?: string | null;
   studioBudgets?: string | null;
   studioFeatures?: string | null;
+  showcaseImageUrl?: string | null;
 }) {
   const router = useRouter();
   const WOODS = parseJsonList(studioWoods ?? null, DEFAULT_WOODS);
@@ -181,14 +185,17 @@ export function CustomStudio({
             space.
           </p>
 
-          <div className="relative mt-10 aspect-[4/3] overflow-hidden rounded-2xl border border-bronze/20 shadow-md">
-            <Image
-              src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1600&auto=format&fit=crop"
-              alt="Custom furniture design consultation"
-              fill
-              className="object-cover"
-            />
-          </div>
+          {/* Nothing rather than stock photography — see SiteSettings.studioImageUrl. */}
+          {showcaseImageUrl && (
+            <div className="relative mt-10 aspect-[4/3] overflow-hidden rounded-2xl border border-bronze/20 shadow-md">
+              <Image
+                src={showcaseImageUrl}
+                alt="Custom furniture made by MAA FURNITURE"
+                fill
+                className="object-cover"
+              />
+            </div>
+          )}
         </div>
 
         <motion.div

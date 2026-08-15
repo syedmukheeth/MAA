@@ -44,6 +44,27 @@ function itemsListHtml(items: OrderItemLike[]) {
     .join("");
 }
 
+/**
+ * The reset link is the only credential-bearing thing we email, so the copy
+ * states the expiry and the "ignore this" line explicitly: a reset mail nobody
+ * asked for is the first sign of someone probing an account.
+ */
+export function passwordResetHtml(resetUrl: string) {
+  return emailLayout(
+    `
+      <h1 style="font-size:22px;margin:0 0 8px;">Reset your password</h1>
+      <p style="color:#5c5349;font-size:14px;line-height:1.6;">We received a request to reset your password. Use the button below to choose a new one. This link works once and expires in 1 hour.</p>
+      <div style="margin:24px 0;">
+        <a href="${esc(resetUrl)}" style="background-color:#8b5e3c;color:#faf7f2;padding:12px 24px;text-decoration:none;border-radius:24px;font-size:14px;display:inline-block;font-weight:bold;">Reset Password</a>
+      </div>
+      <p style="color:#8a8078;font-size:12px;">
+        If you didn't request this, you can ignore this email — your password stays as it is.
+      </p>
+    `,
+    "Reset your MAA FURNITURE password"
+  );
+}
+
 export function orderConfirmationHtml(order: OrderLike) {
   return emailLayout(
     `

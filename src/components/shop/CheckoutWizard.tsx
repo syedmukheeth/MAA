@@ -357,9 +357,10 @@ export function CheckoutWizard({
             </div>
             <div className="divide-y divide-linen">
               {cartItems.map((item) => {
-                const image =
-                  item.product?.images?.[0] ??
-                  "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=600&auto=format&fit=crop";
+                // Local placeholder, not a stock photo of some other sofa: this
+                // renders next to a price the customer is about to pay, and an
+                // unrelated image there misrepresents what they are buying.
+                const image = item.product?.images?.[0] ?? "/placeholder-furniture.svg";
                 const name = item.product?.name ?? item.combo?.name ?? "Product";
                 const desc = item.variant?.name
                   ? `Variant: ${item.variant.name}`

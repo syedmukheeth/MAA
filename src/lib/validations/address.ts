@@ -24,8 +24,10 @@ export const addressSchema = z
     if (!isAPState || !isAPPincode) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
+        // Same reasoning as validations/checkout.ts: no hardcoded phone number
+        // in a message that cannot read SiteSettings.
         message:
-          "We only deliver in Andhra Pradesh currently. We will come there soon or contact to this number: 8886995345 / 9912330151",
+          "We only deliver in Andhra Pradesh at the moment. Call or WhatsApp us using the contact details in the footer and we will help.",
         path: ["state"],
       });
     }

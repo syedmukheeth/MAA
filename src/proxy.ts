@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifySession, SESSION_COOKIE } from "@/lib/auth/jwt";
 
+/** Kept in sync with CHANGE_PASSWORD_ROUTE in @/lib/auth/session, which cannot be
+ *  imported here: that module pulls in Prisma, which does not run on the edge. */
+const CHANGE_PASSWORD_ROUTE = "/change-password";
+
 /**
  * Only private areas are matched. The storefront — `/`, `/products/*`,
  * `/combos/*`, `/custom-studio`, `/showroom` — is deliberately absent: it must
@@ -62,10 +66,11 @@ function contentSecurityPolicy(nonce: string): string {
     "default-src 'self'",
     `script-src ${scriptSrc}`,
     "style-src 'self' 'unsafe-inline'",
-    // Cloudinary serves uploaded product images; Unsplash serves seed
-    // placeholders; blob:/data: are the local preview of a file the user has
-    // picked but not yet uploaded.
-    "img-src 'self' https://res.cloudinary.com https://images.unsplash.com data: blob:",
+    // Cloudinary serves uploaded product images; blob:/data: are the local
+    // preview of a file the user has picked but not yet uploaded. Kept in step
+    // with next.config.ts's remotePatterns — an image host allowed in one and
+    // not the other either fails to render or is silently permitted.
+    "img-src 'self' https://res.cloudinary.com data: blob:",
     "font-src 'self' data:",
     // Uploads POST straight to Cloudinary with a signature minted server-side
     // (src/lib/cloudinary.ts), so the browser talks to that host directly.
@@ -105,8 +110,11 @@ export async function proxy(request: NextRequest) {
   // loginAction — customers to the store, staff to the back-office settings.
   if (isAuthPage) {
     if (session) {
-      const destination =
-        session.role === "CUSTOMER" ? "/products" : "/admin/settings";
+      const destination = session.pw
+        ? CHANGE_PASSWORD_ROUTE
+        : session.role === "CUSTOMER"
+          ? "/products"
+          : "/admin/settings";
       return withCsp(NextResponse.redirect(new URL(destination, request.url)));
     }
     return proceed();
@@ -147,6 +155,15 @@ export async function proxy(request: NextRequest) {
     const response = withCsp(NextResponse.redirect(loginUrl));
     if (token) response.cookies.delete(SESSION_COOKIE);
     return response;
+  }
+
+  // Still on the temporary password handed over at provisioning: nothing but the
+  // change screen is reachable. This is the edge copy of the guard in
+  // requireAuth/requireRole and exists only to save a render — the `pw` claim is
+  // up to seven days stale, so the server-side check against the User row is the
+  // one that actually decides.
+  if (session.pw && pathname !== CHANGE_PASSWORD_ROUTE) {
+    return withCsp(NextResponse.redirect(new URL(CHANGE_PASSWORD_ROUTE, request.url)));
   }
 
   // Back office is staff-only; customers get 403

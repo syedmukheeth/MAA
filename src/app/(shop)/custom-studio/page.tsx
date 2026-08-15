@@ -31,6 +31,7 @@ export default async function CustomStudioPage() {
         studioFinishes={settings.studioFinishes}
         studioBudgets={settings.studioBudgets}
         studioFeatures={settings.studioFeatures}
+        showcaseImageUrl={settings.studioImageUrl}
       />
     </div>
   );

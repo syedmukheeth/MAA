@@ -28,15 +28,31 @@ export const PRIVACY_NOTICE_EFFECTIVE_DATE = "14 August 2026";
  * placeholder, because a grievance channel nobody is accountable for is worse
  * than none.
  */
+/**
+ * Read from the environment so the client's own officer can be set per
+ * deployment without a code change. The committed fallbacks name the developer
+ * and a personal gmail address, which is correct while the site is ours and
+ * wrong the moment it is the client's — DPDP §13 expects the fiduciary's own
+ * accountable person, reachable at the fiduciary's own address.
+ */
 export const GRIEVANCE_OFFICER = {
-  name: "Syed Mukheeth",
-  email: "maafurniture.shop@gmail.com",
+  name: process.env.DPO_NAME || "Syed Mukheeth",
+  email: process.env.DPO_EMAIL || "maafurniture.shop@gmail.com",
   /** Null falls back to SiteSettings.showroomPhone at render time. */
-  phone: null as string | null,
+  phone: (process.env.DPO_PHONE || null) as string | null,
 } as const;
 
 export function isGrievanceOfficerConfigured(): boolean {
   return !GRIEVANCE_OFFICER.name.startsWith("TODO_");
+}
+
+/**
+ * True while the officer is still the developer's fallback rather than the
+ * client's own. Surfaced in /admin so it is visible to whoever runs the shop,
+ * not only to whoever reads this file.
+ */
+export function isGrievanceOfficerFromEnv(): boolean {
+  return Boolean(process.env.DPO_NAME && process.env.DPO_EMAIL);
 }
 
 /**

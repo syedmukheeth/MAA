@@ -12,12 +12,21 @@ export async function Footer({
   instagramUrl,
   whatsapp,
   deliveryMessage,
+  phones = "",
+  email,
+  mapsUrl,
 }: {
   instagramUrl?: string | null;
   whatsapp?: string;
   deliveryMessage?: string;
+  phones?: string;
+  email?: string | null;
+  mapsUrl?: string | null;
 }) {
-  const whatsappDigits = whatsapp?.replace(/[^0-9]/g, "") || "918886995345";
+  // No hardcoded fallback number. One used to sit here, so a site with an empty
+  // WhatsApp setting still linked to a specific person's phone — and it was a
+  // different number from the one the same footer printed elsewhere.
+  const whatsappDigits = whatsapp?.replace(/[^0-9]/g, "") ?? "";
 
   return (
     <footer className="bg-charcoal text-ivory border-t border-bronze/20">
@@ -90,6 +99,9 @@ export async function Footer({
             <FooterContactIcons
               instagramUrl={instagramUrl}
               whatsappDigits={whatsappDigits}
+              phones={phones}
+              email={email}
+              mapsUrl={mapsUrl}
             />
           </div>
 

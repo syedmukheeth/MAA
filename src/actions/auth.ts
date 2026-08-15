@@ -7,7 +7,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { signSession, type Role } from "@/lib/auth/jwt";
-import { SESSION_COOKIE } from "@/lib/auth/session";
+import { SESSION_COOKIE, requireAuthPendingPassword } from "@/lib/auth/session";
+import { recordAudit } from "@/lib/audit";
 import { loginRatelimit, loginIpRatelimit, registerRatelimit } from "@/lib/redis";
 import { clientIp, limitOrAllow } from "@/lib/rate-limit";
 import { reportFailedLogin, reportLoginSuccess } from "@/lib/security";
@@ -54,12 +55,14 @@ async function createSessionCookie(user: {
   email: string;
   role: Role;
   tokenVersion?: number;
+  mustChangePassword?: boolean;
 }) {
   const token = await signSession({
     sub: user.id,
     email: user.email,
     role: user.role,
     tv: user.tokenVersion ?? 0,
+    pw: user.mustChangePassword === true,
   });
   const store = await cookies();
   store.set(SESSION_COOKIE, token, {
@@ -173,13 +176,13 @@ export async function loginAction(
     // Case-insensitive: rows created before registerAction normalised on insert
     // (and rows created by the seed straight from SEED_*_EMAIL) can carry
     // mixed-case addresses that an exact match would never find.
+    //
+    // A bare username used to be expanded to `<input>@maafurnitures.com` here.
+    // That domain is not the one the site runs on (maafurniture.shop), so the
+    // shortcut taught staff an address that exists nowhere else — in their
+    // mailbox, in Resend, or in a password-reset link. Full address only.
     const user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: { equals: lowerInput, mode: "insensitive" } },
-          { email: { equals: `${lowerInput}@maafurnitures.com`, mode: "insensitive" } },
-        ],
-      },
+      where: { email: { equals: lowerInput, mode: "insensitive" } },
     });
     if (!user || !user.isActive) {
       // Recorded even when the address matches no account: a source working
@@ -201,6 +204,13 @@ export async function loginAction(
     await reportLoginSuccess({ ip, userId: user.id });
 
     await createSessionCookie(user);
+
+    // Provisioned account still on the password we generated: nothing else is
+    // reachable until it is replaced, so send them straight there rather than
+    // letting the guards bounce them off whatever they asked for.
+    if (user.mustChangePassword) {
+      redirect("/change-password");
+    }
 
     const isStaffUser = user.role !== "CUSTOMER";
     const requestedNext = safeNextPath(parsed.data.next);
@@ -226,6 +236,111 @@ export async function loginAction(
   }
 }
 
+/**
+ * Sets a new password for the signed-in account.
+ *
+ * Two callers, one action:
+ *  - `/change-password`, reached because the account is still on the temporary
+ *    password we generated at provisioning. The current password is not asked
+ *    for again — it was just used to get here, and prompting for a credential
+ *    the operator also knows adds nothing.
+ *  - `/admin/account`, a voluntary change. Here the current password IS
+ *    required: a session alone must not be enough, or a borrowed browser turns
+ *    into a permanent lockout of the real owner.
+ *
+ * The forced branch is only reachable while `mustChangePassword` is true, which
+ * is set by the provisioning script and cleared here — it cannot be used to skip
+ * the current-password check on a settled account.
+ */
+export async function changePasswordAction(input: {
+  currentPassword?: string;
+  password?: string;
+  confirmPassword?: string;
+}): Promise<{ success?: boolean; error?: string }> {
+  const session = await requireAuthPendingPassword();
+
+  const account = await prisma.user.findUnique({
+    where: { id: session.sub },
+    select: { id: true, email: true, role: true, passwordHash: true, mustChangePassword: true },
+  });
+  if (!account) return { error: "Account not found." };
+
+  const ip = await clientIp();
+  const allowed = await limitOrAllow(
+    resetPasswordRatelimit,
+    `change-password:${account.id}`
+  );
+  if (!allowed) {
+    return { error: "Too many attempts. Please try again later." };
+  }
+
+  const passwordCheck = passwordSchema.safeParse(input.password ?? "");
+  if (!passwordCheck.success) {
+    return { error: passwordCheck.error.issues[0]?.message ?? "Invalid password." };
+  }
+  const password = passwordCheck.data;
+
+  if (password !== input.confirmPassword) {
+    return { error: "Passwords do not match." };
+  }
+
+  if (!account.mustChangePassword) {
+    if (
+      !input.currentPassword ||
+      !(await verifyPassword(input.currentPassword, account.passwordHash))
+    ) {
+      // Counted as a failed login: someone guessing at the current password from
+      // inside a session is the same signal as guessing at the login form.
+      await reportFailedLogin({ ip, userId: account.id });
+      return { error: "Your current password is incorrect." };
+    }
+  }
+
+  // Re-using the temporary password would leave the account on a credential the
+  // operator has seen while reporting itself as settled.
+  if (await verifyPassword(password, account.passwordHash)) {
+    return { error: "Choose a password you have not used on this account before." };
+  }
+
+  const passwordHash = await hashPassword(password);
+  const updated = await prisma.user.update({
+    where: { id: account.id },
+    data: {
+      passwordHash,
+      mustChangePassword: false,
+      passwordChangedAt: new Date(),
+      // Kills every other session holding the old password's JWT.
+      tokenVersion: { increment: 1 },
+    },
+    select: { id: true, email: true, role: true, tokenVersion: true },
+  });
+
+  // The bump above invalidates this browser's cookie too. Without re-issuing it
+  // here the user is silently signed out by the very act of securing their
+  // account — and on the forced path they would land back on /login with a
+  // temporary password that no longer works.
+  await createSessionCookie({
+    id: updated.id,
+    email: updated.email,
+    role: updated.role as Role,
+    tokenVersion: updated.tokenVersion,
+    mustChangePassword: false,
+  });
+
+  await recordAudit({
+    actorId: account.id,
+    action: "user.password_change",
+    entity: "User",
+    entityId: account.id,
+    summary: account.mustChangePassword
+      ? "Temporary password replaced by the account owner"
+      : "Password changed by the account owner",
+    metadata: { forced: account.mustChangePassword },
+  });
+
+  return { success: true };
+}
+
 export async function logoutAction(): Promise<void> {
   const store = await cookies();
   store.delete(SESSION_COOKIE);
@@ -235,6 +350,7 @@ export async function logoutAction(): Promise<void> {
 import { redis, forgotPasswordRatelimit, resetPasswordRatelimit } from "@/lib/redis";
 import { getSiteUrl } from "@/lib/site-url";
 import { sendEmail } from "@/lib/email";
+import { passwordResetHtml } from "@/lib/email-templates";
 
 function hashResetToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
@@ -290,21 +406,7 @@ export async function forgotPasswordAction(
   const sent = await sendEmail({
     to: user.email,
     subject: "Reset your MAA FURNITURE password",
-    html: `
-      <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#2a2420;">
-        <p style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#a5732f;margin:0 0 24px;">
-          MAA FURNITURE
-        </p>
-        <h1 style="font-size:22px;margin:0 0 8px;">Reset your password</h1>
-        <p style="color:#5c5349;font-size:14px;line-height:1.6;">We received a request to reset your password. Click the button below to choose a new password. This link is valid for 1 hour.</p>
-        <div style="margin:24px 0;">
-          <a href="${resetUrl}" style="background-color:#8b5e3c;color:#faf7f2;padding:12px 24px;text-decoration:none;border-radius:24px;font-size:14px;display:inline-block;font-weight:bold;">Reset Password</a>
-        </div>
-        <p style="color:#8a8078;font-size:12px;margin-top:32px;">
-          If you didn't request a password reset, you can safely ignore this email.
-        </p>
-      </div>
-    `,
+    html: passwordResetHtml(resetUrl),
   });
 
   if (!sent) {
@@ -372,6 +474,12 @@ export async function resetPasswordAction(
     where: { email },
     data: {
       passwordHash,
+      // A password chosen through the emailed link is the account owner's own,
+      // so this settles a provisioned account just as /change-password does.
+      // Leaving the flag set would strand them on the change screen right after
+      // a successful reset.
+      mustChangePassword: false,
+      passwordChangedAt: new Date(),
       tokenVersion: { increment: 1 },
     },
   });

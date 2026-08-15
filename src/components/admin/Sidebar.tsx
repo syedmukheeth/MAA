@@ -20,6 +20,7 @@ import {
   ScrollText,
   Store,
   MessageSquare,
+  KeyRound,
 } from "lucide-react";
 
 export const NAV_ITEMS: {
@@ -95,6 +96,14 @@ export const NAV_ITEMS: {
     href: "/admin/settings",
     label: "Website Settings",
     icon: Settings,
+    roles: ["OWNER", "ADMIN", "MANAGER"],
+  },
+  {
+    href: "/admin/account",
+    label: "My Account",
+    icon: KeyRound,
+    // Every staff role: /account is customer-only (see src/proxy.ts), so this is
+    // the only place a staff member can change their own password.
     roles: ["OWNER", "ADMIN", "MANAGER"],
   },
   {

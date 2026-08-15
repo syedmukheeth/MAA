@@ -84,12 +84,18 @@ async function main() {
         role: staff.role,
         isActive: true,
         tokenVersion: { increment: 1 },
+        // Whatever is set here is a password the operator has seen and sent
+        // through a chat or an email. It gets the account through exactly one
+        // login, onto /change-password, and no further.
+        mustChangePassword: true,
+        passwordChangedAt: null,
       },
       create: {
         name: staff.name,
         email,
         passwordHash,
         role: staff.role,
+        mustChangePassword: true,
       },
     });
 
@@ -118,6 +124,11 @@ async function main() {
       }`
     );
   }
+
+  console.log(
+    "\nEvery account above must set its own password at first login — the value\n" +
+      "below works once, for the /change-password screen only.\n"
+  );
 
   if (generated.length > 0) {
     const outPath = path.join(process.cwd(), "staff-credentials.local.txt");

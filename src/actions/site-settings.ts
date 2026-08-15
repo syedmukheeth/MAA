@@ -59,5 +59,8 @@ export async function updateSiteSettings(
   // admin edits appear "not saved" until the 5-min cache expires.
   revalidatePath("/custom-studio");
   revalidatePath("/products");
+  // The showroom page renders the FAQ and contact details from these settings
+  // and caches for 5 minutes; without this an edit looks like it did not save.
+  revalidatePath("/showroom");
   return {};
 }

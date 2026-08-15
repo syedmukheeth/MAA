@@ -19,17 +19,24 @@ export const DEFAULT_SITE_SETTINGS = {
   heroHeadline: "Crafted For Homes.\nBuilt For Generations.",
   heroSubtext:
     "Premium handcrafted furniture designed to bring timeless beauty and lasting comfort into every space.",
-  heroImageUrl:
-    "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=2400&auto=format&fit=crop",
+  // Empty, not a stock photo. A hero image is the first thing a visitor sees;
+  // shipping someone else's living room as the default meant the site looked
+  // finished while advertising furniture the shop does not sell. The Hero falls
+  // back to a plain background until a real image is uploaded at /admin/settings.
+  heroImageUrl: "",
 
   brandLabel: "Crafted For Better Living",
   brandHeadline:
     "We don't build furniture. We shape the way you live, gather, and grow, one room at a time.",
 
-  statYearsExperience: 18,
-  statProjectsDelivered: 4200,
-  statHappyFamilies: 3600,
-  statGoogleRating: "4.9/5",
+  // Zero and empty are "not stated yet", and every consumer hides the tile
+  // rather than printing a 0. The previous defaults (18 years, 4200 projects,
+  // 3600 families, 4.9/5) were invented for the design and would have been
+  // published as fact about a real business.
+  statYearsExperience: 0,
+  statProjectsDelivered: 0,
+  statHappyFamilies: 0,
+  statGoogleRating: "",
 
   showroomAddress:
     "Door No 87/1240, MAA FURNITURE, Ramalingam Subhashini Complex, 4th employees colony, near by Shakthi Auto Mobiles, Revenue Colony, Sree Rama Nagar, Kurnool, Kalluru, Andhra Pradesh 518002",
@@ -39,6 +46,9 @@ export const DEFAULT_SITE_SETTINGS = {
 
   instagramUrl: "https://www.instagram.com/maa.furnitures" as string | null,
   facebookUrl: null as string | null,
+
+  contactEmail: "maafurniture.shop@gmail.com" as string | null,
+  mapsUrl: "https://maps.app.goo.gl/S6U6o7R79U3My4m46" as string | null,
 
   deliveryMessage: "Delivery in Andhra Pradesh Only",
 
@@ -55,6 +65,14 @@ export const DEFAULT_SITE_SETTINGS = {
   studioFinishes: null as string | null,
   studioBudgets: null as string | null,
   studioFeatures: null as string | null,
+
+  // Null = the owner has not entered any, and the section does not render.
+  // There is deliberately no built-in fallback: these blocks make claims
+  // (warranty terms, lead times, room photography) that only the business can
+  // make truthfully.
+  trustBadges: null as string | null,
+  faqItems: null as string | null,
+  studioImageUrl: null as string | null,
 };
 
 export type SiteSettings = typeof DEFAULT_SITE_SETTINGS;
@@ -95,6 +113,8 @@ export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
       showroomWhatsapp: row.showroomWhatsapp,
       instagramUrl: row.instagramUrl,
       facebookUrl: row.facebookUrl,
+      contactEmail: row.contactEmail,
+      mapsUrl: row.mapsUrl,
       deliveryMessage: row.deliveryMessage,
       allowPurchases: row.allowPurchases,
       allowCOD: row.allowCOD,
@@ -107,6 +127,9 @@ export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
       studioFinishes: cleanJson(row.studioFinishes),
       studioBudgets: cleanJson(row.studioBudgets),
       studioFeatures: cleanJson(row.studioFeatures),
+      trustBadges: cleanJson(row.trustBadges),
+      faqItems: cleanJson(row.faqItems),
+      studioImageUrl: row.studioImageUrl,
     };
   } catch {
     return DEFAULT_SITE_SETTINGS;

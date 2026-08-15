@@ -91,6 +91,104 @@ function fromJson(raw: string | null, fallback: string[]): string[] {
   }
 }
 
+/* ─── Reusable two-field list editor ───────────────────────────
+   Backs the "Why Choose Us" badges and the showroom FAQ. Both were hardcoded
+   arrays in their components, publishing warranty terms and lead times the
+   business had never agreed to; an empty list here hides the section entirely,
+   which is the correct state until the owner writes their own. */
+type Pair = { a: string; b: string };
+
+function pairsFromJson(raw: string | null, keyA: string, keyB: string): Pair[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((p) => p && typeof p === "object")
+      .map((p) => ({
+        a: typeof p[keyA] === "string" ? p[keyA] : "",
+        b: typeof p[keyB] === "string" ? p[keyB] : "",
+      }));
+  } catch {
+    return [];
+  }
+}
+
+function pairsToJson(pairs: Pair[], keyA: string, keyB: string): string | null {
+  const cleaned = pairs.filter((p) => p.a.trim() !== "");
+  return cleaned.length === 0
+    ? null
+    : JSON.stringify(cleaned.map((p) => ({ [keyA]: p.a.trim(), [keyB]: p.b.trim() })));
+}
+
+function PairListEditor({
+  pairs,
+  labelA,
+  labelB,
+  addLabel,
+  multilineB = true,
+  onChange,
+}: {
+  pairs: Pair[];
+  labelA: string;
+  labelB: string;
+  addLabel: string;
+  multilineB?: boolean;
+  onChange: (pairs: Pair[]) => void;
+}) {
+  function update(index: number, patch: Partial<Pair>) {
+    onChange(pairs.map((p, i) => (i === index ? { ...p, ...patch } : p)));
+  }
+
+  return (
+    <div className="space-y-4">
+      {pairs.map((pair, i) => (
+        <div key={i} className="space-y-3 rounded-lg border border-border p-4">
+          <div className="flex items-center gap-2">
+            <Input
+              value={pair.a}
+              placeholder={labelA}
+              onChange={(e) => update(i, { a: e.target.value })}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-label={`Remove ${pair.a || labelA}`}
+              onClick={() => onChange(pairs.filter((_, index) => index !== i))}
+              className="shrink-0"
+            >
+              <X size={14} />
+            </Button>
+          </div>
+          {multilineB ? (
+            <Textarea
+              rows={2}
+              value={pair.b}
+              placeholder={labelB}
+              onChange={(e) => update(i, { b: e.target.value })}
+            />
+          ) : (
+            <Input
+              value={pair.b}
+              placeholder={labelB}
+              onChange={(e) => update(i, { b: e.target.value })}
+            />
+          )}
+        </div>
+      ))}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => onChange([...pairs, { a: "", b: "" }])}
+      >
+        <Plus size={14} className="mr-1" /> {addLabel}
+      </Button>
+    </div>
+  );
+}
+
 /* ─── Custom Studio Features ────────────────────────────────── */
 type StudioFeature = { label: string; options: string[] };
 
@@ -180,6 +278,9 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
     showroomWhatsapp: defaults.showroomWhatsapp ?? "",
     instagramUrl: defaults.instagramUrl ?? "",
     facebookUrl: defaults.facebookUrl ?? "",
+    contactEmail: defaults.contactEmail ?? "",
+    mapsUrl: defaults.mapsUrl ?? "",
+    studioImageUrl: defaults.studioImageUrl ?? "",
     gstRate: defaults.gstRate ?? "18",
     deliveryFee: defaults.deliveryFee ?? "0",
     freeDeliveryThreshold: defaults.freeDeliveryThreshold ?? "",
@@ -194,6 +295,8 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
     studioFinishes: defaults.studioFinishes ?? null,
     studioBudgets: defaults.studioBudgets ?? null,
     studioFeatures: defaults.studioFeatures ?? null,
+    trustBadges: defaults.trustBadges ?? null,
+    faqItems: defaults.faqItems ?? null,
   });
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -206,6 +309,8 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
   const studioFinishes = fromJson(values.studioFinishes, DEFAULT_FINISHES);
   const studioBudgets = fromJson(values.studioBudgets, DEFAULT_BUDGETS);
   const studioFeatures = fromFeatureJson(values.studioFeatures);
+  const trustBadges = pairsFromJson(values.trustBadges, "title", "body");
+  const faqItems = pairsFromJson(values.faqItems, "question", "answer");
 
   function set<K extends keyof typeof values>(key: K, val: (typeof values)[K]) {
     setValues((v) => ({ ...v, [key]: val }));
@@ -251,6 +356,10 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
             value={values.heroImageUrl}
             onChange={(e) => set("heroImageUrl", e.target.value)}
           />
+          <p className="text-xs text-muted-foreground">
+            Leave empty to show a plain dark background. Upload a photo of your
+            own work at /admin/products and paste its URL here.
+          </p>
         </div>
       </section>
 
@@ -275,6 +384,11 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
 
       <section className="space-y-4">
         <h2 className="font-heading text-lg text-foreground">Trust Stats</h2>
+        <p className="text-xs text-muted-foreground">
+          Each figure is published on the homepage as a statement about your
+          business. Leave a field at 0 or empty and that tile is hidden — only
+          fill in numbers you can stand behind.
+        </p>
         <div className="grid grid-cols-2 gap-5">
           <div className="space-y-2">
             <Label>Years of experience</Label>
@@ -361,6 +475,66 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
             />
           </div>
         </div>
+        <div className="grid grid-cols-2 gap-5">
+          <div className="space-y-2">
+            <Label>Contact email</Label>
+            <Input
+              type="email"
+              placeholder="hello@yourdomain.com"
+              value={values.contactEmail}
+              onChange={(e) => set("contactEmail", e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Shown in the footer and on the showroom page. Empty hides the email
+              link.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label>Google Maps link</Label>
+            <Input
+              placeholder="https://maps.app.goo.gl/..."
+              value={values.mapsUrl}
+              onChange={(e) => set("mapsUrl", e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Empty falls back to a directions search built from the address
+              above.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="font-heading text-lg text-foreground">Why Choose Us</h2>
+        <p className="text-xs text-muted-foreground">
+          Published on the homepage as your own commitments. Anything you write
+          here — a warranty, a guarantee — is a promise customers can hold you to,
+          so leave the list empty rather than filling it with placeholders. An
+          empty list hides the section.
+        </p>
+        <PairListEditor
+          pairs={trustBadges}
+          labelA="Title, e.g. Genuine Materials"
+          labelB="Short description"
+          addLabel="Add Point"
+          onChange={(pairs) => set("trustBadges", pairsToJson(pairs, "title", "body"))}
+        />
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="font-heading text-lg text-foreground">Showroom FAQ</h2>
+        <p className="text-xs text-muted-foreground">
+          Shown on /showroom. Same rule as above: delivery times, warranty terms
+          and return policies written here are what customers will rely on. An
+          empty list hides the section.
+        </p>
+        <PairListEditor
+          pairs={faqItems}
+          labelA="Question"
+          labelB="Answer"
+          addLabel="Add Question"
+          onChange={(pairs) => set("faqItems", pairsToJson(pairs, "question", "answer"))}
+        />
       </section>
 
       <section className="space-y-4">
@@ -542,6 +716,18 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
           <h2 className="font-heading text-lg text-foreground">Custom Studio Options</h2>
           <p className="text-xs text-muted-foreground mt-1">
             Edit the dropdown options shown in the Custom Furniture Studio request form.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Studio image URL</Label>
+          <Input
+            value={values.studioImageUrl}
+            onChange={(e) => set("studioImageUrl", e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Shown beside the Custom Studio pitch on the homepage and on
+            /custom-studio. Empty hides the image frame.
           </p>
         </div>
 

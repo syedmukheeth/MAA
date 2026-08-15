@@ -38,7 +38,7 @@ function LoginForm() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="email">Email or Username</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="text"
@@ -46,7 +46,7 @@ function LoginForm() {
             autoComplete="username"
             spellCheck={false}
             autoCapitalize="none"
-            placeholder="you@email.com or username"
+            placeholder="you@email.com"
             {...register("email")}
           />
           {errors.email && (

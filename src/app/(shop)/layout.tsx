@@ -45,6 +45,9 @@ export default async function ShopLayout({
         instagramUrl={settings.instagramUrl}
         whatsapp={settings.showroomWhatsapp}
         deliveryMessage={settings.deliveryMessage}
+        phones={settings.showroomPhone}
+        email={settings.contactEmail}
+        mapsUrl={settings.mapsUrl}
       />
     </>
   );

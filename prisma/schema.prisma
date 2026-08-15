@@ -239,6 +239,29 @@ model SiteSettings {
   /// [{"label":"Handle Style","options":["Brass","Steel"]}].
   studioFeatures String?
 
+  /// Public contact channels. These were hardcoded in the footer, the showroom
+  /// FAQ and a validation message, which meant a change of phone number or
+  /// email needed a code change and a deploy.
+  contactEmail String?
+  /// Google Maps link used by the footer, the showroom teaser and the FAQ.
+  mapsUrl      String?
+
+  /// The three content blocks below were hardcoded arrays in components, and
+  /// what they asserted — a five-year warranty, a lead time, "18 years of
+  /// experience" — was written as placeholder copy, not from the business. A
+  /// claim a shop cannot honour is the shop's liability, so the code now ships
+  /// none and the section disappears until the owner enters their own.
+  ///
+  /// JSON array: [{"title":"...","body":"..."}]
+  trustBadges      String?
+  /// JSON array: [{"question":"...","answer":"..."}]
+  faqItems         String?
+
+  /// Image shown beside the Custom Studio pitch, on the homepage teaser and on
+  /// /custom-studio. Null hides the frame rather than showing stock photography
+  /// of furniture the shop did not make.
+  studioImageUrl String?
+
   updatedAt DateTime @updatedAt
 }
 
@@ -285,6 +308,14 @@ model User {
   /// Incremented on password change and role change. JWTs carry the version at
   /// issue time; any token whose version is behind the current value is rejected.
   tokenVersion Int      @default(0)
+  /// Set on accounts provisioned with a temporary password handed over out of
+  /// band (prisma/scripts/upsert-staff.ts). While true every authenticated route
+  /// redirects to /change-password, so a credential the operator has seen cannot
+  /// remain in use. Cleared the moment the account owner picks their own.
+  mustChangePassword Boolean @default(false)
+  /// Last time this account's password was set by its owner. Null on a freshly
+  /// provisioned account that has never been through /change-password.
+  passwordChangedAt  DateTime?
   /// Set when a DPDP erasure request has been executed against this row. The
   /// row itself survives because Order, Cart and AuditLog reference it with
   /// onDelete: Restrict and orders are a statutory accounting record — what is

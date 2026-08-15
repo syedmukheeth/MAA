@@ -39,6 +39,7 @@ export type AuditAction =
   | "settings.update"
   | "user.role_change"
   | "user.set_active"
+  | "user.password_change"
   | "testimonial.create"
   | "testimonial.update"
   | "testimonial.delete"
