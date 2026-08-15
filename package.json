@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "db:users": "tsx --env-file=.env prisma/scripts/list-users.ts",
     "db:staff": "tsx --env-file=.env prisma/scripts/upsert-staff.ts",
+    "db:reset": "tsx --env-file=.env prisma/scripts/reset-store.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
