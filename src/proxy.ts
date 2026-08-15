@@ -75,6 +75,16 @@ function contentSecurityPolicy(nonce: string): string {
     // Uploads POST straight to Cloudinary with a signature minted server-side
     // (src/lib/cloudinary.ts), so the browser talks to that host directly.
     "connect-src 'self' https://api.cloudinary.com",
+    // The showroom map. Without this the embed falls under default-src 'self'
+    // and the browser refuses it — the panel renders "This content is blocked.
+    // Contact the site owner to fix the issue." where the map should be.
+    //
+    // Narrow on purpose: this permits the Google Maps embed and nothing else,
+    // so it does not become a general licence to frame third-party pages. The
+    // frame is still only requested after the visitor clicks "Show map" (see
+    // ShowroomFaqContact), so the privacy trade-off is unchanged — this fixes
+    // what happens once they have asked for it.
+    "frame-src https://www.google.com https://maps.google.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
