@@ -177,7 +177,7 @@ export function Sidebar({ role }: { role: Role }) {
           MAA Admin
         </span>
       </div>
-      <div className="flex-1 overflow-y-auto">
+      <div className="scrollbar-premium flex-1 overflow-y-auto">
         <SidebarNav role={role} />
       </div>
       <div className="p-4 border-t border-border/10">

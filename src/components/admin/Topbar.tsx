@@ -41,7 +41,7 @@ export function Topbar({
           <SheetHeader className="border-b border-border/10 p-4">
             <SheetTitle className="text-foreground">MAA Admin</SheetTitle>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto">
+          <div className="scrollbar-premium flex-1 overflow-y-auto">
             <SidebarNav role={role} onNavigate={() => setOpen(false)} />
           </div>
           <div className="p-4 border-t border-border/10">

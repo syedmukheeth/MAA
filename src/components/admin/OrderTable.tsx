@@ -11,6 +11,39 @@ export type OrderRow = {
   createdAt: string;
 };
 
+/**
+ * Every cell is its own link to the order rather than one link in the Order
+ * column, so the whole row is a click target at any horizontal position.
+ *
+ * A single stretched link (`::after` over a `position: relative` row) would be
+ * one tab stop instead of five, but `position` on `<tr>` is the one place table
+ * layout still disagrees across browsers. Real anchors in each cell always
+ * work — and `tabIndex={-1}` on all but the first keeps the row a single stop
+ * for the keyboard while leaving each cell's text where a screen reader
+ * expects it.
+ */
+function RowLink({
+  orderId,
+  primary = false,
+  className = "",
+  children,
+}: {
+  orderId: string;
+  primary?: boolean;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={`/admin/orders/${orderId}`}
+      tabIndex={primary ? undefined : -1}
+      className={`block px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-bronze ${className}`}
+    >
+      {children}
+    </Link>
+  );
+}
+
 export function OrderTable({ orders }: { orders: OrderRow[] }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-border">
@@ -26,26 +59,40 @@ export function OrderTable({ orders }: { orders: OrderRow[] }) {
         </thead>
         <tbody className="divide-y divide-border">
           {orders.map((o) => (
-            <tr key={o.id}>
-              <td className="px-4 py-3">
-                <Link
-                  href={`/admin/orders/${o.id}`}
-                  className="text-foreground hover:text-bronze"
+            <tr
+              key={o.id}
+              className="group cursor-pointer transition-colors hover:bg-bronze/5"
+            >
+              {/* p-0 on the cells: the padding moves onto the anchors so the
+                  clickable area is the cell, not just the text inside it. */}
+              <td className="p-0">
+                <RowLink
+                  orderId={o.id}
+                  primary
+                  className="text-foreground group-hover:text-bronze"
                 >
                   {o.orderNumber}
-                </Link>
+                </RowLink>
               </td>
-              <td className="px-4 py-3 text-muted-foreground">
-                {o.customerName}
+              <td className="p-0">
+                <RowLink orderId={o.id} className="text-muted-foreground">
+                  {o.customerName}
+                </RowLink>
               </td>
-              <td className="px-4 py-3 text-muted-foreground">
-                {formatINR(o.total)}
+              <td className="p-0">
+                <RowLink orderId={o.id} className="text-muted-foreground">
+                  {formatINR(o.total)}
+                </RowLink>
               </td>
-              <td className="px-4 py-3">
-                <OrderStatusBadge status={o.status} />
+              <td className="p-0">
+                <RowLink orderId={o.id}>
+                  <OrderStatusBadge status={o.status} />
+                </RowLink>
               </td>
-              <td className="px-4 py-3 text-muted-foreground">
-                {o.createdAt}
+              <td className="p-0">
+                <RowLink orderId={o.id} className="text-muted-foreground">
+                  {o.createdAt}
+                </RowLink>
               </td>
             </tr>
           ))}
