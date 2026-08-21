@@ -35,6 +35,10 @@ export type AuditAction =
   | "order.email_failed"
   | "order.cancel"
   | "order.refund"
+  /// A human confirmed a manual UPI transfer actually arrived. The only thing
+  /// that moves an order to PAID, and therefore the only thing that makes a
+  /// refund payable — so it needs a name in the trail.
+  | "order.payment_verified"
   | "request.status_change"
   | "settings.update"
   | "user.role_change"
