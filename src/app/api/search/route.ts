@@ -1,25 +1,24 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { searchRatelimit } from "@/lib/redis";
-import { clientIp } from "@/lib/rate-limit";
+import { clientIp, limitOrAllow } from "@/lib/rate-limit";
 
 /**
  * Live search suggestions for the storefront search bar.
  * Case-insensitive contains match — intentionally forgiving, not exact.
  */
 export async function GET(request: Request) {
-  // Rate limit to prevent DB abuse from bots
-  try {
-    const ip = await clientIp();
-    const { success } = await searchRatelimit.limit(`search:${ip}`);
-    if (!success) {
-      return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
-        { status: 429 }
-      );
-    }
-  } catch {
-    // Fail open for search — degraded search is better than no search
+  // Through limitOrAllow, not searchRatelimit.limit() directly: this used to
+  // fail OPEN on any Redis error, so an Upstash outage (or an attacker
+  // exhausting the Upstash quota) lifted the limit entirely on an unindexed
+  // ILIKE scan against a 2-connection pool. limitOrAllow falls back to the
+  // in-memory limiter instead of skipping the check.
+  const allowed = await limitOrAllow(searchRatelimit, `search:${await clientIp()}`);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
   }
 
   const { searchParams } = new URL(request.url);
