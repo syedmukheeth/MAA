@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cloudinaryImageUrl, IMAGE_MESSAGE } from "./urls";
 
 export const testimonialSchema = z.object({
   name: z.string().min(2, "Customer name is required").max(80),
@@ -10,7 +11,15 @@ export const testimonialSchema = z.object({
   location: z.string().max(40).optional(),
   quote: z.string().min(10, "Quote is too short").max(600),
   rating: z.coerce.number().int().min(1).max(5).default(5),
-  imageUrl: z.string().optional(),
+  /**
+   * Rendered as a next/image src in Testimonials.tsx, so it gets the same
+   * Cloudinary-only check as the settings image fields — an untyped string
+   * saved fine and then threw at render time.
+   */
+  imageUrl: z
+    .string()
+    .optional()
+    .refine(cloudinaryImageUrl, { message: IMAGE_MESSAGE }),
   isPublished: z.coerce.boolean().default(false),
   sortOrder: z.coerce.number().int().min(0).default(0),
   /**

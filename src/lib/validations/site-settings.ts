@@ -1,11 +1,17 @@
 import { z } from "zod";
+import {
+  isHttpsUrl,
+  cloudinaryImageUrl,
+  HTTPS_MESSAGE,
+  IMAGE_MESSAGE,
+} from "./urls";
 
 export const siteSettingsSchema = z.object({
   heroHeadline: z.string().min(2),
   heroSubtext: z.string().min(2),
   // Allowed to be empty: there is no built-in hero image any more, and the Hero
   // renders a plain dark section until the owner uploads one.
-  heroImageUrl: z.string().default(""),
+  heroImageUrl: z.string().default("").refine(cloudinaryImageUrl, IMAGE_MESSAGE),
 
   brandLabel: z.string().min(2),
   brandHeadline: z.string().min(2),
@@ -23,8 +29,8 @@ export const siteSettingsSchema = z.object({
   showroomPhone: z.string().default(""),
   showroomWhatsapp: z.string().default(""),
 
-  instagramUrl: z.string().optional(),
-  facebookUrl: z.string().optional(),
+  instagramUrl: z.string().optional().refine(isHttpsUrl, HTTPS_MESSAGE),
+  facebookUrl: z.string().optional().refine(isHttpsUrl, HTTPS_MESSAGE),
 
   contactEmail: z
     .string()
@@ -38,12 +44,14 @@ export const siteSettingsSchema = z.object({
     .string()
     .optional()
     .nullable()
-    .transform((val) => (val === "" ? null : val)),
+    .transform((val) => (val === "" ? null : val))
+    .refine(isHttpsUrl, HTTPS_MESSAGE),
   studioImageUrl: z
     .string()
     .optional()
     .nullable()
-    .transform((val) => (val === "" ? null : val)),
+    .transform((val) => (val === "" ? null : val))
+    .refine(cloudinaryImageUrl, IMAGE_MESSAGE),
 
   deliveryMessage: z.string().min(2),
 
@@ -51,7 +59,7 @@ export const siteSettingsSchema = z.object({
   allowCOD: z.coerce.boolean().default(true),
   allowUPI: z.coerce.boolean().default(true),
   upiId: z.string().optional().nullable().transform((val) => val === "" ? null : val),
-  upiQrImage: z.string().optional().nullable().transform((val) => val === "" ? null : val),
+  upiQrImage: z.string().optional().nullable().transform((val) => val === "" ? null : val).refine(cloudinaryImageUrl, IMAGE_MESSAGE),
 
   gstRate: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0 && parseFloat(val) <= 100, "GST Rate must be between 0 and 100"),
   deliveryFee: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, "Delivery fee must be 0 or more"),
