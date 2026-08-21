@@ -5,6 +5,16 @@ const COLORS: Record<string, string> = {
   SHIPPED: "bg-violet-500/15 text-violet-400",
   DELIVERED: "bg-emerald-500/15 text-emerald-500",
   CANCELLED: "bg-red-500/15 text-red-500",
+  // PaymentState — same badge, so the two never drift apart visually.
+  UNPAID: "bg-slate-500/15 text-slate-400",
+  AWAITING_VERIFICATION: "bg-amber-500/15 text-amber-500",
+  PAID: "bg-emerald-500/15 text-emerald-500",
+};
+
+const LABELS: Record<string, string> = {
+  UNPAID: "COD · unpaid",
+  AWAITING_VERIFICATION: "Verify payment",
+  PAID: "Paid",
 };
 
 export function OrderStatusBadge({ status }: { status: string }) {
@@ -14,7 +24,7 @@ export function OrderStatusBadge({ status }: { status: string }) {
         COLORS[status] ?? "bg-muted text-muted-foreground"
       }`}
     >
-      {status}
+      {LABELS[status] ?? status}
     </span>
   );
 }

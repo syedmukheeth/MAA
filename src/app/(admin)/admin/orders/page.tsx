@@ -17,6 +17,7 @@ export default async function AdminOrdersPage() {
     customerName: o.user.name,
     total: o.total.toString(),
     status: o.status,
+    paymentState: o.paymentState,
     createdAt: o.createdAt.toLocaleDateString("en-IN"),
   }));
 

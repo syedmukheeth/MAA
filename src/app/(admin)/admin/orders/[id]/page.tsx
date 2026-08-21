@@ -8,6 +8,7 @@ import { formatINR } from "@/lib/money";
 import { OrderTimelineStepper } from "@/components/shop/OrderTimelineStepper";
 
 import { RefundStatusControl } from "@/components/admin/RefundStatusControl";
+import { PaymentVerificationControl } from "@/components/admin/PaymentVerificationControl";
 
 export default async function AdminOrderDetailPage({
   params,
@@ -56,6 +57,19 @@ export default async function AdminOrderDetailPage({
         <p className="text-sm text-muted-foreground">
           Payment Method: {order.paymentMethod}
         </p>
+      </div>
+
+      <div className="rounded-xl border border-border p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-heading text-lg text-foreground">Payment</h2>
+          <OrderStatusBadge status={order.paymentState} />
+        </div>
+        <PaymentVerificationControl
+          orderId={order.id}
+          paymentMethod={order.paymentMethod}
+          paymentState={order.paymentState}
+          paymentReference={order.paymentReference}
+        />
       </div>
 
       <div className="rounded-xl border border-border p-6">

@@ -8,6 +8,8 @@ export type OrderRow = {
   customerName: string;
   total: string;
   status: string;
+  /** PaymentState — staff need to spot "money not in yet" without opening the order. */
+  paymentState: string;
   createdAt: string;
 };
 
@@ -54,6 +56,7 @@ export function OrderTable({ orders }: { orders: OrderRow[] }) {
             <th className="px-4 py-3">Customer</th>
             <th className="px-4 py-3">Total</th>
             <th className="px-4 py-3">Status</th>
+            <th className="px-4 py-3">Payment</th>
             <th className="px-4 py-3">Date</th>
           </tr>
         </thead>
@@ -90,6 +93,11 @@ export function OrderTable({ orders }: { orders: OrderRow[] }) {
                 </RowLink>
               </td>
               <td className="p-0">
+                <RowLink orderId={o.id}>
+                  <OrderStatusBadge status={o.paymentState} />
+                </RowLink>
+              </td>
+              <td className="p-0">
                 <RowLink orderId={o.id} className="text-muted-foreground">
                   {o.createdAt}
                 </RowLink>
@@ -98,7 +106,7 @@ export function OrderTable({ orders }: { orders: OrderRow[] }) {
           ))}
           {orders.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+              <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                 No orders yet.
               </td>
             </tr>
