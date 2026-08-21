@@ -6,7 +6,8 @@ import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import { signSession, type Role } from "@/lib/auth/jwt";
+import { type Role } from "@/lib/auth/jwt";
+import { createSessionCookie } from "@/lib/auth/session-cookie";
 import { SESSION_COOKIE, requireAuthPendingPassword } from "@/lib/auth/session";
 import { recordAudit } from "@/lib/audit";
 import { loginRatelimit, loginIpRatelimit, registerRatelimit } from "@/lib/redis";
@@ -20,8 +21,6 @@ import {
   type LoginInput,
   type RegisterInput,
 } from "@/lib/validations/auth";
-
-const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
 /** Customers land in the store catalogue after signing in. */
 const STORE_ROUTE = "/products";
@@ -50,29 +49,8 @@ function safeNextPath(next: string | undefined): string | null {
   return next;
 }
 
-async function createSessionCookie(user: {
-  id: string;
-  email: string;
-  role: Role;
-  tokenVersion?: number;
-  mustChangePassword?: boolean;
-}) {
-  const token = await signSession({
-    sub: user.id,
-    email: user.email,
-    role: user.role,
-    tv: user.tokenVersion ?? 0,
-    pw: user.mustChangePassword === true,
-  });
-  const store = await cookies();
-  store.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_MAX_AGE_SECONDS,
-  });
-}
+// createSessionCookie now lives in src/lib/auth/session-cookie.ts — updateProfile
+// needs it too, and a "use server" file cannot export a plain helper.
 
 export async function registerAction(
   input: RegisterInput
