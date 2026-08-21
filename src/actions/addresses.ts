@@ -5,6 +5,20 @@ import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/session";
 import { addressSchema, type AddressInput } from "@/lib/validations/address";
 
+/**
+ * Marks a message that is safe to put in front of a customer. Anything else
+ * thrown in here is a Prisma error whose text names tables, columns and the
+ * failing query's parameters — which for these queries are the customer's own
+ * name, phone number and street address. Same pattern as src/actions/orders.ts.
+ */
+class AddressError extends Error {}
+
+function addressFailure(err: unknown, fallback: string, context: string) {
+  if (err instanceof AddressError) return { error: err.message };
+  console.error(`${context} failed [${err instanceof Error ? err.name : "unknown"}]`);
+  return { error: fallback };
+}
+
 export async function saveAddress(
   input: AddressInput
 ): Promise<{ error?: string; success?: boolean }> {
@@ -18,7 +32,7 @@ export async function saveAddress(
     await prisma.$transaction(async (tx) => {
       const count = await tx.address.count({ where: { userId: session.sub } });
       if (count >= 10) {
-        throw new Error("Maximum limit of 10 addresses reached. Please delete an old address to add a new one.");
+        throw new AddressError("Maximum limit of 10 addresses reached. Please delete an old address to add a new one.");
       }
       const isDefault = count === 0 ? true : parsed.data.isDefault;
 
@@ -50,7 +64,7 @@ export async function saveAddress(
     revalidatePath("/checkout");
     return { success: true };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Failed to save address" };
+    return addressFailure(err, "Failed to save address", "saveAddress");
   }
 }
 
@@ -102,7 +116,7 @@ export async function updateAddress(
     revalidatePath("/checkout");
     return { success: true };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Failed to update address" };
+    return addressFailure(err, "Failed to update address", "updateAddress");
   }
 }
 
@@ -140,7 +154,7 @@ export async function deleteAddress(
     revalidatePath("/checkout");
     return { success: true };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Failed to delete address" };
+    return addressFailure(err, "Failed to delete address", "deleteAddress");
   }
 }
 
@@ -171,6 +185,6 @@ export async function setDefaultAddress(
     revalidatePath("/checkout");
     return { success: true };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Failed to set default address" };
+    return addressFailure(err, "Failed to set default address", "setDefaultAddress");
   }
 }

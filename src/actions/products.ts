@@ -5,7 +5,11 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/session";
 import { productSchema, type ProductInput } from "@/lib/validations/product";
-import { applyStockMovement, recomputeProductStock } from "@/lib/inventory";
+import {
+  applyStockMovement,
+  recomputeProductStock,
+  InsufficientStockError,
+} from "@/lib/inventory";
 import { recordAudit } from "@/lib/audit";
 
 import { STAFF_ROLES } from "@/lib/auth/roles";
@@ -86,9 +90,9 @@ export async function createProduct(
       await recomputeProductStock(tx, product.id);
     });
   } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : "Could not create product",
-    };
+    if (err instanceof InsufficientStockError) return { error: err.message };
+    console.error(`createProduct failed [${err instanceof Error ? err.name : "unknown"}]`);
+    return { error: "Could not create product" };
   }
 
   revalidatePath("/admin/products");
@@ -186,9 +190,9 @@ export async function updateProduct(
       await recomputeProductStock(tx, id);
     });
   } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : "Could not update product",
-    };
+    if (err instanceof InsufficientStockError) return { error: err.message };
+    console.error(`updateProduct failed [${err instanceof Error ? err.name : "unknown"}]`);
+    return { error: "Could not update product" };
   }
 
   revalidatePath("/admin/products");

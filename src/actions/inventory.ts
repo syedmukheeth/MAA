@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/session";
-import { applyStockMovement } from "@/lib/inventory";
+import { applyStockMovement, InsufficientStockError } from "@/lib/inventory";
 import { recordAudit } from "@/lib/audit";
 import { STAFF_ROLES } from "@/lib/auth/roles";
 
@@ -47,9 +47,11 @@ export async function receiveStock(input: {
       );
     });
   } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : "Could not receive stock",
-    };
+    // InsufficientStockError carries copy written for staff ("Only 3 left").
+    // Everything else is a Prisma message naming tables and parameters.
+    if (err instanceof InsufficientStockError) return { error: err.message };
+    console.error(`receiveStock failed [${err instanceof Error ? err.name : "unknown"}]`);
+    return { error: "Could not receive stock" };
   }
 
   revalidateInventoryPaths();
@@ -97,9 +99,9 @@ export async function adjustStock(input: {
       );
     });
   } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : "Could not adjust stock",
-    };
+    if (err instanceof InsufficientStockError) return { error: err.message };
+    console.error(`adjustStock failed [${err instanceof Error ? err.name : "unknown"}]`);
+    return { error: "Could not adjust stock" };
   }
 
   revalidateInventoryPaths();

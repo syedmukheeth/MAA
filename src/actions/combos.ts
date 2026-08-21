@@ -69,7 +69,8 @@ export async function createCombo(input: ComboInput): Promise<{ error?: string }
       },
     });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Failed to create combo offer" };
+    console.error(`createCombo failed [${err instanceof Error ? err.name : "unknown"}]`);
+    return { error: "Failed to create combo offer" };
   }
 
   revalidatePath("/admin/combos");
@@ -125,7 +126,8 @@ export async function updateCombo(
       });
     });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Failed to update combo offer" };
+    console.error(`updateCombo failed [${err instanceof Error ? err.name : "unknown"}]`);
+    return { error: "Failed to update combo offer" };
   }
 
   revalidatePath("/admin/combos");
