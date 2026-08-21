@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { getActiveUser } from "@/lib/auth/session";
 import { customRequestSchema } from "@/lib/validations/custom-request";
 import { customRequestRatelimit } from "@/lib/redis";
-import { clientIp } from "@/lib/rate-limit";
 import { sendEmail } from "@/lib/email";
 import { customRequestNotificationHtml } from "@/lib/email-templates";
 
@@ -36,30 +35,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // Rate limit before parsing or touching the DB. This route is public (it is
-  // not in the proxy matcher) and every accepted request emails every OWNER and
-  // ADMIN — unlimited, it is an email amplifier aimed at our own staff.
-  let allowed: boolean;
-  try {
-    ({ success: allowed } = await customRequestRatelimit.limit(
-      `custom-request:${await clientIp()}`
-    ));
-  } catch {
-    // Fail closed. If the limiter is unavailable we cannot bound the fan-out,
-    // and a briefly broken form beats an unbounded inbox flood.
-    return NextResponse.json(
-      { error: "Service temporarily unavailable. Please try again shortly." },
-      { status: 503 }
-    );
-  }
-
-  if (!allowed) {
-    return NextResponse.json(
-      { error: "Too many requests. Please try again later." },
-      { status: 429 }
-    );
-  }
-
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > 100 * 1024) {
     return NextResponse.json(
@@ -82,6 +57,37 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Please log in to submit a custom furniture request.", requiresAuth: true },
       { status: 401 }
+    );
+  }
+
+  // Rate limited per ACCOUNT, and deliberately after the auth check even though
+  // the usual rule is to limit before doing work.
+  //
+  // Everything above this line is cheap and side-effect free (header checks, a
+  // 100KB-capped parse, one cookie verify); the expensive part — the DB write
+  // and an email to every OWNER and ADMIN — is below, and is what the limit is
+  // protecting. Keyed per IP and placed before the auth check, as it was, an
+  // unauthenticated stranger could burn the 5/hour bucket for a shared office
+  // or mobile-carrier NAT address and lock every real customer behind it out of
+  // the form, without ever being able to send a single email themselves.
+  let allowed: boolean;
+  try {
+    ({ success: allowed } = await customRequestRatelimit.limit(
+      `custom-request:${user.sub}`
+    ));
+  } catch {
+    // Fail closed. If the limiter is unavailable we cannot bound the fan-out,
+    // and a briefly broken form beats an unbounded inbox flood.
+    return NextResponse.json(
+      { error: "Service temporarily unavailable. Please try again shortly." },
+      { status: 503 }
+    );
+  }
+
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
     );
   }
 

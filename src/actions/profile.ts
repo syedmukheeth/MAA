@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/session";
+import { createSessionCookie } from "@/lib/auth/session-cookie";
+import { type Role } from "@/lib/auth/jwt";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { passwordSchema } from "@/lib/validations/auth";
 
@@ -46,7 +48,7 @@ export async function updateProfile(input: {
     data.passwordHash = await hashPassword(input.password);
   }
 
-  await prisma.user.update({
+  const updated = await prisma.user.update({
     where: { id: session.sub },
     data: {
       ...data,
@@ -56,7 +58,28 @@ export async function updateProfile(input: {
         ? { tokenVersion: { increment: 1 }, passwordChangedAt: new Date() }
         : {}),
     },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      tokenVersion: true,
+      mustChangePassword: true,
+    },
   });
+
+  // The bump above invalidates THIS browser's cookie too — getActiveUser
+  // compares dbUser.tokenVersion against the `tv` claim — so without re-issuing
+  // it the user is silently signed out by the act of securing their account.
+  // Same reasoning as changePasswordAction in src/actions/auth.ts.
+  if (data.passwordHash) {
+    await createSessionCookie({
+      id: updated.id,
+      email: updated.email,
+      role: updated.role as Role,
+      tokenVersion: updated.tokenVersion,
+      mustChangePassword: updated.mustChangePassword,
+    });
+  }
 
   revalidatePath("/account");
   return { success: true };

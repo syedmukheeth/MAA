@@ -96,9 +96,11 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(SESSION_COOKIE)?.value;
 
-  // Minted once per request and threaded through on the REQUEST headers so
-  // server components (src/components/seo/JsonLd.tsx) can stamp the same value
-  // onto any inline script they render.
+  // Minted once per request and threaded through on the REQUEST headers so a
+  // server component rendering an inline *script* can stamp the same value.
+  // Nothing does today: Next injects its own scripts with this nonce, and
+  // JSON-LD (src/components/seo/JsonLd.tsx) is a data block that script-src
+  // does not apply to — measured, see the comment there.
   const nonce = crypto.randomUUID().replace(/-/g, "");
   const csp = contentSecurityPolicy(nonce);
   const requestHeaders = new Headers(request.headers);

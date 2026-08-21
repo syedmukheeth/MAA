@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { requireAuth, requireRole, getActiveUser } from "@/lib/auth/session";
 import {
   shippingAddressSchema,
+  paymentMethodSchema,
   type ShippingAddressInput,
 } from "@/lib/validations/checkout";
 import {
@@ -24,6 +25,7 @@ import {
 import { money, toPaise, type Money } from "@/lib/money";
 import { computeCartTotals } from "@/lib/cart";
 import { recordAudit } from "@/lib/audit";
+import { isRefundable } from "@/lib/payments";
 import { STAFF_ROLES } from "@/lib/auth/roles";
 import { Prisma, type OrderStatus } from "@/generated/prisma/client";
 import { randomBytes } from "node:crypto";
@@ -82,6 +84,15 @@ export async function placeOrder(
     return { error: parsed.error.issues[0]?.message ?? "Invalid address" };
   }
 
+  // Was written straight to the order as free text. A customer could POST
+  // paymentMethod: "UPI" (or anything at all), pay nothing, cancel, and the
+  // cancel paths below would queue a refund for the full order total.
+  const parsedMethod = paymentMethodSchema.safeParse(input.paymentMethod ?? "COD");
+  if (!parsedMethod.success) {
+    return { error: "Choose a valid payment method" };
+  }
+  const paymentMethod = parsedMethod.data;
+
   const cart = await prisma.cart.findUnique({
     where: { userId: session.sub },
     include: {
@@ -103,6 +114,16 @@ export async function placeOrder(
   // Read outside the transaction: settings are slow-changing config, and the
   // rate is frozen onto the order below so a later change can't rewrite it.
   const settings = await getSiteSettings();
+
+  // Server-side twin of the check in CheckoutWizard: the allowCOD/allowUPI kill
+  // switches were previously enforced only in the browser, so turning one off
+  // stopped nothing.
+  if (paymentMethod === "COD" && !settings.allowCOD) {
+    return { error: "Cash on Delivery is currently unavailable." };
+  }
+  if (paymentMethod === "UPI" && !settings.allowUPI) {
+    return { error: "UPI Payment is currently unavailable." };
+  }
 
   try {
     const orderId = await prisma.$transaction(async (tx) => {
@@ -227,7 +248,12 @@ export async function placeOrder(
           shippingCity: parsed.data.shippingCity,
           shippingState: parsed.data.shippingState,
           shippingPincode: parsed.data.shippingPincode,
-          paymentMethod: input.paymentMethod || "COD",
+          paymentMethod,
+          // UPI is a manual transfer: the customer says they sent it, staff
+          // confirm it against the bank (markOrderPaid). COD collects on
+          // delivery, so UNPAID here is the correct, expected state.
+          paymentState:
+            paymentMethod === "UPI" ? "AWAITING_VERIFICATION" : "UNPAID",
           items: { create: orderItemsData },
         },
       });
@@ -370,12 +396,13 @@ export async function updateOrderStatus(
 
   try {
     await prisma.$transaction(async (tx) => {
-      // COD orders have no money to refund (nothing was collected online);
-      // online-paid orders get PENDING so the refund queue shows them.
-      const isOnlinePaid = order.paymentMethod !== "COD";
+      // A refund is owed only if the shop actually holds the money. Keyed on
+      // paymentState, not paymentMethod: the method says how the customer
+      // intended to pay, which is not evidence that they did.
+      const isPaid = isRefundable(order.paymentState);
       const initialRefundStatus =
         nextStatus === "CANCELLED"
-          ? isOnlinePaid
+          ? isPaid
             ? "PENDING"
             : "NOT_APPLICABLE"
           : undefined;
@@ -389,13 +416,16 @@ export async function updateOrderStatus(
           ...(nextStatus === "CANCELLED"
             ? {
                 refundStatus: initialRefundStatus,
-                refundAmount: order.total,
+                // Only set an amount when there is one to pay back. Writing
+                // order.total alongside NOT_APPLICABLE produced rows that
+                // claimed a refund was due and simultaneously that it wasn't.
+                refundAmount: isPaid ? order.total : null,
               }
             : {}),
         },
       });
       if (updated.count === 0) {
-        throw new Error("Order status changed by someone else. Refresh and retry.");
+        throw new CheckoutError("Order status changed by someone else. Refresh and retry.");
       }
       if (nextStatus === "CANCELLED") {
         await restockOrderItems(tx, order, session.sub);
@@ -420,9 +450,13 @@ export async function updateOrderStatus(
       );
     });
   } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : "Could not update order",
-    };
+    if (err instanceof CheckoutError || err instanceof InsufficientStockError) {
+      return { error: err.message };
+    }
+    console.error(
+      `updateOrderStatus failed [${err instanceof Error ? err.name : "unknown"}] [order=${orderId}]`
+    );
+    return { error: "Could not update order" };
   }
 
   revalidatePath("/admin/orders");
@@ -458,25 +492,31 @@ export async function cancelOwnOrder(orderId: string): Promise<{ error?: string 
   }
 
   try {
+    const isPaid = isRefundable(order.paymentState);
     await prisma.$transaction(async (tx) => {
       const updated = await tx.order.updateMany({
         where: { id: orderId, status: "PENDING" },
         data: {
           status: "CANCELLED",
-          // COD orders have nothing to refund; only online-paid orders queue a refund.
-          refundStatus: order.paymentMethod === "COD" ? "NOT_APPLICABLE" : "PENDING",
-          refundAmount: order.total,
+          // Only a confirmed payment queues a refund. Previously any non-COD
+          // paymentMethod did — and paymentMethod came from the client.
+          refundStatus: isPaid ? "PENDING" : "NOT_APPLICABLE",
+          refundAmount: isPaid ? order.total : null,
         },
       });
       if (updated.count === 0) {
-        throw new Error("Order can no longer be cancelled");
+        throw new CheckoutError("Order can no longer be cancelled");
       }
       await restockOrderItems(tx, order, user.sub);
     });
   } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : "Could not cancel order",
-    };
+    if (err instanceof CheckoutError || err instanceof InsufficientStockError) {
+      return { error: err.message };
+    }
+    console.error(
+      `cancelOwnOrder failed [${err instanceof Error ? err.name : "unknown"}] [order=${orderId}]`
+    );
+    return { error: "Could not cancel order" };
   }
 
   revalidatePath("/account/orders");
@@ -500,6 +540,19 @@ export async function updateRefundStatus(
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) return { error: "Order not found" };
 
+  // You cannot refund money you never received. Without this, an unpaid order
+  // could be walked to PROCESSED and paid out of the shop's pocket.
+  if (
+    !isRefundable(order.paymentState) &&
+    (input.status === "PENDING" || input.status === "PROCESSED")
+  ) {
+    return {
+      error:
+        "This order has no confirmed payment, so there is nothing to refund. Mark the payment received first if the money did arrive.",
+    };
+  }
+
+  let refundAmount: string | undefined;
   if (input.amount !== undefined) {
     // Parse as Decimal to avoid JS float precision errors on currency values.
     let refundDecimal: Prisma.Decimal;
@@ -514,8 +567,9 @@ export async function updateRefundStatus(
     if (refundDecimal.greaterThan(order.total)) {
       return { error: "Refund amount cannot exceed order total" };
     }
-    // Write back as string so the Prisma update below receives a clean Decimal-compatible value.
-    input.amount = refundDecimal.toDecimalPlaces(2).toString() as unknown as string;
+    // Local, not written back into the caller's object: `input` belongs to the
+    // caller and mutating it surprises whoever reuses it.
+    refundAmount = refundDecimal.toDecimalPlaces(2).toString();
   }
   try {
     await prisma.order.update({
@@ -524,7 +578,7 @@ export async function updateRefundStatus(
         refundStatus: input.status,
         refundTxnId: input.refundTxnId || order.refundTxnId,
         refundNotes: input.notes || order.refundNotes,
-        refundAmount: input.amount !== undefined ? input.amount : (order.refundAmount ?? order.total),
+        refundAmount: refundAmount ?? (order.refundAmount ?? order.total),
         refundedAt: input.status === "PROCESSED" ? new Date() : order.refundedAt,
       },
     });
@@ -542,7 +596,87 @@ export async function updateRefundStatus(
       },
     });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Could not update refund status" };
+    console.error(
+      `updateRefundStatus failed [${err instanceof Error ? err.name : "unknown"}] [order=${orderId}]`
+    );
+    return { error: "Could not update refund status" };
+  }
+
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/account/orders");
+  revalidatePath(`/account/orders/${orderId}`);
+  return {};
+}
+
+/**
+ * Records that a manual UPI transfer actually landed.
+ *
+ * The shop has no gateway: the customer scans a QR, pays, and says so. Until a
+ * human matches that against the bank statement the order is
+ * AWAITING_VERIFICATION, and nothing downstream — refunds especially — may
+ * treat it as money in hand.
+ */
+export async function markOrderPaid(
+  orderId: string,
+  reference?: string
+): Promise<{ error?: string }> {
+  const session = await requireRole([...STAFF_ROLES]);
+
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) return { error: "Order not found" };
+  if (order.paymentState === "PAID") {
+    return { error: "This payment is already confirmed" };
+  }
+  if (order.paymentState !== "AWAITING_VERIFICATION") {
+    return {
+      error:
+        "Only UPI orders awaiting verification can be marked paid. COD is collected on delivery.",
+    };
+  }
+
+  const trimmedReference = reference?.trim();
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Same optimistic guard updateOrderStatus uses: two staff working the
+      // same order must not both confirm it.
+      const updated = await tx.order.updateMany({
+        where: { id: orderId, paymentState: "AWAITING_VERIFICATION" },
+        data: {
+          paymentState: "PAID",
+          paymentReference: trimmedReference || null,
+          paymentVerifiedAt: new Date(),
+          paymentVerifiedById: session.sub,
+        },
+      });
+      if (updated.count === 0) {
+        throw new CheckoutError("Payment state changed by someone else. Refresh and retry.");
+      }
+      await recordAudit(
+        {
+          actorId: session.sub,
+          action: "order.payment_verified",
+          entity: "Order",
+          entityId: orderId,
+          summary: `${order.orderNumber}: UPI payment confirmed received`,
+          metadata: {
+            orderNumber: order.orderNumber,
+            total: order.total.toString(),
+            paymentReference: trimmedReference,
+          },
+        },
+        tx
+      );
+    });
+  } catch (err) {
+    if (err instanceof CheckoutError) {
+      return { error: err.message };
+    }
+    console.error(
+      `markOrderPaid failed [${err instanceof Error ? err.name : "unknown"}] [order=${orderId}]`
+    );
+    return { error: "Could not confirm the payment" };
   }
 
   revalidatePath("/admin/orders");

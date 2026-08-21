@@ -139,6 +139,22 @@ function isFrameworkControlFlow(raw: { message: string }): boolean {
 }
 
 /**
+ * Claims a once-per-hour slot. Fails OPEN — if Redis is unreachable we would
+ * rather send a duplicate alert than go quiet about a broken site.
+ */
+async function claimHourly(key: string): Promise<boolean> {
+  try {
+    const result = await redis.set(key, Date.now(), {
+      nx: true,
+      ex: ALERT_THROTTLE_SECONDS,
+    });
+    return result === "OK";
+  } catch {
+    return true;
+  }
+}
+
+/**
  * Alerts on a genuinely new error, or on a known one spiking.
  *
  * Fails open like the security alerts: a duplicate email beats silence about a
@@ -161,15 +177,20 @@ async function maybeAlertError(
 
   let claimed = true;
   try {
-    const result = await redis.set(`error-alert:${fp}`, Date.now(), {
-      nx: true,
-      ex: ALERT_THROTTLE_SECONDS,
-    });
-    claimed = result === "OK";
+    claimed = await claimHourly(`error-alert:${fp}`);
   } catch {
     claimed = true;
   }
   if (!claimed) return;
+
+  // Browser-reported errors carry an attacker-chosen message, and the message is
+  // what the fingerprint hashes — so varying it defeats the per-fingerprint
+  // throttle above and turns reportClientError into an email amplifier aimed at
+  // the grievance officer. One CLIENT alert per hour, whatever the message; the
+  // rows are still written and the /admin/monitoring dashboard shows all of them.
+  if (detail.source === "CLIENT" && !(await claimHourly("error-alert-source:CLIENT"))) {
+    return;
+  }
 
   const sent = await sendEmail({
     to: GRIEVANCE_OFFICER.email,

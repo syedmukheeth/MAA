@@ -21,6 +21,33 @@ enum RefundStatus {
   FAILED
 }
 
+/// How the customer settles the bill. There is no payment gateway: COD is
+/// collected on delivery, UPI is a manual transfer to the shop's own UPI ID
+/// which staff confirm against the bank before fulfilment.
+///
+/// An enum, not a String: this used to be free text written straight from the
+/// checkout payload, so a customer could POST any value they liked and the
+/// refund logic below believed it.
+enum PaymentMethod {
+  COD
+  UPI
+}
+
+/// Whether the shop actually has the money. Distinct from OrderStatus, which
+/// tracks the goods.
+///
+/// Nothing but PAID may queue a refund — an unpaid order that gets cancelled
+/// has nothing to pay back, and treating it otherwise turns the admin refund
+/// queue into a way to extract money from the shop.
+enum PaymentState {
+  /// COD: nothing collected yet, and that is correct.
+  UNPAID
+  /// UPI: the customer says they paid; staff has not confirmed it yet.
+  AWAITING_VERIFICATION
+  /// Money is in the shop's account, confirmed by a human.
+  PAID
+}
+
 /// Purposes for which consent (DPDP §6) is the lawful basis.
 ///
 /// Deliberately short. Almost nothing this app does runs on consent: accounts,
@@ -601,7 +628,16 @@ model Order {
   /// subtotal + deliveryFee. What the customer pays.
   total Decimal @db.Decimal(10, 2)
 
-  paymentMethod   String      @default("COD")
+  paymentMethod   PaymentMethod @default(COD)
+  /// Whether the money has actually arrived. See enum PaymentState.
+  paymentState    PaymentState  @default(UNPAID)
+  /// UPI reference / UTR the staff member matched against the bank statement.
+  paymentReference String?
+  paymentVerifiedAt DateTime?
+  /// User.id of the staff member who confirmed the payment. Deliberately not a
+  /// relation: the durable record is the AuditLog row, and a foreign key here
+  /// would block deleting a staff account (DPDP erasure) over a bookkeeping field.
+  paymentVerifiedById String?
   cancelReason    String?
   refundStatus    RefundStatus @default(NOT_APPLICABLE)
   refundAmount    Decimal?     @db.Decimal(10, 2)

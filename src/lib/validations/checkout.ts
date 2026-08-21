@@ -33,3 +33,14 @@ export const shippingAddressSchema = z
   });
 
 export type ShippingAddressInput = z.infer<typeof shippingAddressSchema>;
+
+/**
+ * The only two payment methods that exist. There is no gateway: COD is
+ * collected on delivery, UPI is a manual transfer the staff confirm.
+ *
+ * Parsed server-side in placeOrder. The checkout wizard checks the same thing,
+ * but a client check is a nicety, not a control — anything can call the action.
+ */
+export const paymentMethodSchema = z.enum(["COD", "UPI"]);
+
+export type PaymentMethodInput = z.infer<typeof paymentMethodSchema>;

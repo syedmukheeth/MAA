@@ -64,7 +64,12 @@ export async function getCartItemCount(userId?: string): Promise<number> {
     if (!cart) return 0;
     return cart.items.reduce((sum, item) => sum + item.quantity, 0);
   } catch (err) {
-    console.error("Error fetching cart item count:", err);
+    // Name only. Prisma interpolates query parameters into its messages, so
+    // logging the error object writes identifiers into the platform log store,
+    // bypassing the scrubber every other error path goes through.
+    console.error(
+      `Cart count failed [${err instanceof Error ? err.name : "unknown"}]`
+    );
     return 0;
   }
 }

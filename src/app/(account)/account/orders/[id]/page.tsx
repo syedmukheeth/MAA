@@ -76,6 +76,18 @@ export default async function AccountOrderDetailPage({
           {order.shippingCity}, {order.shippingState} - {order.shippingPincode}
         </p>
         <p className="mt-2">Payment: {order.paymentMethod}</p>
+        {/* Manual UPI: the shop matches the transfer against its bank statement
+            before treating it as received, so say so rather than leaving the
+            customer guessing whether their payment landed. */}
+        {order.paymentState === "AWAITING_VERIFICATION" && (
+          <p className="mt-1 text-graphite/60">
+            Payment awaiting confirmation — we are checking your UPI transfer and
+            will confirm it shortly.
+          </p>
+        )}
+        {order.paymentState === "PAID" && (
+          <p className="mt-1 text-graphite/60">Payment received.</p>
+        )}
       </div>
 
       {order.status === "CANCELLED" && order.refundStatus && order.refundStatus !== "NOT_APPLICABLE" && (
