@@ -271,7 +271,19 @@ const DEFAULT_WOODS = ["Teak", "Sheesham", "Oak", "Walnut", "Mango Wood"];
 const DEFAULT_FINISHES = ["Matte", "Satin", "High Gloss", "Natural Oil"];
 const DEFAULT_BUDGETS = ["Under ₹50,000", "₹50,000 – ₹1,50,000", "₹1,50,000 – ₹5,00,000", "₹5,00,000+"];
 
-export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
+export function SiteSettingsForm({
+  defaults,
+  canEditCommerce,
+}: {
+  defaults: SiteSettings;
+  /**
+   * OWNER/ADMIN only. A MANAGER may edit shop content but not the tax rate,
+   * delivery fees or the UPI account the money lands in — the server drops
+   * those fields from a MANAGER's save, and this greys them out so the refusal
+   * is visible before they type into it.
+   */
+  canEditCommerce: boolean;
+}) {
   const [values, setValues] = useState({
     ...defaults,
     showroomPhone: defaults.showroomPhone ?? "",
@@ -299,6 +311,7 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
     faqItems: defaults.faqItems ?? null,
   });
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -321,12 +334,14 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+    setNotice(null);
     const result = await updateSiteSettings(values);
     setSubmitting(false);
     if (result?.error) {
       setError(result.error);
       return;
     }
+    setNotice(result?.notice ?? null);
     setSaved(true);
   }
 
@@ -554,6 +569,14 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
         </div>
       </section>
 
+      <fieldset disabled={!canEditCommerce} className="space-y-10 disabled:opacity-60">
+      {!canEditCommerce && (
+        <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+          Pricing and payment settings are owner/admin only. Ask an owner to
+          change the GST rate, delivery fees or the UPI account.
+        </p>
+      )}
+
       <section className="space-y-4">
         <h2 className="font-heading text-lg text-foreground">Tax & Delivery Settings</h2>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
@@ -663,6 +686,7 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
           </div>
         )}
       </section>
+      </fieldset>
 
       {/* ─── Shop Sections (item 4) ─────────────────── */}
       <section className="space-y-4 rounded-xl border border-border bg-muted/30 p-5">
@@ -772,7 +796,8 @@ export function SiteSettingsForm({ defaults }: { defaults: SiteSettings }) {
       </section>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {saved && <p className="text-sm text-emerald-500">Saved.</p>}
+      {saved && !notice && <p className="text-sm text-emerald-500">Saved.</p>}
+      {notice && <p className="text-sm text-amber-500">{notice}</p>}
 
       <Button
         type="submit"

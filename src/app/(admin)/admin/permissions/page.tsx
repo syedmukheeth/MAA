@@ -16,7 +16,9 @@ const CAPABILITIES: {
   { label: "Custom requests: manage pipeline", roles: { OWNER: true, ADMIN: true, MANAGER: true, CUSTOMER: false } },
   { label: "Analytics & revenue", roles: { OWNER: true, ADMIN: true, MANAGER: false, CUSTOMER: false } },
   { label: "User & role management", roles: { OWNER: true, ADMIN: true, MANAGER: false, CUSTOMER: false } },
-  { label: "Website settings", roles: { OWNER: true, ADMIN: true, MANAGER: true, CUSTOMER: false } },
+  { label: "Website settings: content, hours, images, FAQ", roles: { OWNER: true, ADMIN: true, MANAGER: true, CUSTOMER: false } },
+  { label: "Website settings: GST rate, delivery fees, UPI account", roles: { OWNER: true, ADMIN: true, MANAGER: false, CUSTOMER: false } },
+  { label: "Orders: confirm a UPI payment was received", roles: { OWNER: true, ADMIN: true, MANAGER: true, CUSTOMER: false } },
   { label: "Modify Owner accounts", roles: { OWNER: true, ADMIN: false, MANAGER: false, CUSTOMER: false } },
   { label: "Grant the Owner role", roles: { OWNER: true, ADMIN: false, MANAGER: false, CUSTOMER: false } },
   { label: "Change your own role", roles: { OWNER: false, ADMIN: false, MANAGER: false, CUSTOMER: false } },
@@ -30,11 +32,11 @@ const ROLE_NOTES: { role: string; note: string }[] = [
   },
   {
     role: "Manager",
-    note: "Sits between customer and owner. Handles day-to-day operations — products, inventory, orders, combos, custom requests, and website settings.",
+    note: "Sits between customer and owner. Handles day-to-day operations — products, inventory, orders (including confirming UPI payments), combos, custom requests, and website content. Cannot change pricing, tax or the UPI account the money lands in.",
   },
   {
     role: "Admin",
-    note: "Everything a manager can do, plus analytics, user/role management, and website settings.",
+    note: "Everything a manager can do, plus analytics, user/role management, and the pricing/payment settings.",
   },
   {
     role: "Owner",
