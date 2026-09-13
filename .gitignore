@@ -50,3 +50,9 @@ next-env.d.ts
 # Generated staff passwords from prisma/scripts/upsert-staff.ts.
 # Read once, move into a password manager, then delete.
 staff-credentials.local.txt
+
+# Claude Security scan output. Each run drops a CLAUDE-SECURITY-<timestamp>/
+# directory holding findings and patch files. Those carry their own `*`
+# gitignore, so today's is already invisible — this entry is what keeps the
+# NEXT run's directory out too, under whatever timestamp it picks.
+CLAUDE-SECURITY-*/
