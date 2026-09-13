@@ -21,6 +21,9 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - brand (brand assets)
+     * - showcase (catalogue artwork served from /public, referenced by
+     *   SiteSettings.heroImageUrl and Product.images — matched here it 307s to
+     *   /login and every showcase image on the storefront breaks)
      * - uploads (uploaded files)
      * - 403 (access denied page)
      * - forgot-password, reset-password (password reset flow)
@@ -30,7 +33,7 @@ export const config = {
      *   not read robots.txt or the sitemap, and WhatsApp/Instagram got a
      *   redirect instead of the OG image)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|brand|uploads|403|forgot-password|reset-password|robots.txt|sitemap.xml|opengraph-image).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|brand|showcase|uploads|403|forgot-password|reset-password|robots.txt|sitemap.xml|opengraph-image).*)",
   ],
 };
 
