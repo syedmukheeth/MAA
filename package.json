@@ -5,13 +5,15 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "art:showcase": "node scripts/generate-showcase-art.mjs",
+    "start": "next start",
     "db:users": "tsx --env-file=.env prisma/scripts/list-users.ts",
     "db:staff": "tsx --env-file=.env prisma/scripts/upsert-staff.ts",
     "db:reset": "tsx --env-file=.env prisma/scripts/reset-store.ts",
+    "db:showcase": "tsx --env-file=.env prisma/scripts/seed-showcase.ts",
     "db:purge-images": "tsx --env-file=.env prisma/scripts/purge-placeholder-images.ts",
     "postinstall": "prisma generate"
   },
