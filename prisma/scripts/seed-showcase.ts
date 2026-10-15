@@ -6,19 +6,12 @@ import { PrismaPg } from "@prisma/adapter-pg";
  * screenshotted and handed over before the owner has photographed a single
  * piece.
  *
- * The images are the hand-drawn artwork in public/showcase, rendered by
- * scripts/generate-showcase-art.mjs — Indian forms (carved teak sofa, jhoola,
- * jali almirah, puja mandir) in the brand palette. Drawn as SVG, shipped as
- * WEBP, because next/image will not optimise SVG without a config flag that
- * would also cover admin uploads.
- *
- * They are deliberately NOT photographs: a photo of furniture
- * this shop did not build, presented as its catalogue, is the exact problem the
- * Unsplash placeholders were removed for (see the comment on heroImageUrl in
- * src/lib/site-settings.ts and the remotePatterns note in next.config.ts).
- * Artwork reads as artwork, so nothing here can be mistaken for a real product
- * photo — and every row it writes is an ordinary admin-editable row, so the
- * owner replaces each one from /admin as their own photos arrive.
+ * The images are stock photography from Unsplash (free licence, no attribution
+ * required; ids in public/showcase/CREDITS.md), self-hosted as WEBP in
+ * public/showcase so next/image needs no extra remote host. They are stand-ins
+ * for the demo: none shows a piece this shop built, and every row the script
+ * writes is an ordinary admin-editable row, so the owner replaces each one from
+ * /admin as their own photos arrive.
  *
  * Nothing is deleted and nothing existing is overwritten except by slug: rerun
  * it as often as you like. `--remove` takes the whole showcase back out again,
