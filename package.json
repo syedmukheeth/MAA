@@ -8,7 +8,6 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "art:showcase": "node scripts/generate-showcase-art.mjs",
     "start": "next start",
     "db:users": "tsx --env-file=.env prisma/scripts/list-users.ts",
     "db:staff": "tsx --env-file=.env prisma/scripts/upsert-staff.ts",
