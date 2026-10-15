@@ -108,34 +108,34 @@ const PRODUCTS: SeedProduct[] = [
     ],
   },
   {
-    slug: "kurnool-jhoola-swing",
-    name: "Kurnool Jhoola Swing",
+    slug: "recliner-sectional-sofa",
+    name: "Kurnool Recliner Sectional Sofa",
     description:
-      "The indoor swing that belongs in a verandah or a wide living room. Carved teak seat and jali backrest, hung on solid brass chains rated well past the 200 kg seat load, with a cushioned seat in cotton silk.",
-    price: "38999",
-    mrp: "47999",
+      "A corner sectional with two power-free recliners, a cupholder console and deep, soft-padded seats. Hardwood frame, high-resilience foam and a suede-finish fabric that wipes clean.",
+    price: "94999",
+    mrp: "119999",
     category: "LIVING_ROOM",
-    materials: ["Teak wood", "Solid brass chain", "Cotton silk cushion"],
-    dimensions: 'Seat 60" x 22" · Backrest height 26" · Chain drop adjustable',
-    images: [`${IMG}/wooden-jhoola-swing.webp`],
+    materials: ["Hardwood frame","High-resilience foam","Suede-finish fabric"],
+    dimensions: "Corner 112\" x 112\" x 38\" · Seat depth 24\"",
+    images: [`${IMG}/recliner-sectional-sofa.webp`],
     stockQuantity: 4,
     featured: true,
     variants: [
       {
-        name: "Teak · Brass Chain",
-        woodType: "Teak",
-        finish: "Natural",
+        name: "Brown · Suede Finish",
+        woodType: "Hardwood",
+        finish: "Brown",
         priceDelta: "0",
-        sku: "MAA-JHOOLA-TEAK-BR",
+        sku: "MAA-RCL-SEC-BRN",
         stock: 3,
         isDefault: true,
       },
       {
-        name: "Sheesham · Brass Chain",
-        woodType: "Sheesham",
-        finish: "Deep Brown",
-        priceDelta: "-3000",
-        sku: "MAA-JHOOLA-SHSM-BR",
+        name: "Grey · Suede Finish",
+        woodType: "Hardwood",
+        finish: "Grey",
+        priceDelta: "0",
+        sku: "MAA-RCL-SEC-GRY",
         stock: 1,
       },
     ],
@@ -211,36 +211,36 @@ const PRODUCTS: SeedProduct[] = [
     ],
   },
   {
-    slug: "tirumala-puja-mandir",
-    name: "Tirumala Puja Mandir",
+    slug: "leather-tufted-sofa",
+    name: "Leather Tufted 3-Seater Sofa",
     description:
-      "A temple unit in teak with a turned dome, jali side panels and hanging brass bells. Two drawers below for samagri, and a pull-out shelf for the thali. Finished on all sides so it can stand free of a wall.",
-    price: "24999",
-    mrp: "31999",
+      "A three-seater with button-tufted seat and back in soft leatherette, bolster arms and solid wood legs. Firm enough for everyday use, easy to wipe down.",
+    price: "46999",
+    mrp: "58999",
     category: "LIVING_ROOM",
-    materials: ["Teak wood", "Brass bells", "Brass kalash finial"],
-    dimensions: '30" x 18" x 60"',
-    images: [`${IMG}/teak-puja-mandir.webp`],
-    stockQuantity: 7,
+    materials: ["Hardwood frame","Leatherette upholstery","High-density foam"],
+    dimensions: "84\" x 36\" x 33\"",
+    images: [`${IMG}/leather-tufted-sofa.webp`],
+    stockQuantity: 6,
     featured: false,
     variants: [
       {
-        name: "Floor Standing · Teak",
-        woodType: "Teak",
-        finish: "Honey",
-        size: "Floor Standing",
+        name: "Tan · 3 Seater",
+        woodType: "Hardwood",
+        finish: "Tan",
+        size: "3 Seater",
         priceDelta: "0",
-        sku: "MAA-MANDIR-FLR-TEAK",
-        stock: 5,
+        sku: "MAA-LTH-3S-TAN",
+        stock: 4,
         isDefault: true,
       },
       {
-        name: "Wall Mounted · Teak",
-        woodType: "Teak",
-        finish: "Honey",
-        size: "Wall Mounted",
-        priceDelta: "-6000",
-        sku: "MAA-MANDIR-WAL-TEAK",
+        name: "Tan · 2 Seater",
+        woodType: "Hardwood",
+        finish: "Tan",
+        size: "2 Seater",
+        priceDelta: "-9000",
+        sku: "MAA-LTH-2S-TAN",
         stock: 2,
       },
     ],
@@ -281,73 +281,121 @@ const PRODUCTS: SeedProduct[] = [
     ],
   },
   {
-    slug: "sheesham-study-desk",
-    name: "Sheesham Study Desk",
+    slug: "cushion-headboard-bed",
+    name: "Cushion Headboard Double Bed",
     description:
-      "A working desk, not a console: three deep drawers on a solid bank, a 1200 mm clear top and a cable cut-out at the back. Carved drawer fronts with brass pulls. Matching cane-back chair included.",
-    price: "27999",
-    mrp: "33999",
-    category: "OFFICE",
-    materials: ["Sheesham wood", "Brass pulls", "Natural cane"],
-    dimensions: '48" x 24" x 30" · Chair 18" x 18" x 38"',
-    images: [`${IMG}/sheesham-study-desk.webp`],
-    stockQuantity: 6,
-    featured: false,
+      "A queen bed with a padded, button-tufted headboard and a solid wood frame with slatted base, so no box support is needed. Pairs with the Jali Almirah.",
+    price: "36999",
+    mrp: "45999",
+    category: "BEDROOM",
+    materials: ["Hardwood frame","Upholstered headboard","Plywood slats"],
+    dimensions: "Queen 66\" x 82\" · Headboard height 50\"",
+    images: [`${IMG}/cushion-headboard-bed.webp`],
+    stockQuantity: 5,
+    featured: true,
     variants: [
       {
-        name: "With Chair",
-        woodType: "Sheesham",
-        finish: "Deep Brown",
+        name: "Queen · Beige",
+        woodType: "Hardwood",
+        finish: "Beige",
+        size: "Queen",
         priceDelta: "0",
-        sku: "MAA-DESK-CHAIR",
-        stock: 4,
+        sku: "MAA-BED-Q-BGE",
+        stock: 3,
         isDefault: true,
       },
       {
-        name: "Desk Only",
-        woodType: "Sheesham",
-        finish: "Deep Brown",
-        priceDelta: "-5000",
-        sku: "MAA-DESK-ONLY",
+        name: "King · Beige",
+        woodType: "Hardwood",
+        finish: "Beige",
+        size: "King",
+        priceDelta: "6000",
+        sku: "MAA-BED-K-BGE",
         stock: 2,
       },
     ],
   },
   {
-    slug: "konaseema-cane-outdoor-set",
-    name: "Konaseema Cane Outdoor Set",
+    slug: "sheesham-tea-poy",
+    name: "Sheesham Tea Poy",
     description:
-      "Handwoven cane over a teak frame — two armchairs and a low table for a balcony or a terrace. The weave is hand-pulled and re-caneable, so the set is repairable rather than disposable.",
-    price: "32999",
-    mrp: "39999",
-    category: "OUTDOOR",
-    materials: ["Teak frame", "Handwoven cane", "Outdoor cotton cushions"],
-    dimensions: 'Chairs 30" x 30" x 34" · Table 36" x 20" x 18"',
-    images: [`${IMG}/cane-outdoor-set.webp`],
-    stockQuantity: 5,
-    featured: false,
+      "A solid sheesham centre table, sized for the tea tray and the day's newspaper. Plank top, thick square legs, finished with a lacquer that takes a hot cup.",
+    price: "12999",
+    mrp: "16999",
+    category: "LIVING_ROOM",
+    materials: ["Sheesham wood","Melamine lacquer"],
+    dimensions: "36\" x 22\" x 17\"",
+    images: [`${IMG}/tea-poy-wooden.webp`],
+    stockQuantity: 10,
+    featured: true,
     variants: [
       {
-        name: "2 Chairs + Table",
-        woodType: "Teak",
+        name: "Natural Finish",
+        woodType: "Sheesham",
         finish: "Natural",
-        size: "2 Seater",
         priceDelta: "0",
-        sku: "MAA-CANE-2-TBL",
-        stock: 4,
+        sku: "MAA-POY-NAT",
+        stock: 6,
         isDefault: true,
       },
       {
-        name: "4 Chairs + Table",
-        woodType: "Teak",
-        finish: "Natural",
-        size: "4 Seater",
-        priceDelta: "18000",
-        sku: "MAA-CANE-4-TBL",
-        stock: 1,
+        name: "Walnut Finish",
+        woodType: "Sheesham",
+        finish: "Walnut",
+        priceDelta: "1000",
+        sku: "MAA-POY-WAL",
+        stock: 4,
       },
     ],
   },
+  {
+    slug: "lshape-corner-sofa",
+    name: "L-Shape Fabric Corner Sofa",
+    description:
+      "A five-seater L-shape in a hard-wearing grey fabric, with loose back cushions and a deep chaise end. Built on a seasoned hardwood frame with metal feet.",
+    price: "58999",
+    mrp: "72999",
+    category: "LIVING_ROOM",
+    materials: ["Hardwood frame","Woven fabric","High-density foam"],
+    dimensions: "L 108\" x 72\" x 34\"",
+    images: [`${IMG}/lshape-corner-sofa.webp`],
+    stockQuantity: 5,
+    featured: true,
+    variants: [
+      {
+        name: "Grey · Left Chaise",
+        woodType: "Hardwood",
+        finish: "Grey",
+        size: "Left Chaise",
+        priceDelta: "0",
+        sku: "MAA-LSH-GRY-L",
+        stock: 3,
+        isDefault: true,
+      },
+      {
+        name: "Grey · Right Chaise",
+        woodType: "Hardwood",
+        finish: "Grey",
+        size: "Right Chaise",
+        priceDelta: "0",
+        sku: "MAA-LSH-GRY-R",
+        stock: 2,
+      },
+    ],
+  },
+];
+
+/**
+ * Earlier showcase rows that are no longer part of the catalogue (the shop
+ * sells sofas, beds and tea poys, not swings or shrines). Seeding switches them
+ * off rather than deleting them, so an order that already references one keeps
+ * its history; `--remove` deletes them along with everything else.
+ */
+const RETIRED_SLUGS = [
+  "kurnool-jhoola-swing",
+  "tirumala-puja-mandir",
+  "sheesham-study-desk",
+  "konaseema-cane-outdoor-set",
 ];
 
 const COMBOS = [
@@ -355,13 +403,12 @@ const COMBOS = [
     slug: "drawing-room-complete",
     name: "Drawing Room, Complete",
     description:
-      "The sofa set, the jhoola and the puja mandir, bought together. One delivery, one installation visit, and the finishes are matched across all three pieces at the workshop before they leave.",
-    bundlePrice: "139999",
+      "The carved sofa set and a matching tea poy, bought together. One delivery, one installation visit, and the finishes are matched across all three pieces at the workshop before they leave.",
+    bundlePrice: "89999",
     image: `${IMG}/combo-living-room.webp`,
     items: [
       { slug: "marwar-carved-teak-sofa-set", quantity: 1 },
-      { slug: "kurnool-jhoola-swing", quantity: 1 },
-      { slug: "tirumala-puja-mandir", quantity: 1 },
+      { slug: "sheesham-tea-poy", quantity: 1 },
     ],
   },
   {
@@ -476,6 +523,14 @@ async function seed() {
     console.log(`  ${p.slug}  (${variants.length} variants)`);
   }
 
+  const retired = await prisma.product.updateMany({
+    where: { slug: { in: RETIRED_SLUGS } },
+    data: { isActive: false },
+  });
+  if (retired.count) {
+    console.log(`\nSwitched off ${retired.count} retired showcase products`);
+  }
+
   console.log("\nCombos");
   for (const c of COMBOS) {
     const { items, ...fields } = c;
@@ -483,6 +538,15 @@ async function seed() {
       where: { slug: c.slug },
       update: { ...fields, isActive: true },
       create: { ...fields, createdById: owner.id },
+    });
+
+    // Drop items left over from an earlier version of the combo.
+    const keep = await prisma.product.findMany({
+      where: { slug: { in: items.map((i) => i.slug) } },
+      select: { id: true },
+    });
+    await prisma.comboItem.deleteMany({
+      where: { comboId: combo.id, productId: { notIn: keep.map((k) => k.id) } },
     });
 
     for (const item of items) {
@@ -511,7 +575,7 @@ async function seed() {
 }
 
 async function remove() {
-  const slugs = PRODUCTS.map((p) => p.slug);
+  const slugs = [...PRODUCTS.map((p) => p.slug), ...RETIRED_SLUGS];
   const comboSlugs = COMBOS.map((c) => c.slug);
 
   // Combos first: a ComboItem references the products below, and the cascade
@@ -531,7 +595,7 @@ async function main() {
   if (!confirmed) {
     console.log(
       [
-        "This writes a demo catalogue (8 products, 2 combos) and points the hero",
+        "This writes a demo catalogue (9 products, 2 combos) and points the hero",
         "and Custom Studio images at the artwork in public/showcase.",
         "",
         "It is additive and matched on slug, so it never touches the owner's own",

@@ -1,20 +1,21 @@
 # Showcase images
 
-Stock photographs from Unsplash (https://unsplash.com/license — free for commercial use, no attribution required). Placeholders for demos; replace with the shop's own product photos from /admin.
+Stock photographs from Unsplash (https://unsplash.com/license: free for commercial use, no attribution required). Placeholders for demos; replace with the shop's own product photos from /admin.
 
-Unsplash photo ids (open at https://unsplash.com/photos/<id> via the photo search; the CDN form is images.unsplash.com/photo-<id>):
+CDN form: images.unsplash.com/photo-<id>
 
-| File | Unsplash photo |
+| File | Unsplash photo id |
 | --- | --- |
 | teak-carved-sofa-set.webp | 1785486250459-38873b18799b |
-| wooden-jhoola-swing.webp | 1571425046056-cfc17c664e57 |
+| recliner-sectional-sofa.webp | 1658500353815-4d22b7cc6dd3 |
+| lshape-corner-sofa.webp | 1757969722919-1b959d258392 |
+| leather-tufted-sofa.webp | 1691480152351-4b3f2c89ccff |
+| carved-teak-cot.webp | 1678786591418-2b107bdda369 |
+| cushion-headboard-bed.webp | 1560185128-e173042f79dd |
+| tea-poy-wooden.webp | 1738682767952-f85017e1a682 |
 | sheesham-dining-set.webp | 1636138388621-258a72ecb07e |
 | carved-almirah-wardrobe.webp | 1558997519-83ea9252edf8 |
-| teak-puja-mandir.webp | 1544691560-fc2053d97726 |
-| carved-teak-cot.webp | 1678786591418-2b107bdda369 |
-| sheesham-study-desk.webp | 1766431015004-315aa01141f9 |
-| cane-outdoor-set.webp | 1695735240141-f08abacb949d |
 | combo-living-room.webp | 1560449752-3fd4bdbe7df0 |
 | combo-bedroom.webp | 1771327811795-6197403af846 |
-| hero-living-room.webp | 1787390629829-abb32b3025c5 |
-| custom-studio-workshop.webp | 1661446521292-f92b6a0b6354 |
+| hero-living-room.webp | 1560184897-67f4a3f9a7fa |
+| custom-studio-workshop.webp | 1641893979088-87d4d9604c36 |
