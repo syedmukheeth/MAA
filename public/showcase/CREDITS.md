@@ -18,4 +18,4 @@ CDN form: images.unsplash.com/photo-<id>
 | combo-living-room.webp | 1560449752-3fd4bdbe7df0 |
 | combo-bedroom.webp | 1771327811795-6197403af846 |
 | hero-living-room.webp | 1560184897-67f4a3f9a7fa |
-| custom-studio-workshop.webp | 1641893979088-87d4d9604c36 |
+| custom-studio-workshop.webp | 1712171984469-656cb869d45b |
